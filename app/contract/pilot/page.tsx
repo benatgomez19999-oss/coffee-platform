@@ -1,6 +1,6 @@
 "use client"
 
-import { PDFViewer } from "@react-pdf/renderer"
+import dynamic from "next/dynamic"
 
 import {
   Document,
@@ -12,6 +12,22 @@ import {
 
 import { getContracts } from "@/clientLayer/layer/contractStore"
 
+// ======================================================
+// 🔥 FIX: PDFViewer SOLO EN CLIENT (NO SSR)
+// ======================================================
+
+const PDFViewer = dynamic(
+  () =>
+    import("@react-pdf/renderer").then(
+      (mod) => mod.PDFViewer
+    ),
+  { ssr: false }
+)
+
+
+// ======================================================
+// STYLES
+// ======================================================
 
 const styles = StyleSheet.create({
 
@@ -30,6 +46,10 @@ const styles = StyleSheet.create({
 
 })
 
+
+// ======================================================
+// PAGE
+// ======================================================
 
 export default function ContractPage() {
 
