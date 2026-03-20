@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -8,8 +6,8 @@ import { useSearchParams } from "next/navigation"
 import Step1Client from "./step1Client"
 import Step2Supply from "./step2Supply"
 import Step3Preview from "./step3Preview"
-import { selectContract }
-from "@/clientLayer/layer/contractController"
+
+
 
 
 // =====================================================
@@ -47,7 +45,7 @@ export default function ContractCreatePage() {
   const searchParams = useSearchParams()
   
   const mode = searchParams.get("mode")
-const contractId = searchParams.get("contractId")
+  const contractId = searchParams.get("contractId")
 
   const volumeParam = searchParams.get("volume")
 
@@ -111,13 +109,26 @@ const contractId = searchParams.get("contractId")
 
   }, [volumeParam])
 
-useEffect(() => {
 
-  if (mode === "amend" && contractId) {
-    selectContract(contractId)
-  }
+  // =====================================================
+  // LOAD CONTRACT (FIXED 🔥)
+  // =====================================================
 
-}, [mode, contractId])
+  useEffect(() => {
+
+    if (mode === "amend" && contractId) {
+
+      const load = async () => {
+        const mod = await import("@/clientLayer/layer/contractController")
+        mod.selectContract(contractId)
+      }
+
+      load()
+
+    }
+
+  }, [mode, contractId])
+
 
   // =====================================================
   // STEP HANDLERS
