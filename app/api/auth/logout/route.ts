@@ -1,26 +1,21 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+
+// ✅ NECESARIO para Vercel (evita problemas en build/runtime)
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const res = NextResponse.json({ success: true })
+  // ✅ Creamos la respuesta base
+  const response = NextResponse.json({ success: true });
 
-  // 🔥 SIN SECURE
-  res.cookies.set("auth_token", "", {
+  // ✅ Eliminamos la cookie correctamente (UNA sola vez, bien configurada)
+  response.cookies.set("auth_token", "", {
+    httpOnly: true,
+    secure: true, // ⚠️ en producción siempre true
+    sameSite: "lax",
     path: "/",
-    expires: new Date(0)
-  })
+    expires: new Date(0), // fuerza eliminación inmediata
+  });
 
-  // 🔥 CON SECURE
-  res.cookies.set("auth_token", "", {
-    path: "/",
-    secure: true,
-    expires: new Date(0)
-  })
-
-  // 🔥 EXTRA: forzar también Max-Age
-  res.headers.append(
-    "Set-Cookie",
-    "auth_token=; Path=/; Max-Age=0"
-  )
-
-  return res
+  return response;
 }

@@ -1,24 +1,30 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/database/prisma"
-import { hashPassword, signToken } from "../../../../src/lib/auth"
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { hashPassword, signToken } from "@/lib/auth"; // ✅ path limpio
+
+// ✅ NECESARIO para Vercel
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // =====================================================
 // SIGNUP API — CREATE USER + COMPANY + SESSION
 // =====================================================
 
 export async function POST(req: Request) {
-
   try {
+    // =====================================================
+    // ⚠️ IMPORT DINÁMICO DE PRISMA (CLAVE)
+    // =====================================================
+    const { prisma } = await import("@/database/prisma");
 
-    const body = await req.json()
+    const body = await req.json();
 
     const {
       name,
       email,
       password,
-      companyName
-    } = body
+      companyName,
+    } = body;
 
     // =====================================================
     // VALIDATION
@@ -28,35 +34,35 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Missing fields" },
         { status: 400 }
-      )
+      );
     }
 
     // =====================================================
     // NORMALIZE EMAIL
     // =====================================================
 
-    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedEmail = email.toLowerCase().trim();
 
     // =====================================================
     // CHECK USER EXISTS
     // =====================================================
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
-    })
+      where: { email: normalizedEmail },
+    });
 
     if (existingUser) {
       return NextResponse.json(
         { error: "User already exists" },
         { status: 400 }
-      )
+      );
     }
 
     // =====================================================
     // HASH PASSWORD
     // =====================================================
 
-    const passwordHash = await hashPassword(password)
+    const passwordHash = await hashPassword(password);
 
     // =====================================================
     // CREATE COMPANY
@@ -65,9 +71,9 @@ export async function POST(req: Request) {
     const company = await prisma.company.create({
       data: {
         name: companyName,
-        country: "UNKNOWN" // 🔥 luego lo hacemos dinámico
-      }
-    })
+        country: "UNKNOWN", // 🔥 puedes hacerlo dinámico luego
+      },
+    });
 
     // =====================================================
     // CREATE USER
@@ -78,46 +84,41 @@ export async function POST(req: Request) {
         name,
         email: normalizedEmail,
         passwordHash,
-        companyId: company.id
-      }
-    })
+        companyId: company.id,
+      },
+    });
 
     // =====================================================
     // CREATE JWT
     // =====================================================
 
-    const token = signToken({ userId: user.id })
+    const token = signToken({ userId: user.id });
 
     // =====================================================
     // SET COOKIE (SESSION)
     // =====================================================
 
-    const cookieStore = await cookies()
+    const cookieStore = await cookies();
 
     cookieStore.set("auth_token", token, {
       httpOnly: true,
-      path: "/",
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax"
-    })
+      sameSite: "lax",
+      path: "/",
+    });
 
     // =====================================================
     // RESPONSE
     // =====================================================
 
-    return NextResponse.json({
-      success: true
-    })
+    return NextResponse.json({ success: true });
 
   } catch (error: any) {
-
-    console.error("❌ SIGNUP ERROR:", error)
+    console.error("❌ SIGNUP ERROR:", error);
 
     return NextResponse.json(
-      {
-        error: "Internal error"
-      },
+      { error: "Internal error" },
       { status: 500 }
-    )
+    );
   }
 }
