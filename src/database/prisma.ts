@@ -1,19 +1,16 @@
 // =====================================================
-// PRISMA CLIENT (SINGLETON)
+// PRISMA CLIENT (SINGLETON SAFE FOR VERCEL)
 // =====================================================
 
 import { PrismaClient } from "@prisma/client"
 
-
 // =====================================================
-// GLOBAL TYPE (para evitar múltiples instancias en dev)
+// GLOBAL TYPE (evita múltiples instancias en dev / hot reload)
 // =====================================================
 
-const globalForPrisma =
-  globalThis as unknown as {
-    prisma: PrismaClient | undefined
-  }
-
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
 
 // =====================================================
 // CREATE CLIENT
@@ -21,15 +18,14 @@ const globalForPrisma =
 
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient()
-
+  new PrismaClient({
+    log: ["error"], // opcional: logs mínimos (evita ruido en Vercel)
+  })
 
 // =====================================================
-// SAVE GLOBAL (DEV ONLY)
+// SAVE GLOBAL (ONLY IN DEV)
 // =====================================================
 
 if (process.env.NODE_ENV !== "production") {
-
   globalForPrisma.prisma = prisma
-
 }
