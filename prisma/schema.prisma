@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Producer {
+  id        String   @id @default(uuid())
+  name      String
+  country   String
+  createdAt DateTime @default(now())
+  farms     Farm[]
+}
+
+model Farm {
+  id         String     @id @default(uuid())
+  name       String
+  altitude   Int?
+  producerId String
+  producer   Producer   @relation(fields: [producerId], references: [id])
+  lots       GreenLot[]
+}
+
+model GreenLot {
+  id           String       @id @default(uuid())
+  farmId       String
+  variety      String
+  process      ProcessType
+  harvestYear  Int
+  quantityKg   Float
+  createdAt    DateTime     @default(now())
+  farm         Farm         @relation(fields: [farmId], references: [id])
+  purchases    Purchase[]
+  roastBatches RoastBatch[]
+}
+
+model Purchase {
+  id          String   @id @default(uuid())
+  lotId       String
+  quantityKg  Float
+  pricePerKg  Float
+  purchasedAt DateTime
+  createdAt   DateTime @default(now())
+  lot         GreenLot @relation(fields: [lotId], references: [id])
+}
+
+model RoastProfile {
+  id      String       @id @default(uuid())
+  name    String
+  notes   String?
+  batches RoastBatch[]
+}
+
+model RoastBatch {
+  id             String        @id @default(uuid())
+  greenLotId     String
+  roastProfileId String?
+  inputKg        Float
+  outputKg       Float
+  yieldPercent   Float?
+  lossPercent    Float?
+  roastedAt      DateTime
+  createdAt      DateTime      @default(now())
+  greenLot       GreenLot      @relation(fields: [greenLotId], references: [id])
+  roastProfile   RoastProfile? @relation(fields: [roastProfileId], references: [id])
+  roastedBatch   RoastedBatch?
+}
+
+model RoastedBatch {
+  id           String      @id @default(uuid())
+  roastBatchId String      @unique
+  quantityKg   Float
+  bagSizeKg    Float       @default(20)
+  bagCount     Int
+  createdAt    DateTime    @default(now())
+  contracts    Contract[]
+  orders       OrderItem[]
+  roastBatch   RoastBatch  @relation(fields: [roastBatchId], references: [id])
+}
+
+model Company {
+  id        String     @id @default(uuid())
+  name      String
+  country   String
+  createdAt DateTime   @default(now())
+  contracts Contract[]
+  orders    Order[]
+  users     User[]
+}
+
+model Contract {
+  id              String           @id @default(uuid())
+  companyId       String
+  roastedBatchId  String?
+  monthlyVolumeKg Float
+  durationMonths  Int
+  remainingMonths Int
+  pricePerBag     Float
+  bagSizeKg       Float            @default(20)
+  bagsPerDelivery Int
+  startDate       DateTime
+  endDate         DateTime?
+  nextExecution   DateTime?
+  status          ContractStatus   @default(PENDING)
+  createdAt       DateTime         @default(now())
+  company         Company          @relation(fields: [companyId], references: [id])
+  roastedBatch    RoastedBatch?    @relation(fields: [roastedBatchId], references: [id])
+  orders          Order[]
+  signatureTokens SignatureToken[]
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  companyId  String
+  contractId String?
+  status     OrderStatus
+  createdAt  DateTime    @default(now())
+  company    Company     @relation(fields: [companyId], references: [id])
+  contract   Contract?   @relation(fields: [contractId], references: [id])
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id             String       @id @default(uuid())
+  orderId        String
+  roastedBatchId String
+  bags           Int
+  pricePerBag    Float
+  order          Order        @relation(fields: [orderId], references: [id])
+  roastedBatch   RoastedBatch @relation(fields: [roastedBatchId], references: [id])
+}
+
+model SignatureToken {
+  token      String   @id
+  contractId String
+  phone      String
+  expiresAt  DateTime
+  verified   Boolean  @default(false)
+  signed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  contract   Contract @relation(fields: [contractId], references: [id])
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  companyId    String?
+  createdAt    DateTime @default(now())
+  company      Company? @relation(fields: [companyId], references: [id])
+}
+
+enum ProcessType {
+  WASHED
+  NATURAL
+  HONEY
+  ANAEROBIC
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+}
+
+enum ContractStatus {
+  PENDING
+  AWAITING_SIGNATURE
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}

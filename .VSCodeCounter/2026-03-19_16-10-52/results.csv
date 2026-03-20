@@ -1,0 +1,188 @@
+"filename", "language", "JSON with Comments", "TypeScript", "JavaScript", "MS SQL", "JSON", "TypeScript JSX", "PostCSS", "Markdown", "comment", "blank", "total"
+"c:\Users\BG420\coffee-platform\README.md", "Markdown", 0, 0, 0, 0, 0, 0, 0, 23, 0, 14, 37
+"c:\Users\BG420\coffee-platform\app\api\contracts\amend\route.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\app\api\contracts\create\route.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 8, 24, 82
+"c:\Users\BG420\coffee-platform\app\api\contracts\route.ts", "TypeScript", 0, 18, 0, 0, 0, 0, 0, 0, 3, 12, 33
+"c:\Users\BG420\coffee-platform\app\api\dev\reset-contracts\route.ts", "TypeScript", 0, 23, 0, 0, 0, 0, 0, 0, 6, 12, 41
+"c:\Users\BG420\coffee-platform\app\api\signature\request\route.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 24, 34, 108
+"c:\Users\BG420\coffee-platform\app\api\signature\sign\route.ts", "TypeScript", 0, 56, 0, 0, 0, 0, 0, 0, 15, 27, 98
+"c:\Users\BG420\coffee-platform\app\api\signature\verify\route.ts", "TypeScript", 0, 46, 0, 0, 0, 0, 0, 0, 24, 41, 111
+"c:\Users\BG420\coffee-platform\app\contract\create\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 134, 0, 0, 15, 67, 216
+"c:\Users\BG420\coffee-platform\app\contract\create\step1Client.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 169, 0, 0, 25, 88, 282
+"c:\Users\BG420\coffee-platform\app\contract\create\step2Supply.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 160, 0, 0, 41, 87, 288
+"c:\Users\BG420\coffee-platform\app\contract\create\step3Preview.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 171, 0, 0, 39, 81, 291
+"c:\Users\BG420\coffee-platform\app\contract\pilot\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 58, 0, 0, 3, 31, 92
+"c:\Users\BG420\coffee-platform\app\globals.css", "PostCSS", 0, 0, 0, 0, 0, 0, 837, 0, 53, 205, 1095
+"c:\Users\BG420\coffee-platform\app\lab\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 133, 0, 0, 17, 49, 199
+"c:\Users\BG420\coffee-platform\app\layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 34, 0, 0, 3, 11, 48
+"c:\Users\BG420\coffee-platform\app\legacy\hybridengineconcept.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 1960, 864, 2824
+"c:\Users\BG420\coffee-platform\app\legacy\simulationDemo_old.ts", "TypeScript", 0, 657, 0, 0, 0, 0, 0, 0, 218, 272, 1147
+"c:\Users\BG420\coffee-platform\app\login\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 43, 0, 0, 24, 29, 96
+"c:\Users\BG420\coffee-platform\app\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 94, 0, 0, 4, 12, 110
+"c:\Users\BG420\coffee-platform\app\platform\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 1695, 0, 0, 163, 472, 2330
+"c:\Users\BG420\coffee-platform\app\sign\[token]\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 160, 0, 0, 19, 61, 240
+"c:\Users\BG420\coffee-platform\app\signup\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 37, 0, 0, 0, 15, 52
+"c:\Users\BG420\coffee-platform\eslint.config.mjs", "JavaScript", 0, 0, 14, 0, 0, 0, 0, 0, 2, 3, 19
+"c:\Users\BG420\coffee-platform\lib\auth.ts", "TypeScript", 0, 16, 0, 0, 0, 0, 0, 0, 0, 3, 19
+"c:\Users\BG420\coffee-platform\lib\getUserFromRequest.ts", "TypeScript", 0, 17, 0, 0, 0, 0, 0, 0, 0, 5, 22
+"c:\Users\BG420\coffee-platform\lib\supabase.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\next.config.ts", "TypeScript", 0, 4, 0, 0, 0, 0, 0, 0, 1, 3, 8
+"c:\Users\BG420\coffee-platform\package-lock.json", "JSON", 0, 0, 0, 0, 7292, 0, 0, 0, 0, 1, 7293
+"c:\Users\BG420\coffee-platform\package.json", "JSON", 0, 0, 0, 0, 30, 0, 0, 0, 0, 1, 31
+"c:\Users\BG420\coffee-platform\postcss.config.mjs", "JavaScript", 0, 0, 6, 0, 0, 0, 0, 0, 0, 2, 8
+"c:\Users\BG420\coffee-platform\prisma\migrations\init.sql", "MS SQL", 0, 0, 0, 109, 0, 0, 0, 0, 26, 38, 173
+"c:\Users\BG420\coffee-platform\src\AI\advisor\AIStrategicAdvisor.ts", "TypeScript", 0, 63, 0, 0, 0, 0, 0, 0, 19, 56, 138
+"c:\Users\BG420\coffee-platform\src\AI\advisor\coffeeSupplyAdvisor.ts", "TypeScript", 0, 117, 0, 0, 0, 0, 0, 0, 53, 81, 251
+"c:\Users\BG420\coffee-platform\src\AI\agent\AutonomousStrategyAgent.ts", "TypeScript", 0, 134, 0, 0, 0, 0, 0, 0, 58, 79, 271
+"c:\Users\BG420\coffee-platform\src\AI\analytics\PnLEngine.ts", "TypeScript", 0, 17, 0, 0, 0, 0, 0, 0, 6, 10, 33
+"c:\Users\BG420\coffee-platform\src\AI\analytics\StrategyLeaderboard.ts", "TypeScript", 0, 34, 0, 0, 0, 0, 0, 0, 11, 17, 62
+"c:\Users\BG420\coffee-platform\src\AI\analytics\TradeClosureEngine.ts", "TypeScript", 0, 18, 0, 0, 0, 0, 0, 0, 3, 14, 35
+"c:\Users\BG420\coffee-platform\src\AI\dashboard\GlobalRiskDashboardEngine.ts", "TypeScript", 0, 57, 0, 0, 0, 0, 0, 0, 21, 33, 111
+"c:\Users\BG420\coffee-platform\src\AI\decision\CommodityStrategyEngine.ts", "TypeScript", 0, 62, 0, 0, 0, 0, 0, 0, 15, 51, 128
+"c:\Users\BG420\coffee-platform\src\AI\decision\GlobalCommodityPortfolioOptimizer.ts", "TypeScript", 0, 72, 0, 0, 0, 0, 0, 0, 11, 48, 131
+"c:\Users\BG420\coffee-platform\src\AI\decision\GlobalTradeRouteOptimizer.ts", "TypeScript", 0, 63, 0, 0, 0, 0, 0, 0, 10, 46, 119
+"c:\Users\BG420\coffee-platform\src\AI\evolution\CapitalCompetitionEngine.ts", "TypeScript", 0, 37, 0, 0, 0, 0, 0, 0, 21, 30, 88
+"c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyArena.ts", "TypeScript", 0, 38, 0, 0, 0, 0, 0, 0, 24, 24, 86
+"c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyEvolutionEngine.ts", "TypeScript", 0, 44, 0, 0, 0, 0, 0, 0, 39, 31, 114
+"c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyGenome.ts", "TypeScript", 0, 18, 0, 0, 0, 0, 0, 0, 9, 15, 42
+"c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyMutationEngine.ts", "TypeScript", 0, 14, 0, 0, 0, 0, 0, 0, 6, 9, 29
+"c:\Users\BG420\coffee-platform\src\AI\execution\ExecutionRiskEngine.ts", "TypeScript", 0, 58, 0, 0, 0, 0, 0, 0, 27, 33, 118
+"c:\Users\BG420\coffee-platform\src\AI\execution\MarketImpactEngine.ts", "TypeScript", 0, 38, 0, 0, 0, 0, 0, 0, 29, 27, 94
+"c:\Users\BG420\coffee-platform\src\AI\execution\PositionSizingEngine.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 41, 35, 112
+"c:\Users\BG420\coffee-platform\src\AI\execution\selectBestRegion.ts", "TypeScript", 0, 15, 0, 0, 0, 0, 0, 0, 6, 14, 35
+"c:\Users\BG420\coffee-platform\src\AI\execution\selectBestTradeRoute.ts", "TypeScript", 0, 24, 0, 0, 0, 0, 0, 0, 6, 13, 43
+"c:\Users\BG420\coffee-platform\src\AI\foresight\CommodityOpportunityScanner.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 20, 31, 101
+"c:\Users\BG420\coffee-platform\src\AI\foresight\CommodityShockNetwork.ts", "TypeScript", 0, 43, 0, 0, 0, 0, 0, 0, 15, 29, 87
+"c:\Users\BG420\coffee-platform\src\AI\foresight\DecisionStressTest.ts", "TypeScript", 0, 31, 0, 0, 0, 0, 0, 0, 25, 23, 79
+"c:\Users\BG420\coffee-platform\src\AI\foresight\StrategicForecastEngine.ts", "TypeScript", 0, 80, 0, 0, 0, 0, 0, 0, 67, 51, 198
+"c:\Users\BG420\coffee-platform\src\AI\foresight\monteCarloMarketFutures.ts", "TypeScript", 0, 61, 0, 0, 0, 0, 0, 0, 29, 51, 141
+"c:\Users\BG420\coffee-platform\src\AI\foresight\predictiveSimulation.ts", "TypeScript", 0, 70, 0, 0, 0, 0, 0, 0, 44, 66, 180
+"c:\Users\BG420\coffee-platform\src\AI\interpretation\CommodityRegimeDetector.ts", "TypeScript", 0, 33, 0, 0, 0, 0, 0, 0, 13, 21, 67
+"c:\Users\BG420\coffee-platform\src\AI\interpretation\systemIntelligence.ts", "TypeScript", 0, 45, 0, 0, 0, 0, 0, 0, 61, 30, 136
+"c:\Users\BG420\coffee-platform\src\AI\learning\StrategyLearningEngine.ts", "TypeScript", 0, 16, 0, 0, 0, 0, 0, 0, 6, 9, 31
+"c:\Users\BG420\coffee-platform\src\AI\learning\TradeMemory.ts", "TypeScript", 0, 20, 0, 0, 0, 0, 0, 0, 9, 17, 46
+"c:\Users\BG420\coffee-platform\src\AI\market\CommodityPriceEngine.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 27, 45, 122
+"c:\Users\BG420\coffee-platform\src\AI\orchestration\runAISystem.ts", "TypeScript", 0, 312, 0, 0, 0, 0, 0, 0, 151, 180, 643
+"c:\Users\BG420\coffee-platform\src\AI\risk\CapitalAllocationEngine.ts", "TypeScript", 0, 15, 0, 0, 0, 0, 0, 0, 23, 16, 54
+"c:\Users\BG420\coffee-platform\src\AI\risk\PortfolioExposureEngine.ts", "TypeScript", 0, 26, 0, 0, 0, 0, 0, 0, 17, 19, 62
+"c:\Users\BG420\coffee-platform\src\AI\risk\PortfolioRebalancer.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 17, 23, 76
+"c:\Users\BG420\coffee-platform\src\AI\sensing\DemandIntelligence.ts", "TypeScript", 0, 26, 0, 0, 0, 0, 0, 0, 42, 23, 91
+"c:\Users\BG420\coffee-platform\src\AI\sensing\SupplyRiskIntelligence.ts", "TypeScript", 0, 28, 0, 0, 0, 0, 0, 0, 46, 23, 97
+"c:\Users\BG420\coffee-platform\src\AI\sensing\WeatherIntelligence.ts", "TypeScript", 0, 30, 0, 0, 0, 0, 0, 0, 42, 23, 95
+"c:\Users\BG420\coffee-platform\src\AI\simulation\GlobalScenarioEngine.ts", "TypeScript", 0, 33, 0, 0, 0, 0, 0, 0, 25, 39, 97
+"c:\Users\BG420\coffee-platform\src\AI\simulation\SupplyChainStressSimulator.ts", "TypeScript", 0, 57, 0, 0, 0, 0, 0, 0, 12, 50, 119
+"c:\Users\BG420\coffee-platform\src\brain\cascadeDetector.ts", "TypeScript", 0, 27, 0, 0, 0, 0, 0, 0, 12, 13, 52
+"c:\Users\BG420\coffee-platform\src\brain\cognitiveMemory.ts", "TypeScript", 0, 72, 0, 0, 0, 0, 0, 0, 36, 50, 158
+"c:\Users\BG420\coffee-platform\src\brain\phaseTransitionDetector.ts", "TypeScript", 0, 19, 0, 0, 0, 0, 0, 0, 16, 8, 43
+"c:\Users\BG420\coffee-platform\src\brain\regimeLearning.ts", "TypeScript", 0, 26, 0, 0, 0, 0, 0, 0, 5, 15, 46
+"c:\Users\BG420\coffee-platform\src\brain\systemBrain.ts", "TypeScript", 0, 78, 0, 0, 0, 0, 0, 0, 30, 41, 149
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\client\clientFactory.ts", "TypeScript", 0, 8, 0, 0, 0, 0, 0, 0, 0, 4, 12
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\client\clientProfiles.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 0, 14, 50
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\client\clientRequestGenerator.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\client\clientSession.ts", "TypeScript", 0, 25, 0, 0, 0, 0, 0, 0, 9, 15, 49
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\client\clientTypes.ts", "TypeScript", 0, 20, 0, 0, 0, 0, 0, 0, 0, 13, 33
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\signature\signatureController.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\signature\signatureService.ts", "TypeScript", 0, 26, 0, 0, 0, 0, 0, 0, 24, 24, 74
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\signature\signatureTokens.ts", "TypeScript", 0, 46, 0, 0, 0, 0, 0, 0, 0, 32, 78
+"c:\Users\BG420\coffee-platform\src\clientLayer\contracts\signature\signatureTypes.ts", "TypeScript", 0, 12, 0, 0, 0, 0, 0, 0, 0, 7, 19
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\activateContract.ts", "TypeScript", 0, 22, 0, 0, 0, 0, 0, 0, 9, 17, 48
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractController.ts", "TypeScript", 0, 39, 0, 0, 0, 0, 0, 0, 9, 38, 86
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractIntelligence.ts", "TypeScript", 0, 14, 0, 0, 0, 0, 0, 0, 1, 6, 21
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractLedger.ts", "TypeScript", 0, 44, 0, 0, 0, 0, 0, 0, 13, 41, 98
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractPDFGenerator.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 168, 0, 0, 33, 88, 289
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractProposal.ts", "TypeScript", 0, 11, 0, 0, 0, 0, 0, 0, 0, 10, 21
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractRegistry.ts", "TypeScript", 0, 24, 0, 0, 0, 0, 0, 0, 15, 23, 62
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractScheduler.ts", "TypeScript", 0, 29, 0, 0, 0, 0, 0, 0, 42, 28, 99
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractStore.ts", "TypeScript", 0, 60, 0, 0, 0, 0, 0, 0, 26, 51, 137
+"c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractTypes.ts", "TypeScript", 0, 15, 0, 0, 0, 0, 0, 0, 6, 13, 34
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotAuctionEngine.ts", "TypeScript", 0, 60, 0, 0, 0, 0, 0, 0, 22, 52, 134
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotDispatcher.ts", "TypeScript", 0, 18, 0, 0, 0, 0, 0, 0, 14, 15, 47
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotMarketEngine.ts", "TypeScript", 0, 63, 0, 0, 0, 0, 0, 0, 25, 52, 140
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotMarketLearning.ts", "TypeScript", 0, 66, 0, 0, 0, 0, 0, 0, 31, 53, 150
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotOfferEngine.ts", "TypeScript", 0, 51, 0, 0, 0, 0, 0, 0, 23, 44, 118
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotPortfolioEngine.ts", "TypeScript", 0, 81, 0, 0, 0, 0, 0, 0, 28, 62, 171
+"c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotPricingEngine.ts", "TypeScript", 0, 94, 0, 0, 0, 0, 0, 0, 30, 57, 181
+"c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientReputationDrift.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 26, 34, 96
+"c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientScoreEngine.ts", "TypeScript", 0, 66, 0, 0, 0, 0, 0, 0, 64, 46, 176
+"c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientTrustEngine.ts", "TypeScript", 0, 53, 0, 0, 0, 0, 0, 0, 21, 46, 120
+"c:\Users\BG420\coffee-platform\src\clientLayer\scoring\microLotAllocator.ts", "TypeScript", 0, 15, 0, 0, 0, 0, 0, 0, 7, 13, 35
+"c:\Users\BG420\coffee-platform\src\components\lab\AIControlPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 49, 0, 0, 2, 19, 70
+"c:\Users\BG420\coffee-platform\src\components\lab\CommodityMarketPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 61, 0, 0, 0, 24, 85
+"c:\Users\BG420\coffee-platform\src\components\lab\EngineCalibrationPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 76, 0, 0, 0, 21, 97
+"c:\Users\BG420\coffee-platform\src\components\lab\EngineResearchPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 219, 0, 0, 5, 33, 257
+"c:\Users\BG420\coffee-platform\src\components\lab\LeftPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 236, 0, 0, 25, 79, 340
+"c:\Users\BG420\coffee-platform\src\components\lab\RightLabPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 139, 0, 0, 3, 49, 191
+"c:\Users\BG420\coffee-platform\src\components\lab\StrategyLeaderboardPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 61, 0, 0, 6, 21, 88
+"c:\Users\BG420\coffee-platform\src\components\platform\ClientContractsPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 248, 0, 0, 58, 125, 431
+"c:\Users\BG420\coffee-platform\src\components\platform\ClientOverviewPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 225, 0, 0, 49, 105, 379
+"c:\Users\BG420\coffee-platform\src\components\platform\ClientTradingPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 343, 0, 0, 76, 140, 559
+"c:\Users\BG420\coffee-platform\src\components\platform\ContractTimelineModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 100, 0, 0, 0, 30, 130
+"c:\Users\BG420\coffee-platform\src\components\shared\CapacityBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\components\shared\SignalIndicator.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\database\contractRepository.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\database\prisma.ts", "TypeScript", 0, 11, 0, 0, 0, 0, 0, 0, 12, 12, 35
+"c:\Users\BG420\coffee-platform\src\decision\anticipatoryShortage.ts", "TypeScript", 0, 19, 0, 0, 0, 0, 0, 0, 4, 8, 31
+"c:\Users\BG420\coffee-platform\src\decision\capacityFrontier.ts", "TypeScript", 0, 34, 0, 0, 0, 0, 0, 0, 3, 12, 49
+"c:\Users\BG420\coffee-platform\src\decision\clientScoring.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\decision\computeSupplySecurityIndex.ts", "TypeScript", 0, 22, 0, 0, 0, 0, 0, 0, 9, 10, 41
+"c:\Users\BG420\coffee-platform\src\decision\decisionBridge.ts", "TypeScript", 0, 23, 0, 0, 0, 0, 0, 0, 5, 13, 41
+"c:\Users\BG420\coffee-platform\src\decision\decisionMemory.ts", "TypeScript", 0, 20, 0, 0, 0, 0, 0, 0, 5, 14, 39
+"c:\Users\BG420\coffee-platform\src\decision\decisionMomentum.ts", "TypeScript", 0, 13, 0, 0, 0, 0, 0, 0, 4, 5, 22
+"c:\Users\BG420\coffee-platform\src\decision\decisionPipeline.ts", "TypeScript", 0, 458, 0, 0, 0, 0, 0, 0, 171, 297, 926
+"c:\Users\BG420\coffee-platform\src\decision\liveDecision.ts", "TypeScript", 0, 284, 0, 0, 0, 0, 0, 0, 129, 157, 570
+"c:\Users\BG420\coffee-platform\src\decision\marketFeedback.ts", "TypeScript", 0, 25, 0, 0, 0, 0, 0, 0, 13, 19, 57
+"c:\Users\BG420\coffee-platform\src\decision\pendingRequests.ts", "TypeScript", 0, 45, 0, 0, 0, 0, 0, 0, 17, 23, 85
+"c:\Users\BG420\coffee-platform\src\decision\regionalImbalance.ts", "TypeScript", 0, 20, 0, 0, 0, 0, 0, 0, 4, 12, 36
+"c:\Users\BG420\coffee-platform\src\decision\regionalRiskDiagnostics.ts", "TypeScript", 0, 32, 0, 0, 0, 0, 0, 0, 13, 21, 66
+"c:\Users\BG420\coffee-platform\src\decision\replenishmentForecast.ts", "TypeScript", 0, 34, 0, 0, 0, 0, 0, 0, 13, 23, 70
+"c:\Users\BG420\coffee-platform\src\decision\riskModel.ts", "TypeScript", 0, 24, 0, 0, 0, 0, 0, 0, 25, 13, 62
+"c:\Users\BG420\coffee-platform\src\decision\semaphoreEvaluator.ts", "TypeScript", 0, 103, 0, 0, 0, 0, 0, 0, 28, 63, 194
+"c:\Users\BG420\coffee-platform\src\decision\semaphoreLogic.ts", "TypeScript", 0, 29, 0, 0, 0, 0, 0, 0, 12, 16, 57
+"c:\Users\BG420\coffee-platform\src\decision\supplyCascadeRisk.ts", "TypeScript", 0, 17, 0, 0, 0, 0, 0, 0, 4, 10, 31
+"c:\Users\BG420\coffee-platform\src\decision\supplyPlanner.ts", "TypeScript", 0, 38, 0, 0, 0, 0, 0, 0, 16, 26, 80
+"c:\Users\BG420\coffee-platform\src\decision\volumeSuggestion.ts", "TypeScript", 0, 41, 0, 0, 0, 0, 0, 0, 4, 13, 58
+"c:\Users\BG420\coffee-platform\src\engine\adaptiveStress.ts", "TypeScript", 0, 27, 0, 0, 0, 0, 0, 0, 10, 10, 47
+"c:\Users\BG420\coffee-platform\src\engine\engineOperational.ts", "TypeScript", 0, 77, 0, 0, 0, 0, 0, 0, 41, 60, 178
+"c:\Users\BG420\coffee-platform\src\engine\modelPhysics.ts", "TypeScript", 0, 78, 0, 0, 0, 0, 0, 0, 67, 43, 188
+"c:\Users\BG420\coffee-platform\src\engine\runtime.ts", "TypeScript", 0, 829, 0, 0, 0, 0, 0, 0, 510, 505, 1844
+"c:\Users\BG420\coffee-platform\src\engine\simulationReal.ts", "TypeScript", 0, 764, 0, 0, 0, 0, 0, 0, 319, 340, 1423
+"c:\Users\BG420\coffee-platform\src\engine\useEngineBridge.ts", "TypeScript", 0, 89, 0, 0, 0, 0, 0, 0, 6, 20, 115
+"c:\Users\BG420\coffee-platform\src\events\contractEventBridge.ts", "TypeScript", 0, 12, 0, 0, 0, 0, 0, 0, 6, 11, 29
+"c:\Users\BG420\coffee-platform\src\events\eventBus.ts", "TypeScript", 0, 2, 0, 0, 0, 0, 0, 0, 6, 3, 11
+"c:\Users\BG420\coffee-platform\src\events\eventTypes.ts", "TypeScript", 0, 10, 0, 0, 0, 0, 0, 0, 7, 6, 23
+"c:\Users\BG420\coffee-platform\src\hooks\useEngineRuntime.ts", "TypeScript", 0, 67, 0, 0, 0, 0, 0, 0, 32, 49, 148
+"c:\Users\BG420\coffee-platform\src\market\globalMarketState.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\services\contracts.service.ts", "TypeScript", 0, 45, 0, 0, 0, 0, 0, 0, 43, 19, 107
+"c:\Users\BG420\coffee-platform\src\services\inventory.service.ts", "TypeScript", 0, 29, 0, 0, 0, 0, 0, 0, 0, 9, 38
+"c:\Users\BG420\coffee-platform\src\services\roasting.service.ts", "TypeScript", 0, 44, 0, 0, 0, 0, 0, 0, 0, 10, 54
+"c:\Users\BG420\coffee-platform\src\signals\marketSignals.ts", "TypeScript", 0, 57, 0, 0, 0, 0, 0, 0, 39, 20, 116
+"c:\Users\BG420\coffee-platform\src\signals\signalFirewall.ts", "TypeScript", 0, 28, 0, 0, 0, 0, 0, 0, 7, 7, 42
+"c:\Users\BG420\coffee-platform\src\signals\signalRegistry.ts", "TypeScript", 0, 4, 0, 0, 0, 0, 0, 0, 34, 3, 41
+"c:\Users\BG420\coffee-platform\src\spatialMarket\RunSpatialMarkets\runSpatialMarket.ts", "TypeScript", 0, 66, 0, 0, 0, 0, 0, 0, 47, 39, 152
+"c:\Users\BG420\coffee-platform\src\spatialMarket\cascade\commodityShockPropagation.ts", "TypeScript", 0, 40, 0, 0, 0, 0, 0, 0, 42, 46, 128
+"c:\Users\BG420\coffee-platform\src\spatialMarket\cascade\globalShockMemory.ts", "TypeScript", 0, 78, 0, 0, 0, 0, 0, 0, 56, 82, 216
+"c:\Users\BG420\coffee-platform\src\spatialMarket\cascade\shockDecayEngine.ts", "TypeScript", 0, 24, 0, 0, 0, 0, 0, 0, 39, 32, 95
+"c:\Users\BG420\coffee-platform\src\spatialMarket\cascade\shockPropagation.ts", "TypeScript", 0, 49, 0, 0, 0, 0, 0, 0, 31, 44, 124
+"c:\Users\BG420\coffee-platform\src\spatialMarket\cascade\supplyCascadeGraph.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\spatialMarket\export\exportOpportunityEngine.ts", "TypeScript", 0, 61, 0, 0, 0, 0, 0, 0, 27, 63, 151
+"c:\Users\BG420\coffee-platform\src\spatialMarket\export\exportScore.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\spatialMarket\flows\commodityFlowEngine.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 31, 58, 139
+"c:\Users\BG420\coffee-platform\src\spatialMarket\flows\tradeGravityModel.ts", "TypeScript", 0, 29, 0, 0, 0, 0, 0, 0, 32, 31, 92
+"c:\Users\BG420\coffee-platform\src\spatialMarket\graph\commodityDependencyGraph.ts", "TypeScript", 0, 57, 0, 0, 0, 0, 0, 0, 48, 30, 135
+"c:\Users\BG420\coffee-platform\src\spatialMarket\graph\commodityGraph.ts", "TypeScript", 0, 45, 0, 0, 0, 0, 0, 0, 26, 55, 126
+"c:\Users\BG420\coffee-platform\src\spatialMarket\logistics\logisticsNetwork.ts", "TypeScript", 0, 16, 0, 0, 0, 0, 0, 0, 29, 23, 68
+"c:\Users\BG420\coffee-platform\src\spatialMarket\logistics\portCongestionModel.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\spatialMarket\logistics\routeCostEngine.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\spatialMarket\pricing\priceSurface.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\spatialMarket\pricing\spatialPriceEngine.ts", "TypeScript", 0, 69, 0, 0, 0, 0, 0, 0, 43, 59, 171
+"c:\Users\BG420\coffee-platform\src\spatialMarket\regions\regionInventoryEngine.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 32, 32, 100
+"c:\Users\BG420\coffee-platform\src\spatialMarket\regions\regionRegistry.ts", "TypeScript", 0, 40, 0, 0, 0, 0, 0, 0, 26, 37, 103
+"c:\Users\BG420\coffee-platform\src\spatialMarket\regions\regionTypes.ts", "TypeScript", 0, 10, 0, 0, 0, 0, 0, 0, 9, 12, 31
+"c:\Users\BG420\coffee-platform\src\utils\time.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\utils\uuid.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"c:\Users\BG420\coffee-platform\src\websocket\startWebsocket.ts", "TypeScript", 0, 4, 0, 0, 0, 0, 0, 0, 3, 3, 10
+"c:\Users\BG420\coffee-platform\src\websocket\websocketClient.ts", "TypeScript", 0, 32, 0, 0, 0, 0, 0, 0, 12, 30, 74
+"c:\Users\BG420\coffee-platform\src\websocket\websocketGateway.ts", "TypeScript", 0, 39, 0, 0, 0, 0, 0, 0, 16, 26, 81
+"c:\Users\BG420\coffee-platform\src\websocket\websocketServer.ts", "TypeScript", 0, 16, 0, 0, 0, 0, 0, 0, 15, 23, 54
+"c:\Users\BG420\coffee-platform\tsconfig.json", "JSON with Comments", 33, 0, 0, 0, 0, 0, 0, 0, 0, 2, 35
+"Total", "-", 33, 8429, 20, 109, 7322, 4813, 837, 23, 6782, 8295, 36663

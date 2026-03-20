@@ -1,0 +1,92 @@
+Date : 2026-03-18 20:03:20
+Directory : c:\Users\BG420\coffee-platform
+Total : 41 files,  872 codes, 846 comments, 1073 blanks, all 2791 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| TypeScript     |         38 |      1,541 |        840 |      1,048 |      3,429 |
+| TypeScript JSX |          2 |         74 |          6 |         25 |        105 |
+| JSON           |          1 |       -743 |          0 |          0 |       -743 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                   |         41 |        872 |        846 |      1,073 |      2,791 |
+| . (Files)                                                                           |          1 |       -743 |          0 |          0 |       -743 |
+| app                                                                                 |          1 |         13 |          0 |          4 |         17 |
+| app\lab                                                                             |          1 |         13 |          0 |          4 |         17 |
+| src                                                                                 |         39 |      1,602 |        846 |      1,069 |      3,517 |
+| src\AI                                                                              |         17 |        652 |        348 |        438 |      1,438 |
+| src\AI\advisor                                                                      |          1 |        117 |         53 |         81 |        251 |
+| src\AI\agent                                                                        |          1 |         35 |          8 |          6 |         49 |
+| src\AI\analytics                                                                    |          3 |         69 |         20 |         41 |        130 |
+| src\AI\evolution                                                                    |          5 |        151 |         99 |        109 |        359 |
+| src\AI\execution                                                                    |          1 |         36 |         41 |         35 |        112 |
+| src\AI\learning                                                                     |          2 |         36 |         15 |         26 |         77 |
+| src\AI\orchestration                                                                |          1 |        131 |         55 |         82 |        268 |
+| src\AI\risk                                                                         |          3 |         77 |         57 |         58 |        192 |
+| src\clientLayer                                                                     |         12 |        610 |        330 |        487 |      1,427 |
+| src\clientLayer\layer                                                               |          1 |          7 |         39 |         13 |         59 |
+| src\clientLayer\microlots                                                           |          7 |        433 |        173 |        335 |        941 |
+| src\clientLayer\scoring                                                             |          4 |        170 |        118 |        139 |        427 |
+| src\components                                                                      |          1 |         61 |          6 |         21 |         88 |
+| src\components\lab                                                                  |          1 |         61 |          6 |         21 |         88 |
+| src\decision                                                                        |          2 |         14 |          4 |          6 |         24 |
+| src\engine                                                                          |          1 |         86 |         72 |         58 |        216 |
+| src\events                                                                          |          1 |          4 |          4 |          0 |          8 |
+| src\market                                                                          |          1 |          0 |          0 |          1 |          1 |
+| src\services                                                                        |          3 |        118 |         43 |         38 |        199 |
+| src\signals                                                                         |          1 |         57 |         39 |         20 |        116 |
++-------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                            | language       | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| c:\Users\BG420\coffee-platform\app\lab\page.tsx                                     | TypeScript JSX |         13 |          0 |          4 |         17 |
+| c:\Users\BG420\coffee-platform\package-lock.json                                    | JSON           |       -743 |          0 |          0 |       -743 |
+| c:\Users\BG420\coffee-platform\src\AI\advisor\coffeeSupplyAdvisor.ts                | TypeScript     |        117 |         53 |         81 |        251 |
+| c:\Users\BG420\coffee-platform\src\AI\agent\AutonomousStrategyAgent.ts              | TypeScript     |         35 |          8 |          6 |         49 |
+| c:\Users\BG420\coffee-platform\src\AI\analytics\PnLEngine.ts                        | TypeScript     |         17 |          6 |         10 |         33 |
+| c:\Users\BG420\coffee-platform\src\AI\analytics\StrategyLeaderboard.ts              | TypeScript     |         34 |         11 |         17 |         62 |
+| c:\Users\BG420\coffee-platform\src\AI\analytics\TradeClosureEngine.ts               | TypeScript     |         18 |          3 |         14 |         35 |
+| c:\Users\BG420\coffee-platform\src\AI\evolution\CapitalCompetitionEngine.ts         | TypeScript     |         37 |         21 |         30 |         88 |
+| c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyArena.ts                    | TypeScript     |         38 |         24 |         24 |         86 |
+| c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyEvolutionEngine.ts          | TypeScript     |         44 |         39 |         31 |        114 |
+| c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyGenome.ts                   | TypeScript     |         18 |          9 |         15 |         42 |
+| c:\Users\BG420\coffee-platform\src\AI\evolution\StrategyMutationEngine.ts           | TypeScript     |         14 |          6 |          9 |         29 |
+| c:\Users\BG420\coffee-platform\src\AI\execution\PositionSizingEngine.ts             | TypeScript     |         36 |         41 |         35 |        112 |
+| c:\Users\BG420\coffee-platform\src\AI\learning\StrategyLearningEngine.ts            | TypeScript     |         16 |          6 |          9 |         31 |
+| c:\Users\BG420\coffee-platform\src\AI\learning\TradeMemory.ts                       | TypeScript     |         20 |          9 |         17 |         46 |
+| c:\Users\BG420\coffee-platform\src\AI\orchestration\runAISystem.ts                  | TypeScript     |        131 |         55 |         82 |        268 |
+| c:\Users\BG420\coffee-platform\src\AI\risk\CapitalAllocationEngine.ts               | TypeScript     |         15 |         23 |         16 |         54 |
+| c:\Users\BG420\coffee-platform\src\AI\risk\PortfolioExposureEngine.ts               | TypeScript     |         26 |         17 |         19 |         62 |
+| c:\Users\BG420\coffee-platform\src\AI\risk\PortfolioRebalancer.ts                   | TypeScript     |         36 |         17 |         23 |         76 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractScheduler.ts           | TypeScript     |          7 |         39 |         13 |         59 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotAuctionEngine.ts   | TypeScript     |         60 |         22 |         52 |        134 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotDispatcher.ts      | TypeScript     |         18 |         14 |         15 |         47 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotMarketEngine.ts    | TypeScript     |         63 |         25 |         52 |        140 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotMarketLearning.ts  | TypeScript     |         66 |         31 |         53 |        150 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotOfferEngine.ts     | TypeScript     |         51 |         23 |         44 |        118 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotPortfolioEngine.ts | TypeScript     |         81 |         28 |         62 |        171 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\microlots\microLotPricingEngine.ts   | TypeScript     |         94 |         30 |         57 |        181 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientReputationDrift.ts     | TypeScript     |         36 |         26 |         34 |         96 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientScoreEngine.ts         | TypeScript     |         66 |         64 |         46 |        176 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\scoring\clientTrustEngine.ts         | TypeScript     |         53 |         21 |         46 |        120 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\scoring\microLotAllocator.ts         | TypeScript     |         15 |          7 |         13 |         35 |
+| c:\Users\BG420\coffee-platform\src\components\lab\StrategyLeaderboardPanel.tsx      | TypeScript JSX |         61 |          6 |         21 |         88 |
+| c:\Users\BG420\coffee-platform\src\decision\clientScoring.ts                        | TypeScript     |          0 |          0 |          1 |          1 |
+| c:\Users\BG420\coffee-platform\src\decision\liveDecision.ts                         | TypeScript     |         14 |          4 |          5 |         23 |
+| c:\Users\BG420\coffee-platform\src\engine\runtime.ts                                | TypeScript     |         86 |         72 |         58 |        216 |
+| c:\Users\BG420\coffee-platform\src\events\eventTypes.ts                             | TypeScript     |          4 |          4 |          0 |          8 |
+| c:\Users\BG420\coffee-platform\src\market\globalMarketState.ts                      | TypeScript     |          0 |          0 |          1 |          1 |
+| c:\Users\BG420\coffee-platform\src\services\contracts.service.ts                    | TypeScript     |         45 |         43 |         19 |        107 |
+| c:\Users\BG420\coffee-platform\src\services\inventory.service.ts                    | TypeScript     |         29 |          0 |          9 |         38 |
+| c:\Users\BG420\coffee-platform\src\services\roasting.service.ts                     | TypeScript     |         44 |          0 |         10 |         54 |
+| c:\Users\BG420\coffee-platform\src\signals\marketSignals.ts                         | TypeScript     |         57 |         39 |         20 |        116 |
+| Total                                                                               |                |        872 |        846 |      1,073 |      2,791 |
++-------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

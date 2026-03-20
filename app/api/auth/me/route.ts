@@ -1,0 +1,81 @@
+import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { prisma } from "@/database/prisma"
+import { verifyToken } from "../../../../src/lib/auth"
+
+// 🔥 CLAVE: evita cache en Next
+export const dynamic = "force-dynamic"
+
+// =====================================================
+// GET CURRENT USER (SESSION)
+// =====================================================
+
+export async function GET() {
+  try {
+    // =====================================================
+    // GET TOKEN FROM COOKIE
+    // =====================================================
+
+    const cookieStore = await cookies()
+    const token = cookieStore.get("auth_token")?.value
+
+    if (!token) {
+      return NextResponse.json(
+        { user: null },
+        { status: 401 }
+      )
+    }
+
+    // =====================================================
+    // VERIFY TOKEN
+    // =====================================================
+
+    const payload = verifyToken(token)
+
+    if (!payload) {
+      return NextResponse.json(
+        { user: null },
+        { status: 401 }
+      )
+    }
+
+    // =====================================================
+    // GET USER FROM DB
+    // =====================================================
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      include: {
+        company: true
+      }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { user: null },
+        { status: 401 }
+      )
+    }
+
+    // =====================================================
+    // RETURN SAFE USER
+    // =====================================================
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        company: user.company
+      }
+    })
+
+  } catch (error) {
+    console.error("❌ AUTH ME ERROR:", error)
+
+    return NextResponse.json(
+      { user: null },
+      { status: 500 }
+    )
+  }
+}
