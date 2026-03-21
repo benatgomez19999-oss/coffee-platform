@@ -1,19 +1,28 @@
-"use client";
+// =====================================================
+// VERIFY PAGE (SERVER SAFE — NO BUILD ERROR)
+// =====================================================
 
 export const dynamic = "force-dynamic";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+export default function VerifyPage({
+  searchParams,
+}: {
+  searchParams: { token?: string };
+}) {
+  const token = searchParams.token;
 
-export default function VerifyPage() {
-  const params = useSearchParams();
-  const token = params.get("token");
+  if (!token) {
+    return <p>Invalid verification link</p>;
+  }
 
-  useEffect(() => {
-    if (token) {
-      window.location.href = `/api/auth/verify?token=${token}`;
-    }
-  }, [token]);
+  // =====================================================
+  // REDIRECT SERVER SIDE
+  // =====================================================
 
-  return <p>Verifying your account...</p>;
+  return (
+    <meta
+      httpEquiv="refresh"
+      content={`0; url=/api/auth/verify?token=${token}`}
+    />
+  );
 }
