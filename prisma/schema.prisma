@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//////////////////////////////////////////////////////
+// 🌱 CORE DOMAIN (COFFEE SUPPLY CHAIN)
+//////////////////////////////////////////////////////
+
 model Producer {
   id        String   @id @default(uuid())
   name      String
@@ -32,6 +36,7 @@ model GreenLot {
   harvestYear  Int
   quantityKg   Float
   createdAt    DateTime     @default(now())
+
   farm         Farm         @relation(fields: [farmId], references: [id])
   purchases    Purchase[]
   roastBatches RoastBatch[]
@@ -44,6 +49,7 @@ model Purchase {
   pricePerKg  Float
   purchasedAt DateTime
   createdAt   DateTime @default(now())
+
   lot         GreenLot @relation(fields: [lotId], references: [id])
 }
 
@@ -64,6 +70,7 @@ model RoastBatch {
   lossPercent    Float?
   roastedAt      DateTime
   createdAt      DateTime      @default(now())
+
   greenLot       GreenLot      @relation(fields: [greenLotId], references: [id])
   roastProfile   RoastProfile? @relation(fields: [roastProfileId], references: [id])
   roastedBatch   RoastedBatch?
@@ -76,38 +83,54 @@ model RoastedBatch {
   bagSizeKg    Float       @default(20)
   bagCount     Int
   createdAt    DateTime    @default(now())
+
+  roastBatch   RoastBatch  @relation(fields: [roastBatchId], references: [id])
   contracts    Contract[]
   orders       OrderItem[]
-  roastBatch   RoastBatch  @relation(fields: [roastBatchId], references: [id])
 }
+
+//////////////////////////////////////////////////////
+// 🏢 MULTI-TENANT (COMPANIES)
+//////////////////////////////////////////////////////
 
 model Company {
   id        String     @id @default(uuid())
   name      String
   country   String
   createdAt DateTime   @default(now())
+
+  users     User[]
   contracts Contract[]
   orders    Order[]
-  users     User[]
 }
+
+//////////////////////////////////////////////////////
+// 📄 CONTRACTS & ORDERS
+//////////////////////////////////////////////////////
 
 model Contract {
   id              String           @id @default(uuid())
   companyId       String
   roastedBatchId  String?
+
   monthlyVolumeKg Float
   durationMonths  Int
   remainingMonths Int
+
   pricePerBag     Float
   bagSizeKg       Float            @default(20)
   bagsPerDelivery Int
+
   startDate       DateTime
   endDate         DateTime?
   nextExecution   DateTime?
+
   status          ContractStatus   @default(PENDING)
   createdAt       DateTime         @default(now())
+
   company         Company          @relation(fields: [companyId], references: [id])
   roastedBatch    RoastedBatch?    @relation(fields: [roastedBatchId], references: [id])
+
   orders          Order[]
   signatureTokens SignatureToken[]
 }
@@ -118,6 +141,7 @@ model Order {
   contractId String?
   status     OrderStatus
   createdAt  DateTime    @default(now())
+
   company    Company     @relation(fields: [companyId], references: [id])
   contract   Contract?   @relation(fields: [contractId], references: [id])
   items      OrderItem[]
@@ -129,9 +153,14 @@ model OrderItem {
   roastedBatchId String
   bags           Int
   pricePerBag    Float
+
   order          Order        @relation(fields: [orderId], references: [id])
   roastedBatch   RoastedBatch @relation(fields: [roastedBatchId], references: [id])
 }
+
+//////////////////////////////////////////////////////
+// ✍️ SIGNATURE FLOW (YA LO TENÍAS — MUY BIEN)
+//////////////////////////////////////////////////////
 
 model SignatureToken {
   token      String   @id
@@ -141,18 +170,75 @@ model SignatureToken {
   verified   Boolean  @default(false)
   signed     Boolean  @default(false)
   createdAt  DateTime @default(now())
+
   contract   Contract @relation(fields: [contractId], references: [id])
 }
+
+//////////////////////////////////////////////////////
+// 🔐 AUTH SYSTEM (NUEVO — PRO LEVEL)
+//////////////////////////////////////////////////////
 
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String
   name         String?
+
+  // 🔥 NUEVO
+  phone        String?
+  role         String?   // futuro RBAC (ADMIN, BUYER, etc.)
+
+  isVerified   Boolean   @default(false)
+  twoFactorEnabled Boolean @default(false)
+
   companyId    String?
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   company      Company? @relation(fields: [companyId], references: [id])
+
+  verificationTokens VerificationToken[]
+  otpCodes OTPCode[]
+
+  @@index([companyId])
 }
+
+//////////////////////////////////////////////////////
+// 📧 EMAIL VERIFICATION
+//////////////////////////////////////////////////////
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+//////////////////////////////////////////////////////
+// 📲 2FA (OTP SMS)
+//////////////////////////////////////////////////////
+
+model OTPCode {
+  id        String   @id @default(uuid())
+  code      String
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, code])
+}
+
+//////////////////////////////////////////////////////
+// 📊 ENUMS
+//////////////////////////////////////////////////////
 
 enum ProcessType {
   WASHED
