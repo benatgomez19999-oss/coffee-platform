@@ -42,7 +42,7 @@ export type ContractDraft = {
 
 export default function ContractCreatePage() {
 
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams()!
   
   const mode = searchParams.get("mode")
   const contractId = searchParams.get("contractId")

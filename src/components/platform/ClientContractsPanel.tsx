@@ -19,7 +19,7 @@ import { getRegisteredContracts } from "@/clientLayer/layer/contractRegistry"
 export default function ClientContractsPanel({ contracts }: { contracts: any[] }) {
 
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams()!
 
   const contractSuccess =
     searchParams.get("contract") === "success"

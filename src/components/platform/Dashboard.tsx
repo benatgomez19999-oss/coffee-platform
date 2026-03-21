@@ -42,7 +42,7 @@ const [contracts, setContracts] = useState<any[]>([])
 // SUCESSFULL CONTRACT
 // ======================================================
 
-const searchParams = useSearchParams()
+const searchParams = useSearchParams()!
 
 const contractSuccess =
   searchParams.get("contract") === "success"
