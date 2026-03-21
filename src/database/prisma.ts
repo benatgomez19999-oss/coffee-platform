@@ -1,16 +1,26 @@
 // =====================================================
-// PRISMA CLIENT (SINGLETON SAFE FOR VERCEL)
+// PRISMA CLIENT (FORCED ENV FIX FOR VERCEL)
 // =====================================================
 
 import { PrismaClient } from "@prisma/client"
 
 // =====================================================
-// GLOBAL TYPE (evita múltiples instancias en dev / hot reload)
+// GLOBAL TYPE
 // =====================================================
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
+
+// =====================================================
+// SELECT DATABASE URL (FORCE NEW ENV)
+// =====================================================
+
+const databaseUrl =
+  process.env.DATABASE_URL_NEW || process.env.DATABASE_URL
+
+// DEBUG (muy importante ahora)
+console.log("🔥 PRISMA USING DB:", databaseUrl)
 
 // =====================================================
 // CREATE CLIENT
@@ -19,7 +29,12 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ["error"], // opcional: logs mínimos (evita ruido en Vercel)
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+    log: ["error"],
   })
 
 // =====================================================
