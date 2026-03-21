@@ -118,7 +118,8 @@ export async function POST(req: Request) {
     // 🔗 VERIFY LINK
     // =====================================================
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${verificationToken}`;
+   const origin = req.headers.get("origin")
+const verifyUrl = `${origin}/api/auth/verify?token=${verificationToken}`;
 
     console.log("🔥 VERIFY LINK:", verifyUrl);
 
