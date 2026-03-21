@@ -87,9 +87,11 @@ export async function GET(req: Request) {
     if (existingUser) {
       console.log("⚠️ USER ALREADY EXISTS");
 
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/login?verified=true`
-      );
+      const origin = req.headers.get("origin")
+
+return NextResponse.redirect(
+  `${origin}/login?verified=true`
+)
     }
 
     // =====================================================
@@ -122,9 +124,11 @@ export async function GET(req: Request) {
     // REDIRECT
     // =====================================================
 
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login?verified=true`
-    );
+    const origin = req.headers.get("origin")
+
+return NextResponse.redirect(
+  `${origin}/login?verified=true`
+)
 
   } catch (error) {
     console.error("❌ VERIFY ERROR:", error);
