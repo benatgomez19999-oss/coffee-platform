@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { hashPassword, signToken } from "@/lib/auth"; // ✅ path limpio
+import { hashPassword } from "@/lib/auth";
+import crypto from "crypto";
+import { sendEmail } from "@/lib/email";
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // =====================================================
-// SIGNUP API — CREATE USER + COMPANY + SESSION
+// 🔐 UTILS
+// =====================================================
+
+function generateToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+// =====================================================
+// SIGNUP API — CREATE USER + COMPANY + EMAIL VERIFICATION
 // =====================================================
 
 export async function POST(req: Request) {
@@ -24,22 +33,26 @@ export async function POST(req: Request) {
       email,
       password,
       companyName,
+      phone, // 🔥 NUEVO
     } = body;
 
     // =====================================================
-    // VALIDATION
+    // VALIDATION (MEJORADA)
     // =====================================================
 
-    if (!name || !email || !password || !companyName) {
+    if (!email || !password || !companyName) {
       return NextResponse.json(
-        { error: "Missing fields" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // =====================================================
-    // NORMALIZE EMAIL
-    // =====================================================
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters" },
+        { status: 400 }
+      );
+    }
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -65,53 +78,81 @@ export async function POST(req: Request) {
     const passwordHash = await hashPassword(password);
 
     // =====================================================
-    // CREATE COMPANY
+    // GENERATE VERIFICATION TOKEN
     // =====================================================
 
-    const company = await prisma.company.create({
-      data: {
-        name: companyName,
-        country: "UNKNOWN", // 🔥 puedes hacerlo dinámico luego
-      },
+    const verificationToken = generateToken();
+
+    // =====================================================
+    // 🔥 TRANSACTION (CRÍTICO)
+    // =====================================================
+
+    const result = await prisma.$transaction(async (tx) => {
+      // =============================
+      // CREATE COMPANY
+      // =============================
+
+      const company = await tx.company.create({
+        data: {
+          name: companyName,
+          country: "UNKNOWN",
+        },
+      });
+
+      // =============================
+      // CREATE USER
+      // =============================
+
+      const user = await tx.user.create({
+  data: {
+    name, // ✅ FALTABA
+    email: normalizedEmail,
+    passwordHash,
+    phone,
+    companyId: company.id,
+    isVerified: false,
+  },
+});
+
+      // =============================
+      // CREATE VERIFICATION TOKEN
+      // =============================
+
+      await tx.verificationToken.create({
+        data: {
+          token: verificationToken,
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1h
+        },
+      });
+
+      return { user };
     });
 
     // =====================================================
-    // CREATE USER
+    // ✉️ SEND VERIFICATION EMAIL
     // =====================================================
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email: normalizedEmail,
-        passwordHash,
-        companyId: company.id,
-      },
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${verificationToken}`;
+
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Verify your account",
+      html: `
+        <h2>Verify your account</h2>
+        <p>Click the link below:</p>
+        <a href="${verifyUrl}">${verifyUrl}</a>
+      `,
     });
 
     // =====================================================
-    // CREATE JWT
+    // ❗ NO SESSION HERE (CAMBIO CLAVE)
     // =====================================================
 
-    const token = signToken({ userId: user.id });
-
-    // =====================================================
-    // SET COOKIE (SESSION)
-    // =====================================================
-
-    const cookieStore = await cookies();
-
-    cookieStore.set("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+    return NextResponse.json({
+      success: true,
+      message: "Check your email to verify your account",
     });
-
-    // =====================================================
-    // RESPONSE
-    // =====================================================
-
-    return NextResponse.json({ success: true });
 
   } catch (error: any) {
     console.error("❌ SIGNUP ERROR:", error);
