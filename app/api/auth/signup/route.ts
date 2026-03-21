@@ -3,7 +3,6 @@ import { hashPassword } from "@/lib/auth";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 
-// ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -16,14 +15,11 @@ function generateToken() {
 }
 
 // =====================================================
-// SIGNUP API — CREATE USER + COMPANY + EMAIL VERIFICATION
+// SIGNUP API — PRO FLOW (NO USER CREATION)
 // =====================================================
 
 export async function POST(req: Request) {
   try {
-    // =====================================================
-    // ⚠️ IMPORT DINÁMICO DE PRISMA (CLAVE)
-    // =====================================================
     const { prisma } = await import("@/database/prisma");
 
     const body = await req.json();
@@ -33,11 +29,11 @@ export async function POST(req: Request) {
       email,
       password,
       companyName,
-      phone, // 🔥 NUEVO
+      phone,
     } = body;
 
     // =====================================================
-    // VALIDATION (MEJORADA)
+    // VALIDATION
     // =====================================================
 
     if (!email || !password || !companyName) {
@@ -57,7 +53,7 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // =====================================================
-    // CHECK USER EXISTS
+    // CHECK USER EXISTS (REAL USER)
     // =====================================================
 
     const existingUser = await prisma.user.findUnique({
@@ -78,16 +74,17 @@ export async function POST(req: Request) {
     const passwordHash = await hashPassword(password);
 
     // =====================================================
-    // GENERATE VERIFICATION TOKEN
+    // GENERATE TOKEN
     // =====================================================
 
     const verificationToken = generateToken();
 
     // =====================================================
-    // 🔥 TRANSACTION (CRÍTICO)
+    // 🔥 TRANSACTION (SIN USER)
     // =====================================================
 
     const result = await prisma.$transaction(async (tx) => {
+
       // =============================
       // CREATE COMPANY
       // =============================
@@ -100,41 +97,33 @@ export async function POST(req: Request) {
       });
 
       // =============================
-      // CREATE USER
-      // =============================
-
-      const user = await tx.user.create({
-  data: {
-    name, // ✅ FALTABA
-    email: normalizedEmail,
-    passwordHash,
-    phone,
-    companyId: company.id,
-    isVerified: false,
-  },
-});
-
-      // =============================
       // CREATE VERIFICATION TOKEN
       // =============================
 
       await tx.verificationToken.create({
-        data: {
-          token: verificationToken,
-          userId: user.id,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1h
-        },
-      });
+  data: {
+    token: verificationToken,
+    email: normalizedEmail,
+    password: passwordHash,
+    name,
+    phone,              // 🔥 NUEVO
+    companyId: company.id, // 🔥 NUEVO
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+  },
+});
 
-      return { user };
+      return { company };
     });
 
     // =====================================================
-    // ✉️ SEND VERIFICATION EMAIL
+    // ✉️ VERIFY LINK (FIXED)
     // =====================================================
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${verificationToken}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${verificationToken}`;
 
+    console.log("🔥 VERIFY LINK:", verifyUrl);
+
+    // (opcional, ahora mismo no te hace falta)
     await sendEmail({
       to: normalizedEmail,
       subject: "Verify your account",
@@ -144,10 +133,6 @@ export async function POST(req: Request) {
         <a href="${verifyUrl}">${verifyUrl}</a>
       `,
     });
-
-    // =====================================================
-    // ❗ NO SESSION HERE (CAMBIO CLAVE)
-    // =====================================================
 
     return NextResponse.json({
       success: true,

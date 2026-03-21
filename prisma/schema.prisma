@@ -184,11 +184,12 @@ model User {
   passwordHash String
   name         String?
 
-  // 🔥 NUEVO
   phone        String?
-  role         String?   // futuro RBAC (ADMIN, BUYER, etc.)
+  role         String?
 
-  isVerified   Boolean   @default(false)
+  
+  // isVerified   Boolean   @default(false)
+
   twoFactorEnabled Boolean @default(false)
 
   companyId    String?
@@ -197,7 +198,6 @@ model User {
 
   company      Company? @relation(fields: [companyId], references: [id])
 
-  verificationTokens VerificationToken[]
   otpCodes OTPCode[]
 
   @@index([companyId])
@@ -210,13 +210,19 @@ model User {
 model VerificationToken {
   id        String   @id @default(uuid())
   token     String   @unique
-  userId    String
+
+  email     String
+  password  String
+  name      String?
+
+  // 🔥 NUEVO
+  phone     String?
+  companyId String?
+
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
+  @@index([email])
 }
 
 //////////////////////////////////////////////////////
