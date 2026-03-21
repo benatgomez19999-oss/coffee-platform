@@ -13,7 +13,7 @@ export const revalidate = 0;
 // DEBUG FLAG (activar/desactivar rápido)
 // =====================================================
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 // =====================================================
 // VERIFY EMAIL TOKEN
