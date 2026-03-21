@@ -1,5 +1,21 @@
 // =====================================================
-// 📧 EMAIL SERVICE (TEMP / DEV)
+// 📧 EMAIL SERVICE (PRODUCTION READY - SENDGRID)
+// =====================================================
+
+import sgMail from "@sendgrid/mail";
+
+// =====================================================
+// INIT
+// =====================================================
+
+if (!process.env.SENDGRID_API_KEY) {
+  console.warn("⚠️ SENDGRID_API_KEY not set");
+} else {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// =====================================================
+// SEND EMAIL
 // =====================================================
 
 export async function sendEmail({
@@ -11,17 +27,22 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  // =====================================================
-  // 🔥 DEV MODE (solo log)
-  // =====================================================
+  try {
+    const msg = {
+      to,
+      from: "benat.gomez19999@gmail.com", // ⚠️ sender verificado
+      subject,
+      html,
+    };
 
-  console.log("📧 EMAIL SENT:");
-  console.log("TO:", to);
-  console.log("SUBJECT:", subject);
-  console.log("HTML:", html);
+    const res = await sgMail.send(msg);
 
-  // =====================================================
-  // 🚀 FUTURO
-  // =====================================================
-  // 👉 aquí conectarás Resend / Nodemailer
+    console.log("📧 EMAIL SENT SUCCESS");
+    console.log("TO:", to);
+    console.log("STATUS:", res[0]?.statusCode);
+
+  } catch (error: any) {
+    console.error("❌ EMAIL ERROR:", error?.response?.body || error.message);
+    throw new Error("Email sending failed");
+  }
 }
