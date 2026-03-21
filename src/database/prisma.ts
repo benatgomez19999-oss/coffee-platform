@@ -1,26 +1,30 @@
 // =====================================================
-// PRISMA CLIENT (FORCED ENV FIX FOR VERCEL)
+// PRISMA CLIENT (VERCEL + NEXT SAFE)
 // =====================================================
 
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
 
 // =====================================================
-// GLOBAL TYPE
+// GLOBAL CACHE (avoid multiple instances in dev)
 // =====================================================
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
 // =====================================================
-// SELECT DATABASE URL (FORCE NEW ENV)
+// DATABASE URL (SAFE RESOLUTION)
 // =====================================================
 
 const databaseUrl =
-  process.env.DATABASE_URL_NEW || process.env.DATABASE_URL
+  process.env.DATABASE_URL_NEW || process.env.DATABASE_URL;
 
-// DEBUG (muy importante ahora)
-console.log("🔥 PRISMA USING DB:", databaseUrl)
+if (!databaseUrl) {
+  throw new Error("❌ DATABASE_URL is not defined");
+}
+
+// (Opcional: quitar en producción si molesta)
+console.log("🔥 PRISMA USING DB:", databaseUrl);
 
 // =====================================================
 // CREATE CLIENT
@@ -34,13 +38,13 @@ export const prisma =
         url: databaseUrl,
       },
     },
-    log: ["error"],
-  })
+    log: process.env.NODE_ENV === "development" ? ["query", "error"] : ["error"],
+  });
 
 // =====================================================
-// SAVE GLOBAL (ONLY IN DEV)
+// SAVE GLOBAL (DEV ONLY)
 // =====================================================
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
+  globalForPrisma.prisma = prisma;
 }

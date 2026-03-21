@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
+import { prisma } from "@/database/prisma";
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
@@ -11,10 +12,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    // ======================================================
-    // ⚠️ IMPORT DINÁMICO DE PRISMA (CLAVE)
-    // ======================================================
-    const { prisma } = await import("@/database/prisma");
+   
 
     // ======================================================
     // AUTH

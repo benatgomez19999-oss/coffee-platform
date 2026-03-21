@@ -1,18 +1,38 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/database/prisma";
 
 // =====================================================
-// VERIFY EMAIL TOKEN
+// CONFIG
 // =====================================================
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+// =====================================================
+// DEBUG FLAG (activar/desactivar rápido)
+// =====================================================
+
+const DEBUG_MODE = true;
+
+// =====================================================
+// VERIFY EMAIL TOKEN
+// =====================================================
+
+console.log("🔥 VERIFY FILE LOADED");
+
 export async function GET(req: Request) {
   console.log("✅ VERIFY ENDPOINT HIT");
 
   try {
-    const { prisma } = await import("@/database/prisma");
+    // =====================================================
+    // 🧪 DEBUG EARLY RETURN
+    // =====================================================
+
+    if (DEBUG_MODE) {
+      console.log("🧪 DEBUG MODE ACTIVE");
+      return NextResponse.json({ ok: true, route: "verify alive" });
+    }
 
     // =====================================================
     // GET TOKEN
@@ -22,8 +42,13 @@ export async function GET(req: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json({ error: "Missing token" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing token" },
+        { status: 400 }
+      );
     }
+
+    console.log("🔑 TOKEN:", token);
 
     // =====================================================
     // FIND TOKEN
@@ -34,7 +59,10 @@ export async function GET(req: Request) {
     });
 
     if (!record) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid token" },
+        { status: 400 }
+      );
     }
 
     // =====================================================
@@ -42,11 +70,30 @@ export async function GET(req: Request) {
     // =====================================================
 
     if (record.expiresAt < new Date()) {
-      return NextResponse.json({ error: "Token expired" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Token expired" },
+        { status: 400 }
+      );
     }
 
     // =====================================================
-    // 🔥 CREATE USER (NUEVO FLOW)
+    // 🛡️ CHECK IF USER ALREADY EXISTS (IDEMPOTENCIA)
+    // =====================================================
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: record.email },
+    });
+
+    if (existingUser) {
+      console.log("⚠️ USER ALREADY EXISTS");
+
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/login?verified=true`
+      );
+    }
+
+    // =====================================================
+    // 🔥 CREATE USER
     // =====================================================
 
     await prisma.user.create({
@@ -56,9 +103,10 @@ export async function GET(req: Request) {
         name: record.name,
         phone: record.phone,
         companyId: record.companyId,
-        
       },
     });
+
+    console.log("✅ USER CREATED");
 
     // =====================================================
     // DELETE TOKEN
@@ -67,6 +115,8 @@ export async function GET(req: Request) {
     await prisma.verificationToken.delete({
       where: { token },
     });
+
+    console.log("🗑️ TOKEN DELETED");
 
     // =====================================================
     // REDIRECT

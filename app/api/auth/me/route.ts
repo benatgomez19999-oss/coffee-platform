@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
+import { prisma } from "@/database/prisma";
 
 // ✅ NECESARIO para evitar problemas en build (Vercel)
 export const runtime = "nodejs";
@@ -12,10 +13,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // =====================================================
-    // ⚠️ IMPORT DINÁMICO DE PRISMA (CLAVE)
-    // =====================================================
-    const { prisma } = await import("@/database/prisma");
+   
 
     // =====================================================
     // GET TOKEN FROM COOKIE

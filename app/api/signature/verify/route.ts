@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/database/prisma";
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
@@ -10,10 +11,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    // =====================================================
-    // ⚠️ IMPORT DINÁMICO DE PRISMA (CLAVE)
-    // =====================================================
-    const { prisma } = await import("@/database/prisma");
+   
 
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
+import { prisma } from "@/database/prisma";
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
     // =====================================================
     // ⚠️ IMPORTS DINÁMICOS (CLAVE TOTAL)
     // =====================================================
-    const { prisma } = await import("@/database/prisma");
+   
     const twilio = (await import("twilio")).default;
 
     // =====================================================

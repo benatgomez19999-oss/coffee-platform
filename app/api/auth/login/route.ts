@@ -12,11 +12,12 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/auth";
+import { prisma } from "@/database/prisma";
 
 export async function POST(req: Request) {
   try {
-    // 🔥 IMPORT DINÁMICO (CLAVE)
-    const { prisma } = await import("@/database/prisma");
+   
+    
 
     const { email, password } = await req.json();
 

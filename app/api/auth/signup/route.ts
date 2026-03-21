@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
+import { prisma } from "@/database/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
 
 // =====================================================
 // 🔐 UTILS
@@ -20,7 +22,7 @@ function generateToken() {
 
 export async function POST(req: Request) {
   try {
-    const { prisma } = await import("@/database/prisma");
+    
 
     const body = await req.json();
 
