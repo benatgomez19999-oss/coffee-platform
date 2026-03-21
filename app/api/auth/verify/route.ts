@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 
+
 // =====================================================
 // VERIFY EMAIL TOKEN
 // =====================================================
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0; // 🔥 AÑADE ESTO
 
 export async function GET(req: Request) {
+    console.log("✅ VERIFY ENDPOINT HIT");
   try {
     // =====================================================
     // ⚠️ IMPORT DINÁMICO DE PRISMA
