@@ -87,12 +87,12 @@ export async function GET(req: Request) {
     if (existingUser) {
       console.log("⚠️ USER ALREADY EXISTS");
 
-      const origin = req.headers.get("origin")
+     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
 
-return NextResponse.redirect(
-  `${origin}/login?verified=true`
-)
-    }
+  return NextResponse.redirect(
+    `${baseUrl}/login?verified=true`
+  )
+}
 
     // =====================================================
     // 🔥 CREATE USER
@@ -124,12 +124,11 @@ return NextResponse.redirect(
     // REDIRECT
     // =====================================================
 
-    const origin = req.headers.get("origin")
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
 
 return NextResponse.redirect(
-  `${origin}/login?verified=true`
+  `${baseUrl}/login?verified=true`
 )
-
   } catch (error) {
     console.error("❌ VERIFY ERROR:", error);
 
