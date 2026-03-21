@@ -1,35 +1,28 @@
 import { NextResponse } from "next/server";
 
-
 // =====================================================
 // VERIFY EMAIL TOKEN
 // =====================================================
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // 🔥 AÑADE ESTO
+export const revalidate = 0;
 
 export async function GET(req: Request) {
-    console.log("✅ VERIFY ENDPOINT HIT");
-  try {
-    // =====================================================
-    // ⚠️ IMPORT DINÁMICO DE PRISMA
-    // =====================================================
+  console.log("✅ VERIFY ENDPOINT HIT");
 
+  try {
     const { prisma } = await import("@/database/prisma");
 
     // =====================================================
-    // GET TOKEN FROM URL
+    // GET TOKEN
     // =====================================================
 
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Missing token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing token" }, { status: 400 });
     }
 
     // =====================================================
@@ -41,10 +34,7 @@ export async function GET(req: Request) {
     });
 
     if (!record) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     }
 
     // =====================================================
@@ -52,23 +42,26 @@ export async function GET(req: Request) {
     // =====================================================
 
     if (record.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "Token expired" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Token expired" }, { status: 400 });
     }
 
     // =====================================================
-    // VERIFY USER
+    // 🔥 CREATE USER (NUEVO FLOW)
     // =====================================================
 
-    await prisma.user.update({
-      where: { id: record.userId },
-      data: { isVerified: true },
+    await prisma.user.create({
+      data: {
+        email: record.email,
+        passwordHash: record.password,
+        name: record.name,
+        phone: record.phone,
+        companyId: record.companyId,
+        
+      },
     });
 
     // =====================================================
-    // DELETE TOKEN (ONE-TIME USE)
+    // DELETE TOKEN
     // =====================================================
 
     await prisma.verificationToken.delete({
@@ -76,7 +69,7 @@ export async function GET(req: Request) {
     });
 
     // =====================================================
-    // REDIRECT TO LOGIN (SUCCESS)
+    // REDIRECT
     // =====================================================
 
     return NextResponse.redirect(
