@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // =====================================================
-    // CHECK USER EXISTS (REAL USER)
+    // CHECK USER EXISTS
     // =====================================================
 
     const existingUser = await prisma.user.findUnique({
@@ -80,11 +80,10 @@ export async function POST(req: Request) {
     const verificationToken = generateToken();
 
     // =====================================================
-    // 🔥 TRANSACTION (SIN USER)
+    // 🔥 TRANSACTION
     // =====================================================
 
-    const result = await prisma.$transaction(async (tx) => {
-
+    await prisma.$transaction(async (tx) => {
       // =============================
       // CREATE COMPANY
       // =============================
@@ -101,38 +100,47 @@ export async function POST(req: Request) {
       // =============================
 
       await tx.verificationToken.create({
-  data: {
-    token: verificationToken,
-    email: normalizedEmail,
-    password: passwordHash,
-    name,
-    phone,              // 🔥 NUEVO
-    companyId: company.id, // 🔥 NUEVO
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60),
-  },
-});
-
-      return { company };
+        data: {
+          token: verificationToken,
+          email: normalizedEmail,
+          password: passwordHash,
+          name: name || null,
+          phone: phone || null,
+          companyId: company.id,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1h
+        },
+      });
     });
 
     // =====================================================
-    // ✉️ VERIFY LINK (FIXED)
+    // 🔗 VERIFY LINK
     // =====================================================
 
     const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${verificationToken}`;
 
     console.log("🔥 VERIFY LINK:", verifyUrl);
 
-    // (opcional, ahora mismo no te hace falta)
-    await sendEmail({
-      to: normalizedEmail,
-      subject: "Verify your account",
-      html: `
-        <h2>Verify your account</h2>
-        <p>Click the link below:</p>
-        <a href="${verifyUrl}">${verifyUrl}</a>
-      `,
-    });
+    // =====================================================
+    // ✉️ EMAIL (opcional en dev)
+    // =====================================================
+
+    try {
+      await sendEmail({
+        to: normalizedEmail,
+        subject: "Verify your account",
+        html: `
+          <h2>Verify your account</h2>
+          <p>Click the link below:</p>
+          <a href="${verifyUrl}">${verifyUrl}</a>
+        `,
+      });
+    } catch (err) {
+      console.warn("⚠️ Email not sent (dev mode)");
+    }
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
 
     return NextResponse.json({
       success: true,
