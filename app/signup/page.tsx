@@ -41,8 +41,11 @@ export default function SignupPage() {
         return
       }
 
-      // 🔥 YA TIENES COOKIE → ENTRAS DIRECTO
-      router.push("/platform")
+      // =====================================================
+      // ✅ REDIRECT TO SUCCESS PAGE (PRO UX)
+      // =====================================================
+
+      router.push("/signup/success")
 
     } catch (err) {
       console.error(err)
@@ -123,7 +126,8 @@ export default function SignupPage() {
             background: "linear-gradient(90deg,#d4af37,#f3d27a)",
             color: "#111",
             fontWeight: 500,
-            cursor: "pointer"
+            cursor: "pointer",
+            opacity: loading ? 0.7 : 1
           }}
         >
           {loading ? "Creating..." : "Create account"}
