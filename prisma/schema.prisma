@@ -97,6 +97,13 @@ model Company {
   id        String     @id @default(uuid())
   name      String
   country   String
+
+  // 🔥 NUEVO (onboarding data)
+  phone        String?
+  address      String?
+  vat          String?   // CIF
+  contactName  String?
+
   createdAt DateTime   @default(now())
 
   users     User[]
@@ -187,10 +194,10 @@ model User {
   phone        String?
   role         String?
 
-  
-  // isVerified   Boolean   @default(false)
-
   twoFactorEnabled Boolean @default(false)
+
+  // 🔥 NUEVO
+  onboardingCompleted Boolean @default(false)
 
   companyId    String?
   createdAt    DateTime @default(now())
