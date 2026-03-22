@@ -9,6 +9,8 @@ import { startEngineRuntime } from "@/engine/runtime"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/websocket/websocketClient"
+import OnboardingWizard from "@/components/platform/OnboardingWizard"
+import { getUserFromRequest } from "@/lib/auth"
 
 // ENGINE
 import { stepSimulationReal } from "@/engine/simulationReal";
@@ -912,6 +914,13 @@ const status = useMemo(() => {
 
 
 return (
+  <>
+    {!user.onboardingCompleted && (
+  <OnboardingWizard 
+    user={user}
+    onComplete={() => window.location.reload()}
+  />
+)}
 
     <div style={{
       minHeight: "100vh",
@@ -930,32 +939,28 @@ return (
           Client Dashboard
         </h2>
 
-  <button
-  onClick={async () => {
+        <button
+          onClick={async () => {
+            await fetch("/api/auth/logout", {
+              method: "POST",
+              credentials: "include"
+            })
 
-    await fetch("/api/auth/logout", {
-  method: "POST",
-  credentials: "include" // 💣 CLAVE
-})
-
-    // 💣 HARD RELOAD (borra TODO estado)
-    window.location.href = "/"
-
-  }}
-
-  style={{
-    position: "absolute",
-    top: 20,
-    right: 20,
-    padding: "6px 14px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.2)",
-    background: "rgba(255,255,255,0.06)",
-    cursor: "pointer"
-  }}
->
-  Logout
-</button>
+            window.location.href = "/"
+          }}
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            padding: "6px 14px",
+            borderRadius: 999,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.06)",
+            cursor: "pointer"
+          }}
+        >
+          Logout
+        </button>
 
       </div>
 
@@ -994,15 +999,13 @@ return (
 
         {/* RIGHT */}
         <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
-
           <ClientOverviewPanel engineState={engineState} />
-
           <ClientContractsPanel contracts={contracts} />
-
         </div>
 
       </div>
 
     </div>
-  )
+  </>
+)
 }
