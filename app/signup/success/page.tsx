@@ -1,16 +1,16 @@
+"use client"
+
 // =====================================================
-// SIGNUP SUCCESS PAGE (SAFE VERSION)
+// SIGNUP SUCCESS PAGE (CLIENT VERSION - FIXED)
 // =====================================================
 
-export const dynamic = "force-dynamic";
+export default function SignupSuccessPage() {
 
-export default function SignupSuccessPage({
-  searchParams,
-}: {
-  searchParams?: { email?: string };
-}) {
+  const params = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  );
 
-  const email = searchParams?.email;
+  const email = params.get("email");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
@@ -40,34 +40,34 @@ export default function SignupSuccessPage({
 
           {/* RESEND */}
           {email && (
-  <button
-    onClick={async () => {
-      try {
-        const res = await fetch("/api/auth/resend-verification", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/auth/resend-verification", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email }),
+                  });
 
-        if (!res.ok) {
-          const err = await res.json();
-          alert(err.error || "Failed to resend email");
-          return;
-        }
+                  if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || "Failed to resend email");
+                    return;
+                  }
 
-        alert("Verification email sent again");
-      } catch (err) {
-        console.error(err);
-        alert("Network error");
-      }
-    }}
-    className="text-sm text-gray-400 hover:text-white"
-  >
-    Resend verification email
-  </button>
-)}
+                  alert("Verification email sent again");
+                } catch (err) {
+                  console.error(err);
+                  alert("Network error");
+                }
+              }}
+              className="text-sm text-gray-400 hover:text-white"
+            >
+              Resend verification email
+            </button>
+          )}
 
         </div>
 
