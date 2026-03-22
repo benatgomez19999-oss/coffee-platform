@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
+import { prisma } from "@/database/prisma"
 
 // =====================================================
 // ENV
@@ -49,6 +50,38 @@ export function verifyToken(token: string) {
     return jwt.verify(token, JWT_SECRET) as {
       userId: string
     }
+  } catch {
+    return null
+  }
+}
+
+// =====================================================
+// GET USER FROM REQUEST (SERVER)
+// =====================================================
+
+export async function getUserFromRequest(req: Request) {
+  try {
+    const cookie = req.headers.get("cookie")
+
+    if (!cookie) return null
+
+    const token = cookie
+      .split("; ")
+      .find(c => c.startsWith("token="))
+      ?.split("=")[1]
+
+    if (!token) return null
+
+    const decoded = verifyToken(token)
+
+    if (!decoded) return null
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    })
+
+    return user
+
   } catch {
     return null
   }
