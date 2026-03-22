@@ -3,6 +3,7 @@ import { hashPassword } from "@/lib/auth";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/database/prisma";
+import { alturaEmailTemplate } from "@/lib/emailTemplates"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,59 +144,23 @@ const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}`;
     console.log("🔥 VERIFY LINK:", verifyUrl);
 
 // =====================================================
-// ✉️ EMAIL (PRO UX - CTA BUTTON)
+// ✉️ EMAIL (ALTURA COLLECTIVE TEMPLATE)
 // =====================================================
 
 try {
   await sendEmail({
     to: normalizedEmail,
     subject: "Verify your account",
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height:1.5;">
-        
-        <h2 style="margin-bottom:16px;">
-          Verify your account
-        </h2>
-
-        <p>
-          Click the button below to activate your account:
-        </p>
-
-        <!-- CTA BUTTON -->
-        <a href="${verifyUrl}" style="
-          display:inline-block;
-          margin-top:16px;
-          padding:12px 20px;
-          background:#000;
-          color:#fff;
-          text-decoration:none;
-          border-radius:6px;
-          font-weight:500;
-        ">
-          Verify Account
-        </a>
-
-        <!-- FALLBACK LINK -->
-        <p style="margin-top:20px; font-size:12px; color:#666;">
-          If the button doesn’t work, copy and paste this link into your browser:
-        </p>
-
-        <p style="font-size:12px; word-break:break-all;">
-          ${verifyUrl}
-        </p>
-
-        <!-- EXPIRATION -->
-        <p style="margin-top:16px; font-size:12px; color:#999;">
-          This link expires in 1 hour.
-        </p>
-
-      </div>
-    `,
+    html: alturaEmailTemplate({
+      title: "Verify your account",
+      subtitle: "Confirm your email to activate your Altura Collective account.",
+      buttonText: "Verify Account",
+      url: verifyUrl,
+    }),
   });
 } catch (err) {
   console.warn("⚠️ Email not sent (dev mode)");
 }
-
     // =====================================================
     // RESPONSE
     // =====================================================

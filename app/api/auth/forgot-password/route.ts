@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import crypto from "crypto"
 import { sendEmail } from "@/lib/email"
+import { alturaEmailTemplate } from "@/lib/emailTemplates"
 
 // =====================================================
 // FORGOT PASSWORD
@@ -57,23 +58,24 @@ export async function POST(req: Request) {
 
     console.log("🔗 RESET LINK:", resetUrl)
 
-    // =====================================================
-    // ✉️ SEND EMAIL
-    // =====================================================
+// =====================================================
+// ✉️ EMAIL (ALTURA COLLECTIVE TEMPLATE)
+// =====================================================
 
-    try {
-      await sendEmail({
-        to: email,
-        subject: "Reset your password",
-        html: `
-          <h2>Reset your password</h2>
-          <p>Click the link below:</p>
-          <a href="${resetUrl}">${resetUrl}</a>
-        `,
-      })
-    } catch (err) {
-      console.warn("⚠️ Reset email not sent")
-    }
+try {
+  await sendEmail({
+    to: email,
+    subject: "Reset your password",
+    html: alturaEmailTemplate({
+      title: "Reset your password",
+      subtitle: "You requested a password reset for your Altura Collective account. This link expires in 1 hour.",
+      buttonText: "Reset Password",
+      url: resetUrl,
+    }),
+  })
+} catch (err) {
+  console.warn("⚠️ Reset email not sent")
+}
 
     return NextResponse.json({ success: true })
 
