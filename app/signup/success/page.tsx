@@ -40,20 +40,34 @@ export default function SignupSuccessPage({
 
           {/* RESEND */}
           {email && (
-            <form
-              action="/api/auth/resend-verification"
-              method="POST"
-            >
-              <input type="hidden" name="email" value={email} />
+  <button
+    onClick={async () => {
+      try {
+        const res = await fetch("/api/auth/resend-verification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        });
 
-              <button
-                type="submit"
-                className="text-sm text-gray-400 hover:text-white"
-              >
-                Resend verification email
-              </button>
-            </form>
-          )}
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || "Failed to resend email");
+          return;
+        }
+
+        alert("Verification email sent again");
+      } catch (err) {
+        console.error(err);
+        alert("Network error");
+      }
+    }}
+    className="text-sm text-gray-400 hover:text-white"
+  >
+    Resend verification email
+  </button>
+)}
 
         </div>
 
