@@ -78,12 +78,13 @@ export default function OnboardingWizard({ onComplete }: Props) {
 
     try {
       const res = await fetch("/api/company/update", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(form)
-      })
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  credentials: "include", // 🔥 CLAVE
+  body: JSON.stringify(form)
+})
 
       if (!res.ok) {
         setError("Failed to save data")
