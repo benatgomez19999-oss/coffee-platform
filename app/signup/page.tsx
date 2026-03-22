@@ -45,7 +45,7 @@ export default function SignupPage() {
       // ✅ REDIRECT TO SUCCESS PAGE (PRO UX)
       // =====================================================
 
-      router.push("/signup/success")
+      router.push(`/signup/success?email=${encodeURIComponent(form.email)}`)
 
     } catch (err) {
       console.error(err)
