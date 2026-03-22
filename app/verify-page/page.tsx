@@ -1,5 +1,5 @@
 // =====================================================
-// VERIFY PAGE (SERVER SAFE — NO BUILD ERROR)
+// VERIFY PAGE (SERVER — PRO UX)
 // =====================================================
 
 export const dynamic = "force-dynamic";
@@ -7,22 +7,79 @@ export const dynamic = "force-dynamic";
 export default function VerifyPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: { status?: string };
 }) {
-  const token = searchParams.token;
 
-  if (!token) {
-    return <p>Invalid verification link</p>;
+  const status = searchParams.status;
+
+  // =====================================================
+  // RENDER CONTENT
+  // =====================================================
+
+  function renderContent() {
+    switch (status) {
+      case "success":
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-4 text-white">
+              ✅ Account verified
+            </h1>
+            <p className="text-gray-300">
+              Your account has been successfully activated.
+            </p>
+
+            {/* AUTO REDIRECT */}
+            <meta httpEquiv="refresh" content="2; url=/login" />
+          </>
+        );
+
+      case "expired":
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-4 text-white">
+              ⏰ Link expired
+            </h1>
+            <p className="text-gray-300">
+              This verification link has expired.
+            </p>
+          </>
+        );
+
+      case "invalid":
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-4 text-white">
+              ❌ Invalid link
+            </h1>
+            <p className="text-gray-300">
+              This verification link is not valid.
+            </p>
+          </>
+        );
+
+      default:
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-4 text-white">
+              ⚠️ Something went wrong
+            </h1>
+            <p className="text-gray-300">
+              Please try again or request a new link.
+            </p>
+          </>
+        );
+    }
   }
 
   // =====================================================
-  // REDIRECT SERVER SIDE
+  // UI
   // =====================================================
 
   return (
-    <meta
-      httpEquiv="refresh"
-      content={`0; url=/api/auth/verify?token=${token}`}
-    />
+    <div className="min-h-screen flex items-center justify-center bg-black px-4">
+      <div className="max-w-md w-full bg-neutral-900 p-8 rounded-xl shadow-lg text-center">
+        {renderContent()}
+      </div>
+    </div>
   );
 }
