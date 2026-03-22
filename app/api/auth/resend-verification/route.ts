@@ -9,7 +9,8 @@ import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const formData = await req.formData();
+const email = formData.get("email") as string;
 
     if (!email) {
       return NextResponse.json(

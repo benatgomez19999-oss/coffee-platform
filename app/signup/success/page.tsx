@@ -1,5 +1,5 @@
 // =====================================================
-// SIGNUP SUCCESS PAGE (PRO UX + RESEND WORKING)
+// SIGNUP SUCCESS PAGE (SAFE VERSION)
 // =====================================================
 
 export const dynamic = "force-dynamic";
@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 export default function SignupSuccessPage({
   searchParams,
 }: {
-  searchParams: { email?: string };
+  searchParams?: { email?: string };
 }) {
 
-  const email = searchParams.email;
+  const email = searchParams?.email;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
@@ -31,7 +31,6 @@ export default function SignupSuccessPage({
         {/* ACTIONS */}
         <div className="mt-6 flex flex-col gap-3">
 
-          {/* LOGIN */}
           <a
             href="/login"
             className="bg-white text-black py-2 rounded-md font-medium"
@@ -39,35 +38,21 @@ export default function SignupSuccessPage({
             Go to login
           </a>
 
-          {/* RESEND BUTTON */}
+          {/* RESEND */}
           {email && (
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch("/api/auth/resend-verification", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email }),
-                  });
-
-                  if (!res.ok) {
-                    const err = await res.json();
-                    alert(err.error || "Failed to resend email");
-                    return;
-                  }
-
-                  alert("Verification email sent again");
-                } catch (err) {
-                  console.error(err);
-                  alert("Network error");
-                }
-              }}
-              className="text-sm text-gray-400 hover:text-white"
+            <form
+              action="/api/auth/resend-verification"
+              method="POST"
             >
-              Resend verification email
-            </button>
+              <input type="hidden" name="email" value={email} />
+
+              <button
+                type="submit"
+                className="text-sm text-gray-400 hover:text-white"
+              >
+                Resend verification email
+              </button>
+            </form>
           )}
 
         </div>
