@@ -86,6 +86,14 @@ export async function POST(req: Request) {
     // =====================================================
 
     await prisma.$transaction(async (tx) => {
+
+      // =====================================================
+      // 🧹 CLEAN OLD TOKENS (UX + SECURITY)
+      // =====================================================
+
+await tx.verificationToken.deleteMany({
+  where: { email: normalizedEmail }
+})
       // =============================
       // CREATE COMPANY
       // =============================
@@ -114,32 +122,79 @@ export async function POST(req: Request) {
       });
     });
 
-    // =====================================================
-    // 🔗 VERIFY LINK
-    // =====================================================
+    
 
-   const origin = req.headers.get("origin")
-const verifyUrl = `${origin}/api/auth/verify?token=${verificationToken}`;
+  // =====================================================
+// 🌐 BASE URL (FIXED - PRODUCTION SAFE)
+// =====================================================
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
+
+if (!baseUrl) {
+  throw new Error("NEXT_PUBLIC_APP_URL not configured")
+}
+
+// =====================================================
+// 🔗 VERIFY LINK
+// =====================================================
+
+const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}`;
 
     console.log("🔥 VERIFY LINK:", verifyUrl);
 
-    // =====================================================
-    // ✉️ EMAIL (opcional en dev)
-    // =====================================================
+// =====================================================
+// ✉️ EMAIL (PRO UX - CTA BUTTON)
+// =====================================================
 
-    try {
-      await sendEmail({
-        to: normalizedEmail,
-        subject: "Verify your account",
-        html: `
-          <h2>Verify your account</h2>
-          <p>Click the link below:</p>
-          <a href="${verifyUrl}">${verifyUrl}</a>
-        `,
-      });
-    } catch (err) {
-      console.warn("⚠️ Email not sent (dev mode)");
-    }
+try {
+  await sendEmail({
+    to: normalizedEmail,
+    subject: "Verify your account",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height:1.5;">
+        
+        <h2 style="margin-bottom:16px;">
+          Verify your account
+        </h2>
+
+        <p>
+          Click the button below to activate your account:
+        </p>
+
+        <!-- CTA BUTTON -->
+        <a href="${verifyUrl}" style="
+          display:inline-block;
+          margin-top:16px;
+          padding:12px 20px;
+          background:#000;
+          color:#fff;
+          text-decoration:none;
+          border-radius:6px;
+          font-weight:500;
+        ">
+          Verify Account
+        </a>
+
+        <!-- FALLBACK LINK -->
+        <p style="margin-top:20px; font-size:12px; color:#666;">
+          If the button doesn’t work, copy and paste this link into your browser:
+        </p>
+
+        <p style="font-size:12px; word-break:break-all;">
+          ${verifyUrl}
+        </p>
+
+        <!-- EXPIRATION -->
+        <p style="margin-top:16px; font-size:12px; color:#999;">
+          This link expires in 1 hour.
+        </p>
+
+      </div>
+    `,
+  });
+} catch (err) {
+  console.warn("⚠️ Email not sent (dev mode)");
+}
 
     // =====================================================
     // RESPONSE

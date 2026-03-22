@@ -26,6 +26,16 @@ export async function GET(req: Request) {
 
   try {
     // =====================================================
+    // 🌐 BASE URL (FIXED)
+    // =====================================================
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
+
+    if (!baseUrl) {
+      throw new Error("NEXT_PUBLIC_APP_URL not configured");
+    }
+
+    // =====================================================
     // 🧪 DEBUG EARLY RETURN
     // =====================================================
 
@@ -42,9 +52,8 @@ export async function GET(req: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Missing token" },
-        { status: 400 }
+      return NextResponse.redirect(
+        `${baseUrl}/verify-page?status=invalid`
       );
     }
 
@@ -59,9 +68,8 @@ export async function GET(req: Request) {
     });
 
     if (!record) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 400 }
+      return NextResponse.redirect(
+        `${baseUrl}/verify-page?status=invalid`
       );
     }
 
@@ -70,9 +78,8 @@ export async function GET(req: Request) {
     // =====================================================
 
     if (record.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: "Token expired" },
-        { status: 400 }
+      return NextResponse.redirect(
+        `${baseUrl}/verify-page?status=expired`
       );
     }
 
@@ -87,12 +94,10 @@ export async function GET(req: Request) {
     if (existingUser) {
       console.log("⚠️ USER ALREADY EXISTS");
 
-     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
-
-  return NextResponse.redirect(
-    `${baseUrl}/login?verified=true`
-  )
-}
+      return NextResponse.redirect(
+        `${baseUrl}/verify-page?status=success`
+      );
+    }
 
     // =====================================================
     // 🔥 CREATE USER
@@ -121,20 +126,24 @@ export async function GET(req: Request) {
     console.log("🗑️ TOKEN DELETED");
 
     // =====================================================
-    // REDIRECT
+    // REDIRECT SUCCESS
     // =====================================================
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
+    return NextResponse.redirect(
+      `${baseUrl}/verify-page?status=success`
+    );
 
-return NextResponse.redirect(
-  `${baseUrl}/login?verified=true`
-)
   } catch (error) {
     console.error("❌ VERIFY ERROR:", error);
 
-    return NextResponse.json(
-      { error: "Internal error" },
-      { status: 500 }
+    // =====================================================
+    // ❌ FALLBACK ERROR (NO JSON → UX SAFE)
+    // =====================================================
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
+
+    return NextResponse.redirect(
+      `${baseUrl}/verify-page?status=error`
     );
   }
 }
