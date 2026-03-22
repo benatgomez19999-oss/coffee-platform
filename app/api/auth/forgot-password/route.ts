@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import crypto from "crypto"
+import { sendEmail } from "@/lib/email"
 
 // =====================================================
 // FORGOT PASSWORD
@@ -57,8 +58,22 @@ export async function POST(req: Request) {
     console.log("🔗 RESET LINK:", resetUrl)
 
     // =====================================================
-    // TODO: SEND EMAIL (luego)
+    // ✉️ SEND EMAIL
     // =====================================================
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Reset your password",
+        html: `
+          <h2>Reset your password</h2>
+          <p>Click the link below:</p>
+          <a href="${resetUrl}">${resetUrl}</a>
+        `,
+      })
+    } catch (err) {
+      console.warn("⚠️ Reset email not sent")
+    }
 
     return NextResponse.json({ success: true })
 
