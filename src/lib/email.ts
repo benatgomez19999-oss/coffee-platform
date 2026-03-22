@@ -1,18 +1,18 @@
 // =====================================================
-// 📧 EMAIL SERVICE (PRODUCTION READY - SENDGRID)
+// 📧 EMAIL SERVICE (PRODUCTION - RESEND)
 // =====================================================
 
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 
 // =====================================================
 // INIT
 // =====================================================
 
-if (!process.env.SENDGRID_API_KEY) {
-  console.warn("⚠️ SENDGRID_API_KEY not set");
-} else {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+if (!process.env.RESEND_API_KEY) {
+  console.warn("⚠️ RESEND_API_KEY not set");
 }
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // =====================================================
 // SEND EMAIL
@@ -28,21 +28,21 @@ export async function sendEmail({
   html: string;
 }) {
   try {
-    const msg = {
+    console.log("📧 SENDING EMAIL VIA RESEND...");
+    console.log("TO:", to);
+
+    const response = await resend.emails.send({
+      from: "onboarding@resend.dev", // 🔥 IMPORTANTE (modo test)
       to,
-      from: "benat.gomez19999@gmail.com", // ⚠️ sender verificado
       subject,
       html,
-    };
+    });
 
-    const res = await sgMail.send(msg);
-
-    console.log("📧 EMAIL SENT SUCCESS");
-    console.log("TO:", to);
-    console.log("STATUS:", res[0]?.statusCode);
+    console.log("✅ EMAIL SENT");
+    console.log("ID:", response?.data?.id);
 
   } catch (error: any) {
-    console.error("❌ EMAIL ERROR:", error?.response?.body || error.message);
+    console.error("❌ EMAIL ERROR:", error);
     throw new Error("Email sending failed");
   }
 }
