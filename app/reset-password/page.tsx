@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { useState } from "react"
 
 // =====================================================
-// RESET PASSWORD PAGE
+// INNER COMPONENT
 // =====================================================
 
-export default function ResetPasswordPage() {
+function ResetContent() {
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -20,10 +21,6 @@ export default function ResetPasswordPage() {
     text: string
     type: "error" | "success"
   } | null>(null)
-
-  // =====================================================
-  // SUBMIT
-  // =====================================================
 
   const handleReset = async () => {
 
@@ -62,10 +59,6 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // =====================================================
-      // SUCCESS
-      // =====================================================
-
       setMessage({
         text: "Password updated successfully",
         type: "success"
@@ -87,42 +80,54 @@ export default function ResetPasswordPage() {
   }
 
   return (
+    <div className="max-w-md w-full bg-neutral-900 p-8 rounded-xl text-center">
+
+      <h1 className="text-xl text-white mb-4">
+        Set new password
+      </h1>
+
+      <input
+        type="password"
+        placeholder="New password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full p-2 rounded mb-4"
+        disabled={loading}
+      />
+
+      {message && (
+        <p className={`text-sm mb-3 ${
+          message.type === "error"
+            ? "text-red-400"
+            : "text-green-400"
+        }`}>
+          {message.text}
+        </p>
+      )}
+
+      <button
+        onClick={handleReset}
+        disabled={loading}
+        className="bg-white text-black px-4 py-2 rounded"
+      >
+        {loading ? "Updating..." : "Update password"}
+      </button>
+
+    </div>
+  )
+}
+
+// =====================================================
+// WRAPPER (CLAVE)
+// =====================================================
+
+export default function ResetPasswordPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
 
-      <div className="max-w-md w-full bg-neutral-900 p-8 rounded-xl text-center">
-
-        <h1 className="text-xl text-white mb-4">
-          Set new password
-        </h1>
-
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 rounded mb-4"
-          disabled={loading}
-        />
-
-        {message && (
-          <p className={`text-sm mb-3 ${
-            message.type === "error"
-              ? "text-red-400"
-              : "text-green-400"
-          }`}>
-            {message.text}
-          </p>
-        )}
-
-        <button
-          onClick={handleReset}
-          disabled={loading}
-          className="bg-white text-black px-4 py-2 rounded"
-        >
-          {loading ? "Updating..." : "Update password"}
-        </button>
-
-      </div>
+      <Suspense fallback={<p className="text-white">Loading...</p>}>
+        <ResetContent />
+      </Suspense>
 
     </div>
   )
