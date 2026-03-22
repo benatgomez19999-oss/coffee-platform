@@ -1,16 +1,15 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
+
 // =====================================================
 // SIGNUP SUCCESS PAGE (CLIENT VERSION - FIXED)
 // =====================================================
 
 export default function SignupSuccessPage() {
 
-  const params = new URLSearchParams(
-    typeof window !== "undefined" ? window.location.search : ""
-  );
-
-  const email = params.get("email");
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email")
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4">
