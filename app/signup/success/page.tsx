@@ -29,7 +29,24 @@ export default function SignupSuccessPage() {
             Go to login
           </a>
 
+      
+
         </div>
+
+        <form
+  action="/api/auth/resend-verification"
+  method="POST"
+  className="mt-2"
+>
+  <input type="hidden" name="email" value="" />
+
+  <button
+    type="submit"
+    className="text-sm text-gray-400 hover:text-white"
+  >
+    Resend verification email
+  </button>
+</form>
 
       </div>
     </div>
