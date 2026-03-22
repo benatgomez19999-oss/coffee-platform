@@ -77,6 +77,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
     setError("")
 
     try {
+        console.log("FORM SUBMIT:", form)
       const res = await fetch("/api/company/update", {
   method: "POST",
   headers: {
