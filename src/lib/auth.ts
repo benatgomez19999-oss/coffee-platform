@@ -67,7 +67,7 @@ export async function getUserFromRequest(req: Request) {
 
     const token = cookie
       .split("; ")
-      .find(c => c.startsWith("token="))
+      .find(c => c.startsWith("auth_token="))
       ?.split("=")[1]
 
     if (!token) return null
