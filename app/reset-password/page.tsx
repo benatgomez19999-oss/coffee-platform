@@ -16,21 +16,43 @@ function ResetContent() {
   const token = searchParams.get("token")
 
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{
     text: string
     type: "error" | "success"
   } | null>(null)
 
-  const handleReset = async () => {
+  // =====================================================
+  // VALIDATION
+  // =====================================================
 
+  const validate = () => {
     if (!token) {
-      setMessage({ text: "Invalid link", type: "error" })
-      return
+      return "Invalid or expired link"
     }
 
     if (password.length < 8) {
-      setMessage({ text: "Password must be at least 8 characters", type: "error" })
+      return "Password must be at least 8 characters"
+    }
+
+    if (password !== confirmPassword) {
+      return "Passwords do not match"
+    }
+
+    return null
+  }
+
+  // =====================================================
+  // HANDLE RESET
+  // =====================================================
+
+  const handleReset = async () => {
+
+    const error = validate()
+
+    if (error) {
+      setMessage({ text: error, type: "error" })
       return
     }
 
@@ -64,6 +86,7 @@ function ResetContent() {
         type: "success"
       })
 
+      // UX PRO → pequeño delay + redirect
       setTimeout(() => {
         router.push("/login")
       }, 1500)
@@ -79,24 +102,40 @@ function ResetContent() {
     }
   }
 
-  return (
-    <div className="max-w-md w-full bg-neutral-900 p-8 rounded-xl text-center">
+  // =====================================================
+  // UI
+  // =====================================================
 
-      <h1 className="text-xl text-white mb-4">
+  return (
+    <div className="max-w-md w-full bg-neutral-900 p-8 rounded-xl text-center shadow-lg">
+
+      <h1 className="text-xl text-white mb-6">
         Set new password
       </h1>
 
+      {/* PASSWORD */}
       <input
         type="password"
         placeholder="New password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full p-2 rounded mb-4"
+        className="w-full p-3 rounded-md mb-3 bg-black border border-gray-700 text-white placeholder-gray-500"
         disabled={loading}
       />
 
+      {/* CONFIRM PASSWORD */}
+      <input
+        type="password"
+        placeholder="Confirm new password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        className="w-full p-3 rounded-md mb-4 bg-black border border-gray-700 text-white placeholder-gray-500"
+        disabled={loading}
+      />
+
+      {/* MESSAGE */}
       {message && (
-        <p className={`text-sm mb-3 ${
+        <p className={`text-sm mb-4 ${
           message.type === "error"
             ? "text-red-400"
             : "text-green-400"
@@ -105,10 +144,11 @@ function ResetContent() {
         </p>
       )}
 
+      {/* BUTTON */}
       <button
         onClick={handleReset}
         disabled={loading}
-        className="bg-white text-black px-4 py-2 rounded"
+        className="w-full bg-white text-black py-2 rounded-md font-medium hover:opacity-90 transition"
       >
         {loading ? "Updating..." : "Update password"}
       </button>
@@ -118,7 +158,7 @@ function ResetContent() {
 }
 
 // =====================================================
-// WRAPPER (CLAVE)
+// WRAPPER (SUSPENSE)
 // =====================================================
 
 export default function ResetPasswordPage() {
