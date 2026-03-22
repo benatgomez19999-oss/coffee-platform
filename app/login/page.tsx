@@ -12,39 +12,47 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  // =====================================================
+  // LOGIN HANDLER
+  // =====================================================
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
+
+    if (loading) return // 🛑 evitar doble submit
 
     setLoading(true)
     setError("")
 
     try {
-     const res = await fetch("/api/auth/login", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  credentials: "include", // 💣 CLAVE
-  body: JSON.stringify({
-    email,
-    password
-  })
-})
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password
+        })
+      })
 
       if (!res.ok) {
-        setError("Invalid credentials")
-        setLoading(false)
+        setError("Invalid email or password")
         return
       }
 
-      // 🔥 clave: refrescar estado server
-      router.refresh()
+      // =====================================================
+      // 🔄 REFRESH + REDIRECT
+      // =====================================================
 
-      // 🔥 redirect limpio
+      router.refresh()
       router.replace("/platform")
 
     } catch (err) {
-      setError("Something went wrong")
+      console.error(err)
+      setError("Network error, please try again")
+    } finally {
       setLoading(false)
     }
   }
@@ -73,40 +81,53 @@ export default function LoginPage() {
         }}
       >
 
-        <h2 style={{ fontWeight: 300 }}>Login</h2>
+        <h2 style={{ fontWeight: 300 }}>
+          Login
+        </h2>
 
+        {/* EMAIL */}
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={loading}
           style={{
             padding: "10px",
             borderRadius: "6px",
-            border: "none"
+            border: "none",
+            opacity: loading ? 0.6 : 1
           }}
         />
 
+        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          disabled={loading}
           style={{
             padding: "10px",
             borderRadius: "6px",
-            border: "none"
+            border: "none",
+            opacity: loading ? 0.6 : 1
           }}
         />
 
+        {/* ERROR */}
         {error && (
-          <div style={{ color: "#f87171", fontSize: "0.85rem" }}>
+          <div style={{
+            color: "#f87171",
+            fontSize: "0.85rem"
+          }}>
             {error}
           </div>
         )}
 
+        {/* BUTTON */}
         <button
           type="submit"
           disabled={loading}
@@ -116,10 +137,11 @@ export default function LoginPage() {
             background: "#d4af37",
             color: "#111",
             border: "none",
-            cursor: "pointer"
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1
           }}
         >
-          {loading ? "Loading..." : "Login"}
+          {loading ? "Logging in..." : "Login"}
         </button>
 
       </form>
