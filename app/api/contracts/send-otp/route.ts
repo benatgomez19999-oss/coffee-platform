@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       mode,
       contractDraft,
       contractId,
-      channel // 🔥 NUEVO
+      channel
     } = body
 
     const sendChannel = channel || "sms"
@@ -86,18 +86,6 @@ export async function POST(req: Request) {
 
       phone = contract?.company?.phone || null
     }
-
-    // =====================================================
-    // GET EMAIL
-    // =====================================================
-
-    let email: string | null = null
-
-    if (contractDraft?.client?.email) {
-      email = contractDraft.client.email
-    }
-
-    // 👉 opcional: si luego quieres company.email lo añadimos aquí
 
     // =====================================================
     // GENERATE OTP
@@ -154,10 +142,30 @@ export async function POST(req: Request) {
       }
 
       // -----------------------------------------------------
-      // 📧 EMAIL (RESEND)
+      // 📧 EMAIL (RESEND + RECOVERY FLOW)
       // -----------------------------------------------------
 
       if (sendChannel === "email") {
+
+        let email: string | null = null
+
+        // 🟡 PRIORIDAD 1 → draft inicial
+        if (contractDraft?.client?.email) {
+          email = contractDraft.client.email
+        }
+
+        // 🟢 PRIORIDAD 2 → recuperar de token anterior
+        if (!email && contractId) {
+          const lastToken = await prisma.signatureToken.findFirst({
+            where: { contractId },
+            orderBy: { createdAt: "desc" }
+          })
+
+          if (lastToken?.contractDraft) {
+            const draft: any = lastToken.contractDraft
+            email = draft?.client?.email || null
+          }
+        }
 
         if (!email) {
           console.warn("⚠️ No email available for OTP")
