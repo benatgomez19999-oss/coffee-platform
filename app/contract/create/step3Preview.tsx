@@ -14,7 +14,6 @@ import {
 import { registerEngineContract } from "@/engine/runtime"
 
 
-
 // =====================================================
 // TYPES
 // =====================================================
@@ -73,9 +72,8 @@ export default function Step3Preview({ draft }: Props) {
 
         setPdfUrl(url)
       } catch (err) {
-  console.error("🔥 SIGN CONTRACT ERROR:", err)
-  setLoading(false) // 🔥 MUY IMPORTANTE
-}
+        console.error("🔥 PDF ERROR:", err)
+      }
     }
 
     buildPDF()
@@ -83,42 +81,31 @@ export default function Step3Preview({ draft }: Props) {
 
 
   // =====================================================
-  // SIGN CONTRACT
+  // SIGN CONTRACT → NOW OTP FLOW
   // =====================================================
 
   async function signContract() {
-    if (loading) return
-setLoading(true)
 
-    console.log("🚀 SIGN CLICKED")
+    if (loading) return
+    setLoading(true)
 
     try {
-
-      // =====================================================
-      // ✅ VALIDATE PHONE (CRÍTICO)
-      // =====================================================
 
       const phone = draft.client.phone?.trim()
 
       if (!phone) {
-        console.error("❌ PHONE MISSING — BLOCKING SIGN")
         alert("Please enter a phone number before signing")
+        setLoading(false)
         return
       }
 
-      console.log("📱 PHONE OK:", phone)
-
-
       const selectedContract = getSelectedContract()
 
-
       // =====================================================
-      // MODIFY EXISTING CONTRACT
+      // 🟡 AMEND EXISTING CONTRACT
       // =====================================================
 
       if (selectedContract) {
-
-        console.log("🟡 AMENDING CONTRACT:", selectedContract.id)
 
         await fetch("/api/contracts/amend", {
           method: "POST",
@@ -129,28 +116,22 @@ setLoading(true)
           })
         })
 
-        console.log("🟡 REQUEST SIGNATURE (existing)")
-
-        const signRes = await fetch("/api/signature/request", {
+        // 👉 SEND OTP
+        await fetch("/api/contracts/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contractId: selectedContract.id,
-            phone
+            contractId: selectedContract.id
           })
         })
 
-        const signData = await signRes.json()
-
-        console.log("✅ SIGNATURE RESPONSE:", signData)
-
-        router.replace("/platform?contract=awaiting_signature")
+        router.replace("/platform?contract=otp_required")
         return
       }
 
 
       // =====================================================
-      // CREATE NEW CONTRACT
+      // 🟢 CREATE NEW CONTRACT
       // =====================================================
 
       const contract = {
@@ -164,102 +145,42 @@ setLoading(true)
         status: "pending_signature" as const
       }
 
-      console.log("🟢 NEW CONTRACT:", contract)
-
-
-      // =====================================================
-      // REGISTER IN ENGINE
-      // =====================================================
-
       registerEngineContract(contract)
 
+      const createRes = await fetch("/api/contracts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          id: contract.id,
+          monthlyVolumeKg: contract.monthlyVolumeKg,
+          durationMonths: contract.durationMonths
+        })
+      })
 
-      // =====================================================
-      // CREATE CONTRACT (API)
-      // =====================================================
+      if (!createRes.ok) {
+        throw new Error("Contract creation failed")
+      }
 
-     const createRes = await fetch("/api/contracts/create", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include", // 🔥 CLAVE PARA AUTH
-  body: JSON.stringify({
-    id: contract.id,
-    monthlyVolumeKg: contract.monthlyVolumeKg,
-    durationMonths: contract.durationMonths
-  })
-})
+      // 👉 SEND OTP
+      await fetch("/api/contracts/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractId: contract.id
+        })
+      })
 
-// 💣 VALIDACIÓN
-if (!createRes.ok) {
-  const err = await createRes.text()
-  console.error("❌ CREATE FAILED:", err)
-  throw new Error("Contract creation failed")
-}
-
-const createData = await createRes.json()
-
-console.log("✅ CONTRACT CREATED:", createData)
-
-
-      // =====================================================
-      // REQUEST SIGNATURE
-      // =====================================================
-
-      console.log("🟡 REQUESTING SIGNATURE...")
-
-      const signRes = await fetch("/api/signature/request", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include", // 🔥 REQUIRED FOR AUTH
-  body: JSON.stringify({
-    contractId: contract.id,
-    phone
-  })
-})
-
-    const text = await signRes.text()
-
-console.log("🧪 RAW RESPONSE:", text)
-
-let signData: any = null
-
-try {
-  signData = JSON.parse(text)
-} catch {
-  console.error("❌ INVALID JSON RESPONSE")
-}
-
-if (!signRes.ok) {
-  console.error("❌ SIGNATURE FAILED:", signData)
-  throw new Error(signData?.message || "Signature failed")
-}
-
-console.log("✅ SIGNATURE RESPONSE:", signData)
-
-
-      // =====================================================
-      // 👉 AQUÍ ESTÁ LA MAGIA (PRUEBA MÓVIL)
-      // =====================================================
-
-     if (signData?.signingLink) {
-  window.location.href = signData.signingLink
-  return
-   }
-
-
-      // =====================================================
-      // REDIRECT DASHBOARD
-      // =====================================================
-
-      router.replace("/platform?contract=awaiting_signature")
+      // 👉 REDIRECT A OTP STATE
+      router.replace("/platform?contract=otp_required")
 
     } catch (err) {
 
       console.error("🔥 SIGN CONTRACT ERROR:", err)
+      alert("Error during signing process")
+      setLoading(false)
 
     }
-
-    
 
   }
 
@@ -269,51 +190,35 @@ console.log("✅ SIGNATURE RESPONSE:", signData)
   // =====================================================
 
   return (
+    <div>
 
-    <div className="space-y-6 p-6 border rounded">
-
-      <h2 className="text-lg font-semibold">
-        Contract Preview
-      </h2>
-
-      <div className="space-y-1">
-        <h3 className="font-medium">Client</h3>
-        <p>{draft.client.businessName}</p>
-        <p className="text-sm text-gray-600">
-          {draft.client.country}
-        </p>
-      </div>
-
-      <div className="space-y-1">
-        <h3 className="font-medium">Supply</h3>
-        <p>Origin: {draft.supply.origin}</p>
-        <p>Monthly Volume: {monthly} kg</p>
-        <p>Duration: {duration} months</p>
-      </div>
-
-      <div className="text-lg font-semibold">
-        Total Supply: {total} kg
-      </div>
+      <h2>Contract Preview</h2>
 
       {pdfUrl && (
         <iframe
           src={pdfUrl}
           style={{
             width: "100%",
-            height: "600px",
-            border: "1px solid #ccc",
-            borderRadius: "6px"
+            height: "400px",
+            border: "1px solid #ddd",
+            marginBottom: 20
           }}
         />
       )}
 
-   <button
-  onClick={signContract}
-  disabled={loading}
-  className="bg-black text-white px-6 py-2 rounded"
->
-  {loading ? "Signing..." : "Sign Contract"}
-</button>
+      <button
+        onClick={signContract}
+        disabled={loading}
+        style={{
+          padding: "12px 20px",
+          background: loading ? "#888" : "#000",
+          color: "#fff",
+          borderRadius: 8,
+          cursor: loading ? "not-allowed" : "pointer"
+        }}
+      >
+        {loading ? "Sending OTP..." : "Sign Contract"}
+      </button>
 
     </div>
   )
