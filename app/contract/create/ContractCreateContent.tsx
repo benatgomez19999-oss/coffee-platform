@@ -77,39 +77,54 @@ export default function ContractCreatePage() {
   // 🔥 FETCH COMPANY (AUTOFILL BASE)
   // =====================================================
 
-  useEffect(() => {
-    const fetchCompany = async () => {
-      try {
-        const res = await fetch("/api/company/me", {
-          credentials: "include"
-        })
+useEffect(() => {
+  const fetchCompany = async () => {
+    try {
+      const res = await fetch("/api/company/me", {
+        credentials: "include"
+      })
 
-        if (res.ok) {
-          const data = await res.json()
-          setCompany(data.company)
+      const userRes = await fetch("/api/auth/me", {
+        credentials: "include"
+      })
 
-          // 💥 PREFILL SOLO SI ESTÁ VACÍO
-          setDraft(prev => ({
-            ...prev,
-            client: {
-              ...prev.client,
-              country: prev.client.country || data.company?.country || "",
-              businessName: prev.client.businessName || data.company?.name || "",
-              vat: prev.client.vat || data.company?.vat || "",
-              address: prev.client.address || data.company?.address || "",
-              contactName: prev.client.contactName || data.company?.contactName || "",
-              phone: prev.client.phone || data.company?.phone || ""
-            }
-          }))
-        }
+      let userEmail = ""
 
-      } catch (err) {
-        console.error(err)
+      if (userRes.ok) {
+        const userData = await userRes.json()
+        userEmail = userData.user?.email || ""
       }
-    }
 
-    fetchCompany()
-  }, [])
+      let companyData = null
+
+      if (res.ok) {
+        const data = await res.json()
+        companyData = data.company
+        setCompany(companyData)
+      }
+
+      // 💥 SIEMPRE PREFILL (aunque no haya company)
+      setDraft(prev => ({
+        ...prev,
+        client: {
+          ...prev.client,
+          country: prev.client.country || companyData?.country || "",
+          businessName: prev.client.businessName || companyData?.name || "",
+          vat: prev.client.vat || companyData?.vat || "",
+          address: prev.client.address || companyData?.address || "",
+          contactName: prev.client.contactName || companyData?.contactName || "",
+          phone: prev.client.phone || companyData?.phone || "",
+          email: prev.client.email || userEmail,
+        }
+      }))
+
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  fetchCompany()
+}, [])
 
   // =====================================================
   // APPLY VOLUME PARAM FROM SLIDER
