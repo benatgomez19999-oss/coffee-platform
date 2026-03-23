@@ -1013,7 +1013,7 @@ return (
 </span>
 
   <span
-  onClick={() => router.push("/contracts")}
+  onClick={() => router.push("/platform/contracts")}
   style={{
     ...navItemStyle,
     color: pathname === "/contracts" ? "white" : "#aaa"
@@ -1078,7 +1078,7 @@ return (
       position: "absolute",
       bottom: "0",
       left: "50%",
-      width: pathname === "/" ? "100%" : "0%",
+      width: "0%",
       height: "1px",
       background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
       transition: "all 0.3s ease"
