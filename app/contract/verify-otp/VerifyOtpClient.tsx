@@ -1,7 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useRef } from "react"
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function VerifyOtpClient({
   contractId
@@ -10,11 +14,57 @@ export default function VerifyOtpClient({
 }) {
   const router = useRouter()
 
-  const [code, setCode] = useState("")
+  // =====================================================
+  // STATE
+  // =====================================================
+
+  const [values, setValues] = useState(["", "", "", "", "", ""])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
 
-  const handleVerify = async () => {
+  const inputs = useRef<(HTMLInputElement | null)[]>([])
+
+  // =====================================================
+  // HANDLE INPUT
+  // =====================================================
+
+  const handleChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return
+
+    const newValues = [...values]
+    newValues[index] = value
+    setValues(newValues)
+
+    if (value && index < 5) {
+      inputs.current[index + 1]?.focus()
+    }
+
+    // AUTO SUBMIT
+    if (newValues.every((v) => v !== "")) {
+      verify(newValues.join(""))
+    }
+  }
+
+  // =====================================================
+  // PASTE SUPPORT
+  // =====================================================
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const paste = e.clipboardData.getData("text").slice(0, 6)
+    if (!/^\d+$/.test(paste)) return
+
+    const newValues = paste.split("")
+    setValues(newValues)
+
+    verify(paste)
+  }
+
+  // =====================================================
+  // VERIFY
+  // =====================================================
+
+  const verify = async (code: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -40,32 +90,127 @@ export default function VerifyOtpClient({
 
     } catch (err: any) {
       setError(err.message)
+      setValues(["", "", "", "", "", ""])
+      inputs.current[0]?.focus()
     } finally {
       setLoading(false)
     }
   }
 
+  // =====================================================
+  // RESEND (SMS / EMAIL)
+  // =====================================================
+
+  const resend = async (channel: "sms" | "email") => {
+    try {
+      setResending(true)
+
+      await fetch("/api/contracts/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contractId,
+          channel
+        })
+      })
+
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setResending(false)
+    }
+  }
+
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-4">
-        <h1 className="text-xl font-semibold">Verify Contract</h1>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-black to-gray-900">
+      <div className="w-full max-w-md text-center space-y-6 bg-white/5 p-8 rounded-xl backdrop-blur">
 
-        <input
-          className="w-full border p-2"
-          placeholder="Enter OTP"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
+        {/* ===================================================== */}
+        {/* HEADER */}
+        {/* ===================================================== */}
+        <h1 className="text-2xl font-semibold text-white">
+          Verify your contract
+        </h1>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <p className="text-gray-400 text-sm">
+          Enter the 6-digit code sent to your phone
+        </p>
 
+        {/* ===================================================== */}
+        {/* OTP INPUT */}
+        {/* ===================================================== */}
+        <div className="flex justify-center gap-3">
+          {values.map((v, i) => (
+            <input
+              key={i}
+             ref={(el) => {
+             inputs.current[i] = el
+             }}
+              value={v}
+              onChange={(e) => handleChange(e.target.value, i)}
+              onPaste={handlePaste}
+              maxLength={1}
+              className="w-12 h-14 text-center text-xl border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+            />
+          ))}
+        </div>
+
+        {/* ===================================================== */}
+        {/* ERROR */}
+        {/* ===================================================== */}
+        {error && (
+          <p className="text-red-400 text-sm">{error}</p>
+        )}
+
+        {/* ===================================================== */}
+        {/* LOADING */}
+        {/* ===================================================== */}
+        {loading && (
+          <p className="text-gray-400 text-sm">Verifying...</p>
+        )}
+
+        {/* ===================================================== */}
+        {/* BUTTON */}
+        {/* ===================================================== */}
         <button
-          onClick={handleVerify}
-          disabled={loading}
-          className="w-full bg-black text-white p-2"
+          onClick={() => verify(values.join(""))}
+          disabled={loading || values.some(v => v === "")}
+          className="w-full bg-white text-black p-3 rounded-md font-medium disabled:opacity-50"
         >
-          {loading ? "Verifying..." : "Confirm Contract"}
+          Confirm Contract
         </button>
+
+        {/* ===================================================== */}
+        {/* RESEND */}
+        {/* ===================================================== */}
+        <div className="text-sm text-gray-400 space-y-2">
+          <p>Didn't receive the code?</p>
+
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => resend("sms")}
+              disabled={resending}
+              className="underline hover:text-white"
+            >
+              Resend SMS
+            </button>
+
+            <button
+              onClick={() => resend("email")}
+              disabled={resending}
+              className="underline hover:text-white"
+            >
+              Send via Email
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   )
