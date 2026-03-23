@@ -920,7 +920,9 @@ const navItemStyle = {
   fontSize: "14px",
   color: "#aaa",
   cursor: "pointer",
-  transition: "color 0.2s ease"
+  transition: "color 0.25s ease",
+  position: "relative" as const,
+  paddingBottom: "4px"
 }
 
 
@@ -974,39 +976,114 @@ return (
   <div style={{ display: "flex", gap: "20px", fontSize: "14px", color: "#aaa" }}>
     
 
-    <span
+   <span
   onClick={() => router.push("/platform")}
   style={{
     ...navItemStyle,
-    cursor: "pointer",
     color: pathname === "/platform" ? "white" : "#aaa"
+  }}
+  onMouseEnter={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "100%"
+      underline.style.left = "0"
+    }
+  }}
+  onMouseLeave={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "0%"
+      underline.style.left = "50%"
+    }
   }}
 >
   Dashboard
+
+  <span
+    style={{
+      position: "absolute",
+      bottom: "0",
+      left: "50%",
+      width: pathname === "/platform" ? "100%" : "0%",
+      height: "1px",
+      background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
+      transition: "all 0.3s ease"
+    }}
+  />
 </span>
 
-    <span
-  onClick={() => router.push("/contracts")}
+  <span
+  onClick={() => router.push("/platform")}
   style={{
     ...navItemStyle,
-    cursor: "pointer",
-    color: pathname === "/contracts" ? "white" : "#aaa"
+    color: pathname === "/platform" ? "white" : "#aaa"
+  }}
+  onMouseEnter={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "100%"
+      underline.style.left = "0"
+    }
+  }}
+  onMouseLeave={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "0%"
+      underline.style.left = "50%"
+    }
   }}
 >
   Contracts
+
+  <span
+    style={{
+      position: "absolute",
+      bottom: "0",
+      left: "50%",
+      width: pathname === "/platform" ? "100%" : "0%",
+      height: "1px",
+      background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
+      transition: "all 0.3s ease"
+    }}
+  />
 </span>
 
   </div>
 
-  <span
-  onClick={() => router.push("/")}
+ <span
+  onClick={() => router.push("/platform")}
   style={{
     ...navItemStyle,
-    cursor: "pointer",
-    color: pathname === "/" ? "white" : "#aaa"
+    color: pathname === "/platform" ? "white" : "#aaa"
+  }}
+  onMouseEnter={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "100%"
+      underline.style.left = "0"
+    }
+  }}
+  onMouseLeave={(e) => {
+    const underline = e.currentTarget.querySelector("span")
+    if (underline) {
+      underline.style.width = "0%"
+      underline.style.left = "50%"
+    }
   }}
 >
   Marketplace
+
+  <span
+    style={{
+      position: "absolute",
+      bottom: "0",
+      left: "50%",
+      width: pathname === "/platform" ? "100%" : "0%",
+      height: "1px",
+      background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
+      transition: "all 0.3s ease"
+    }}
+  />
 </span>
 
 </div>
