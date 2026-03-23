@@ -1,3 +1,6 @@
+// ⚠️ LEGACY LINK-BASED SIGNING (NOT USED IN PROD)
+// kept for fallback & debugging
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
 
@@ -6,19 +9,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // =====================================================
-// VERIFY SIGNATURE TOKEN (PRISMA)
+// SIGN CONTRACT (SAFE + DEBUG)
 // =====================================================
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   try {
-   
+    
 
-    const { searchParams } = new URL(req.url);
-    const token = searchParams.get("token");
+    const body = await req.json();
+    const { token } = body;
 
-    // =====================================================
-    // VALIDATION
-    // =====================================================
+    console.log("🟡 SIGN TOKEN:", token);
+
     if (!token) {
       return NextResponse.json(
         { error: "Missing token" },
@@ -33,47 +35,56 @@ export async function GET(req: Request) {
       where: { token },
     });
 
-    // =====================================================
-    // NOT FOUND
-    // =====================================================
+    console.log("🔍 TOKEN RECORD:", record);
+
     if (!record) {
       return NextResponse.json(
-        { error: "Invalid signature link" },
+        { error: "Invalid token" },
         { status: 404 }
       );
     }
 
     // =====================================================
-    // EXPIRED
+    // MARK TOKEN AS SIGNED
     // =====================================================
-    if (new Date() > record.expiresAt) {
-      return NextResponse.json(
-        { error: "Signature link expired" },
-        { status: 400 }
-      );
-    }
+    await prisma.signatureToken.update({
+      where: { token },
+      data: {
+        signed: true,
+      },
+    });
+
+    console.log("✅ TOKEN MARKED AS SIGNED");
 
     // =====================================================
-    // ALREADY SIGNED
+    // UPDATE CONTRACT
     // =====================================================
-    if (record.signed) {
+    try {
+      await prisma.contract.update({
+        where: { id: record.contractId },
+        data: {
+          status: "CONFIRMED",
+        },
+      });
+
+      console.log("✅ CONTRACT UPDATED");
+
+    } catch (err) {
+      console.error("❌ CONTRACT UPDATE ERROR:", err);
+
       return NextResponse.json(
-        { error: "Contract already signed" },
-        { status: 400 }
+        { error: "Contract update failed" },
+        { status: 500 }
       );
     }
 
     // =====================================================
     // SUCCESS
     // =====================================================
-    return NextResponse.json({
-      token: record.token,
-      contractId: record.contractId,
-      expiresAt: record.expiresAt,
-    });
+    return NextResponse.json({ success: true });
 
   } catch (err) {
-    console.error("❌ VERIFY ERROR:", err);
+    console.error("🔥 SIGN ERROR:", err);
 
     return NextResponse.json(
       { error: "Internal error" },

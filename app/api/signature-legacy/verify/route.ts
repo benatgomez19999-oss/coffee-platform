@@ -1,3 +1,6 @@
+// ⚠️ LEGACY LINK-BASED SIGNING (NOT USED IN PROD)
+// kept for fallback & debugging
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
 
@@ -6,18 +9,19 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // =====================================================
-// SIGN CONTRACT (SAFE + DEBUG)
+// VERIFY SIGNATURE TOKEN (PRISMA)
 // =====================================================
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    
+   
 
-    const body = await req.json();
-    const { token } = body;
+    const { searchParams } = new URL(req.url);
+    const token = searchParams.get("token");
 
-    console.log("🟡 SIGN TOKEN:", token);
-
+    // =====================================================
+    // VALIDATION
+    // =====================================================
     if (!token) {
       return NextResponse.json(
         { error: "Missing token" },
@@ -32,56 +36,47 @@ export async function POST(req: Request) {
       where: { token },
     });
 
-    console.log("🔍 TOKEN RECORD:", record);
-
+    // =====================================================
+    // NOT FOUND
+    // =====================================================
     if (!record) {
       return NextResponse.json(
-        { error: "Invalid token" },
+        { error: "Invalid signature link" },
         { status: 404 }
       );
     }
 
     // =====================================================
-    // MARK TOKEN AS SIGNED
+    // EXPIRED
     // =====================================================
-    await prisma.signatureToken.update({
-      where: { token },
-      data: {
-        signed: true,
-      },
-    });
-
-    console.log("✅ TOKEN MARKED AS SIGNED");
-
-    // =====================================================
-    // UPDATE CONTRACT
-    // =====================================================
-    try {
-      await prisma.contract.update({
-        where: { id: record.contractId },
-        data: {
-          status: "CONFIRMED",
-        },
-      });
-
-      console.log("✅ CONTRACT UPDATED");
-
-    } catch (err) {
-      console.error("❌ CONTRACT UPDATE ERROR:", err);
-
+    if (new Date() > record.expiresAt) {
       return NextResponse.json(
-        { error: "Contract update failed" },
-        { status: 500 }
+        { error: "Signature link expired" },
+        { status: 400 }
+      );
+    }
+
+    // =====================================================
+    // ALREADY SIGNED
+    // =====================================================
+    if (record.signed) {
+      return NextResponse.json(
+        { error: "Contract already signed" },
+        { status: 400 }
       );
     }
 
     // =====================================================
     // SUCCESS
     // =====================================================
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      token: record.token,
+      contractId: record.contractId,
+      expiresAt: record.expiresAt,
+    });
 
   } catch (err) {
-    console.error("🔥 SIGN ERROR:", err);
+    console.error("❌ VERIFY ERROR:", err);
 
     return NextResponse.json(
       { error: "Internal error" },

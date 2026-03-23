@@ -1,3 +1,6 @@
+// ⚠️ LEGACY LINK-BASED SIGNING (NOT USED IN PROD)
+// kept for fallback & debugging
+
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/database/prisma";
