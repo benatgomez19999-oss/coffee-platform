@@ -915,29 +915,61 @@ const status = useMemo(() => {
 
 return (
   <>
+
+    {/* ONBOARDING */}
     {!user.onboardingCompleted && (
-  <OnboardingWizard 
-    user={user}
-    onComplete={() => window.location.reload()}
-  />
-)}
+      <OnboardingWizard 
+        user={user}
+        onComplete={() => window.location.reload()}
+      />
+    )}
 
-    <div style={{
-      minHeight: "100vh",
-      background: "#0b0f0f",
-      color: "white",
-      paddingTop: "120px"
-    }}>
+    {/* ====================================================== */}
+    {/* HEADER PRO SaaS */}
+    {/* ====================================================== */}
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "70px",
+        background: "rgba(11,15,15,0.85)",
+        backdropFilter: "blur(10px)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 40px",
+        zIndex: 1000
+      }}
+    >
 
-      {/* HEADER */}
-      <div style={{ padding: "0 80px" }}>
+      {/* LEFT */}
+      <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
+        <div style={{ fontWeight: 500 }}>
+          Altura Collective
+        </div>
 
-        <h2 style={{
-          fontWeight: 300,
-          marginBottom: "40px"
-        }}>
-          Client Dashboard
-        </h2>
+        <div style={{ display: "flex", gap: "20px", fontSize: "14px", color: "#aaa" }}>
+          <span style={{ color: "white" }}>Dashboard</span>
+          <span style={{ cursor: "pointer" }}>Contracts</span>
+          <span style={{ cursor: "pointer" }}>Settings</span>
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ fontSize: "14px", color: "#ccc" }}>
+          {user?.email}
+        </div>
+
+        <div style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: "#4ade80"
+        }} />
 
         <button
           onClick={async () => {
@@ -945,30 +977,50 @@ return (
               method: "POST",
               credentials: "include"
             })
-
             window.location.href = "/"
           }}
           style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            padding: "6px 14px",
-            borderRadius: 999,
+            padding: "6px 12px",
+            borderRadius: "999px",
             border: "1px solid rgba(255,255,255,0.2)",
-            background: "rgba(255,255,255,0.06)",
+            background: "transparent",
+            color: "white",
             cursor: "pointer"
           }}
         >
           Logout
         </button>
+      </div>
 
+    </div>
+
+    {/* ====================================================== */}
+    {/* MAIN DASHBOARD */}
+    {/* ====================================================== */}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0b0f0f",
+        color: "white",
+        paddingTop: "120px"
+      }}
+    >
+
+      {/* TITLE */}
+      <div style={{ padding: "0 80px" }}>
+        <h2 style={{
+          fontWeight: 300,
+          marginBottom: "40px"
+        }}>
+          Client Dashboard
+        </h2>
       </div>
 
       {/* SUCCESS MESSAGE */}
       {showMessage && (
         <div
           style={{
-            marginBottom: 30,
+            margin: "0 80px 30px 80px",
             padding: "16px 22px",
             borderRadius: 12,
             background: "rgba(74,222,128,0.1)",
@@ -1006,6 +1058,7 @@ return (
       </div>
 
     </div>
+
   </>
 )
-}
+  }
