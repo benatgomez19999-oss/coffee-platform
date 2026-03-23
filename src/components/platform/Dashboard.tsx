@@ -916,7 +916,12 @@ const status = useMemo(() => {
 }, [semaphoreState, volume])
 
 
-
+const navItemStyle = {
+  fontSize: "14px",
+  color: "#aaa",
+  cursor: "pointer",
+  transition: "color 0.2s ease"
+}
 
 
 return (
@@ -972,6 +977,7 @@ return (
     <span
   onClick={() => router.push("/platform")}
   style={{
+    ...navItemStyle,
     cursor: "pointer",
     color: pathname === "/platform" ? "white" : "#aaa"
   }}
@@ -982,6 +988,7 @@ return (
     <span
   onClick={() => router.push("/contracts")}
   style={{
+    ...navItemStyle,
     cursor: "pointer",
     color: pathname === "/contracts" ? "white" : "#aaa"
   }}
@@ -994,6 +1001,7 @@ return (
   <span
   onClick={() => router.push("/")}
   style={{
+    ...navItemStyle,
     cursor: "pointer",
     color: pathname === "/" ? "white" : "#aaa"
   }}
