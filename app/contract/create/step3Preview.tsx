@@ -78,7 +78,7 @@ export default function Step3Preview({ draft }: Props) {
 
 
   // =====================================================
-  // SIGN CONTRACT → OTP FLOW (NO CONTRACT YET)
+  // SIGN CONTRACT → OTP FLOW (FIXED ARCHITECTURE)
   // =====================================================
 
   async function signContract() {
@@ -98,8 +98,11 @@ export default function Step3Preview({ draft }: Props) {
 
       const selectedContract = getSelectedContract()
 
+
       // =====================================================
-      // 🟡 AMEND EXISTING CONTRACT (solo prepara OTP)
+      // 🟡 AMEND EXISTING CONTRACT
+      // → ya existe contractId
+      // → solo enviamos OTP
       // =====================================================
 
       if (selectedContract) {
@@ -114,26 +117,60 @@ export default function Step3Preview({ draft }: Props) {
           })
         })
 
-        router.replace("/platform?contract=otp_required")
+        // ✅ REDIRECT A OTP PAGE (NO MÁS PLATFORM HACK)
+        router.replace(`/contract/verify-otp?contractId=${selectedContract.id}`)
         return
       }
 
 
       // =====================================================
-      // 🟢 NEW CONTRACT → SOLO ENVÍA OTP (NO CREA NADA)
+      // 🟢 NEW CONTRACT (FIXED)
+      // → 1. crear contrato en DB
+      // → 2. enviar OTP ligado al contractId
+      // → 3. redirect a verify page
       // =====================================================
+
+      // -----------------------------------------------
+      // 1. CREATE CONTRACT
+      // -----------------------------------------------
+
+      const createRes = await fetch("/api/contracts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractDraft: draft
+        })
+      })
+
+      const createData = await createRes.json()
+
+      if (!createData.success) {
+        throw new Error("Failed to create contract")
+      }
+
+      const contractId = createData.contractId
+
+
+      // -----------------------------------------------
+      // 2. SEND OTP (linked to contractId)
+      // -----------------------------------------------
 
       await fetch("/api/contracts/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "create",
-          contractDraft: draft
+          contractId
         })
       })
 
-      // 👉 REDIRECT A OTP STATE
-      router.replace("/platform?contract=otp_required")
+
+      // -----------------------------------------------
+      // 3. REDIRECT TO OTP PAGE
+      // -----------------------------------------------
+
+      router.replace(`/contract/verify-otp?contractId=${contractId}`)
+
 
     } catch (err) {
 

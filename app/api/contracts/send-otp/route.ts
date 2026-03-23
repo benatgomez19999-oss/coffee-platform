@@ -33,7 +33,7 @@ function formatPhone(phone: string) {
 }
 
 // =====================================================
-// SEND OTP (STORE DRAFT)
+// SEND OTP (FIXED: SUPPORT CREATE + AMEND)
 // =====================================================
 
 export async function POST(req: Request) {
@@ -47,18 +47,50 @@ export async function POST(req: Request) {
       contractId
     } = body
 
+
     // =====================================================
-    // VALIDATION
+    // VALIDATION (FIXED)
     // =====================================================
 
-    if (!contractDraft) {
+    // 👉 caso CREATE (nuevo flow)
+    // → necesitamos contractId
+    // → draft ya NO es obligatorio
+
+    if (!contractId && !contractDraft) {
       return NextResponse.json(
-        { error: "Missing contractDraft" },
+        { error: "Missing contractId or contractDraft" },
         { status: 400 }
       )
     }
 
-    const phone = contractDraft?.client?.phone
+
+    // =====================================================
+    // GET PHONE (FLEXIBLE)
+    // =====================================================
+
+    let phone: string | null = null
+
+    // 🟡 PRIORIDAD 1 → contractDraft (amend o legacy)
+    if (contractDraft?.client?.phone) {
+      phone = contractDraft.client.phone
+    }
+
+    // 🟢 PRIORIDAD 2 → buscar en DB (nuevo flow)
+    if (!phone && contractId) {
+
+      const contract = await prisma.contract.findUnique({
+  where: { id: contractId },
+  include: {
+    company: {
+      select: {
+        phone: true
+      }
+    }
+  }
+})
+
+phone = contract?.company?.phone || null
+    }
 
     if (!phone) {
       return NextResponse.json(
@@ -69,6 +101,7 @@ export async function POST(req: Request) {
 
     const phoneFormatted = formatPhone(phone)
 
+
     // =====================================================
     // GENERATE OTP
     // =====================================================
@@ -76,17 +109,21 @@ export async function POST(req: Request) {
     const otp = generateOTP()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
+
     // =====================================================
-    // SAVE TOKEN + DRAFT
+    // SAVE TOKEN
     // =====================================================
 
     await prisma.signatureToken.create({
       data: {
         token: otp,
 
-        // 🔥 NUEVO MODELO
+        // 👉 ahora SIEMPRE ligado a contractId si existe
         contractId: contractId || null,
-        contractDraft: contractDraft,
+
+        // 👉 solo guardamos draft si viene (amend / fallback)
+        contractDraft: contractDraft || null,
+
         mode: mode || "create",
 
         phone: phoneFormatted,
@@ -96,6 +133,7 @@ export async function POST(req: Request) {
         signed: false
       }
     })
+
 
     // =====================================================
     // SEND SMS OTP
@@ -115,10 +153,11 @@ export async function POST(req: Request) {
 
       console.error("❌ TWILIO ERROR:", err)
 
-      // ⚠️ NO rompemos flujo por fallo de SMS
+      // ⚠️ no rompemos flujo por fallo de SMS
     }
 
     console.log("🔐 OTP GENERATED:", otp)
+
 
     // =====================================================
     // SUCCESS

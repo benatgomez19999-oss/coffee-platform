@@ -5,28 +5,35 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 // =====================================================
-// VERIFY OTP
+// VERIFY OTP (FINAL FLOW)
 // =====================================================
 
 export async function POST(req: Request) {
   try {
 
     const body = await req.json()
-    const { otp } = body
+    const { code, contractId } = body
 
-    if (!otp) {
+    // =====================================================
+    // VALIDATION
+    // =====================================================
+
+    if (!code || !contractId) {
       return NextResponse.json(
-        { error: "Missing OTP" },
+        { error: "Missing code or contractId" },
         { status: 400 }
       )
     }
 
     // =====================================================
-    // FIND TOKEN
+    // FIND TOKEN (OTP + CONTRACT LINKED)
     // =====================================================
 
-    const record = await prisma.signatureToken.findUnique({
-      where: { token: otp }
+    const record = await prisma.signatureToken.findFirst({
+      where: {
+        token: code,
+        contractId: contractId
+      }
     })
 
     if (!record) {
@@ -54,93 +61,51 @@ export async function POST(req: Request) {
       )
     }
 
-    if (!record.contractDraft) {
-      return NextResponse.json(
-        { error: "Missing contract draft" },
-        { status: 400 }
-      )
-    }
-
-    // 🔒 ensure valid mode
-    if (record.mode !== "create" && record.mode !== "amend") {
-      return NextResponse.json(
-        { error: "Invalid mode" },
-        { status: 400 }
-      )
-    }
-
     // =====================================================
-    // CREATE OR AMEND CONTRACT (TRANSACTION SAFE)
+    // TRANSACTION (CONFIRM CONTRACT)
     // =====================================================
-
-    let contractId = record.contractId
-
-    // 🔧 TEMP: tiparemos después
-    const draft: any = record.contractDraft
-
-    // 🔒 basic draft validation
-    if (!draft.supply) {
-      return NextResponse.json(
-        { error: "Invalid draft structure" },
-        { status: 400 }
-      )
-    }
 
     await prisma.$transaction(async (tx) => {
 
       // -----------------------------
-      // CREATE
+      // 🟢 CONFIRM CONTRACT (NEW FLOW)
       // -----------------------------
-      if (record.mode === "create") {
 
-        if (!draft.companyId) {
-          throw new Error("Missing companyId in draft")
-        }
-
-        const created = await tx.contract.create({
-          data: {
-            id: crypto.randomUUID(),
-            companyId: draft.companyId,
-            monthlyVolumeKg: draft.supply.monthlyVolume,
-            durationMonths: draft.supply.duration,
-            remainingMonths: draft.supply.duration,
-            pricePerBag: draft.pricePerBag ?? 0,
-            bagSizeKg: 20,
-            bagsPerDelivery: draft.bagsPerDelivery ?? 1,
-            startDate: new Date(),
-            status: "CONFIRMED"
-          }
-        })
-
-        contractId = created.id
+      if (!record.contractId) {
+        throw new Error("Missing contractId on token")
       }
 
-      // -----------------------------
-      // AMEND
-      // -----------------------------
-      if (record.mode === "amend") {
-
-        if (!record.contractId) {
-          throw new Error("Missing contractId")
+      await tx.contract.update({
+        where: { id: record.contractId },
+        data: {
+          status: "CONFIRMED"
         }
+      })
+
+      // -----------------------------
+      // 🟡 OPTIONAL: HANDLE AMEND
+      // -----------------------------
+
+      if (record.mode === "amend" && record.contractDraft) {
+
+        const draft: any = record.contractDraft
 
         await tx.contract.update({
           where: { id: record.contractId },
           data: {
-            monthlyVolumeKg: draft.supply.monthlyVolume,
-            durationMonths: draft.supply.duration,
-            remainingMonths: draft.supply.duration
+            monthlyVolumeKg: draft?.supply?.monthlyVolume,
+            durationMonths: draft?.supply?.duration,
+            remainingMonths: draft?.supply?.duration
           }
         })
-
-        contractId = record.contractId
       }
 
       // -----------------------------
-      // MARK TOKEN AS USED
+      // 🔐 MARK TOKEN AS USED
       // -----------------------------
+
       await tx.signatureToken.update({
-        where: { token: otp },
+        where: { token: code },
         data: {
           verified: true,
           signed: true
