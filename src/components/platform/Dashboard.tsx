@@ -1004,19 +1004,19 @@ return (
       position: "absolute",
       bottom: "0",
       left: "50%",
-      width: pathname === "/platform" ? "100%" : "0%",
+      width: "0%",
       height: "1px",
       background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
-      transition: "all 0.3s ease"
+      transition: "width 0.3s ease, left 0.3s ease"
     }}
   />
 </span>
 
   <span
-  onClick={() => router.push("/platform")}
+  onClick={() => router.push("/contracts")}
   style={{
     ...navItemStyle,
-    color: pathname === "/platform" ? "white" : "#aaa"
+    color: pathname === "/contracts" ? "white" : "#aaa"
   }}
   onMouseEnter={(e) => {
     const underline = e.currentTarget.querySelector("span")
@@ -1040,7 +1040,7 @@ return (
       position: "absolute",
       bottom: "0",
       left: "50%",
-      width: pathname === "/platform" ? "100%" : "0%",
+      width: "0%",
       height: "1px",
       background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
       transition: "all 0.3s ease"
@@ -1050,11 +1050,11 @@ return (
 
   </div>
 
- <span
-  onClick={() => router.push("/platform")}
+  <span
+  onClick={() => router.push("/")}
   style={{
     ...navItemStyle,
-    color: pathname === "/platform" ? "white" : "#aaa"
+    color: pathname === "/" ? "white" : "#aaa"
   }}
   onMouseEnter={(e) => {
     const underline = e.currentTarget.querySelector("span")
@@ -1078,13 +1078,14 @@ return (
       position: "absolute",
       bottom: "0",
       left: "50%",
-      width: pathname === "/platform" ? "100%" : "0%",
+      width: pathname === "/" ? "100%" : "0%",
       height: "1px",
       background: "linear-gradient(90deg, #d4af37, #f3d27a, #d4af37)",
       transition: "all 0.3s ease"
     }}
   />
 </span>
+
 
 </div>
 
