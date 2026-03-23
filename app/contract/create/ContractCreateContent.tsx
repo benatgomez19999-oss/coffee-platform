@@ -7,15 +7,11 @@ import Step1Client from "./step1Client"
 import Step2Supply from "./step2Supply"
 import Step3Preview from "./step3Preview"
 
-
-
-
 // =====================================================
 // CONTRACT DRAFT
 // =====================================================
 
 export type ContractDraft = {
-
   client: {
     country: string
     businessName: string
@@ -32,9 +28,7 @@ export type ContractDraft = {
     monthlyVolume: number
     duration: number
   }
-
 }
-
 
 // =====================================================
 // CONTRACT CREATE PAGE
@@ -43,7 +37,7 @@ export type ContractDraft = {
 export default function ContractCreatePage() {
 
   const searchParams = useSearchParams()!
-  
+
   const mode = searchParams.get("mode")
   const contractId = searchParams.get("contractId")
 
@@ -58,8 +52,9 @@ export default function ContractCreatePage() {
     volumeParam ? 3 : 1
   )
 
-  const [draft, setDraft] = useState<ContractDraft>({
+  const [company, setCompany] = useState<any | null>(null)
 
+  const [draft, setDraft] = useState<ContractDraft>({
     client: {
       country: "",
       businessName: "",
@@ -72,17 +67,49 @@ export default function ContractCreatePage() {
     },
 
     supply: {
-
       origin: "Brazil",
-
       monthlyVolume: initialVolume,
-
       duration: 9
-
     }
-
   })
 
+  // =====================================================
+  // 🔥 FETCH COMPANY (AUTOFILL BASE)
+  // =====================================================
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const res = await fetch("/api/company/me", {
+          credentials: "include"
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setCompany(data.company)
+
+          // 💥 PREFILL SOLO SI ESTÁ VACÍO
+          setDraft(prev => ({
+            ...prev,
+            client: {
+              ...prev.client,
+              country: prev.client.country || data.company?.country || "",
+              businessName: prev.client.businessName || data.company?.name || "",
+              vat: prev.client.vat || data.company?.vat || "",
+              address: prev.client.address || data.company?.address || "",
+              contactName: prev.client.contactName || data.company?.contactName || "",
+              phone: prev.client.phone || data.company?.phone || ""
+            }
+          }))
+        }
+
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchCompany()
+  }, [])
 
   // =====================================================
   // APPLY VOLUME PARAM FROM SLIDER
@@ -95,23 +122,19 @@ export default function ContractCreatePage() {
     const volume = Number(volumeParam)
 
     setDraft(prev => ({
-
       ...prev,
-
       supply: {
         ...prev.supply,
         monthlyVolume: volume
       }
-
     }))
 
     setStep(3)
 
   }, [volumeParam])
 
-
   // =====================================================
-  // LOAD CONTRACT (FIXED 🔥)
+  // LOAD CONTRACT
   // =====================================================
 
   useEffect(() => {
@@ -129,34 +152,27 @@ export default function ContractCreatePage() {
 
   }, [mode, contractId])
 
-
   // =====================================================
   // STEP HANDLERS
   // =====================================================
 
   function updateClient(data: ContractDraft["client"]) {
-
     setDraft(prev => ({
       ...prev,
       client: data
     }))
 
     setStep(2)
-
   }
 
-
   function updateSupply(data: ContractDraft["supply"]) {
-
     setDraft(prev => ({
       ...prev,
       supply: data
     }))
 
     setStep(3)
-
   }
-
 
   // =====================================================
   // RENDER
@@ -195,35 +211,27 @@ export default function ContractCreatePage() {
         </h1>
 
         {step === 1 && (
-
           <Step1Client
             client={draft.client}
             onNext={updateClient}
           />
-
         )}
 
         {step === 2 && (
-
           <Step2Supply
             supply={draft.supply}
             onNext={updateSupply}
           />
-
         )}
 
         {step === 3 && (
-
           <Step3Preview
             draft={draft}
           />
-
         )}
 
       </div>
 
     </div>
-
   )
-
 }
