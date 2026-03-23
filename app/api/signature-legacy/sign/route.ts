@@ -56,28 +56,38 @@ export async function POST(req: Request) {
 
     console.log("✅ TOKEN MARKED AS SIGNED");
 
-    // =====================================================
-    // UPDATE CONTRACT
-    // =====================================================
-    try {
-      await prisma.contract.update({
-        where: { id: record.contractId },
-        data: {
-          status: "CONFIRMED",
-        },
-      });
+   // =====================================================
+// UPDATE CONTRACT
+// =====================================================
 
-      console.log("✅ CONTRACT UPDATED");
+try {
 
-    } catch (err) {
-      console.error("❌ CONTRACT UPDATE ERROR:", err);
+  // 🔒 ensure contractId exists
+  if (!record.contractId) {
+    return NextResponse.json(
+      { error: "Missing contractId" },
+      { status: 400 }
+    )
+  }
 
-      return NextResponse.json(
-        { error: "Contract update failed" },
-        { status: 500 }
-      );
-    }
+  await prisma.contract.update({
+    where: { id: record.contractId },
+    data: {
+      status: "CONFIRMED",
+    },
+  })
 
+  console.log("✅ CONTRACT UPDATED")
+
+} catch (err) {
+
+  console.error("❌ CONTRACT UPDATE ERROR:", err)
+
+  return NextResponse.json(
+    { error: "Contract update failed" },
+    { status: 500 }
+  )
+}
     // =====================================================
     // SUCCESS
     // =====================================================

@@ -14,41 +14,69 @@ function generateOTP() {
 }
 
 // =====================================================
-// SEND OTP (STEP 1)
+// SEND OTP (STORE DRAFT)
 // =====================================================
 
 export async function POST(req: Request) {
   try {
 
     const body = await req.json()
-    const { contractId } = body
 
-    if (!contractId) {
+    const {
+      mode,
+      contractDraft,
+      contractId
+    } = body
+
+    // =====================================================
+    // VALIDATION
+    // =====================================================
+
+    if (!contractDraft) {
       return NextResponse.json(
-        { error: "Missing contractId" },
+        { error: "Missing contractDraft" },
         { status: 400 }
       )
     }
 
-    // 🔐 generar código
+    const phone = contractDraft?.client?.phone
+
+    if (!phone) {
+      return NextResponse.json(
+        { error: "Missing phone number" },
+        { status: 400 }
+      )
+    }
+
+    // =====================================================
+    // GENERATE OTP
+    // =====================================================
+
     const otp = generateOTP()
 
-    // ⏳ expiración (10 min)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-    // 💾 guardar en DB (reutilizamos tu tabla)
+    // =====================================================
+    // SAVE TOKEN + DRAFT
+    // =====================================================
+
     await prisma.signatureToken.create({
       data: {
         token: otp,
-        contractId,
-        phone: "", // 🔥 luego lo metemos bien
+
+        // 🔥 NUEVO MODELO
+        contractId: contractId || null,
+        contractDraft: contractDraft,
+        mode: mode || "create",
+
+        phone,
+
         expiresAt,
         verified: false,
         signed: false
       }
     })
 
-    // 🧪 debug temporal
     console.log("OTP GENERATED:", otp)
 
     return NextResponse.json({
@@ -56,7 +84,9 @@ export async function POST(req: Request) {
     })
 
   } catch (err) {
-    console.error(err)
+
+    console.error("SEND OTP ERROR:", err)
+
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }

@@ -166,19 +166,31 @@ model OrderItem {
 }
 
 //////////////////////////////////////////////////////
-// ✍️ SIGNATURE FLOW (YA LO TENÍAS — MUY BIEN)
+// ✍️ SIGNATURE FLOW (OTP READY)
 //////////////////////////////////////////////////////
 
 model SignatureToken {
-  token      String   @id
-  contractId String
-  phone      String
-  expiresAt  DateTime
-  verified   Boolean  @default(false)
-  signed     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  token          String   @id
 
-  contract   Contract @relation(fields: [contractId], references: [id])
+  // 🔥 ahora opcional (porque puede no existir aún)
+  contractId     String?
+
+  // 🔥 NUEVO: guardamos el draft completo
+  contractDraft  Json?
+
+  // 🔥 NUEVO: create | amend
+  mode           String?
+
+  phone          String
+  expiresAt      DateTime
+
+  verified       Boolean  @default(false)
+  signed         Boolean  @default(false)
+
+  createdAt      DateTime @default(now())
+
+  // 🔥 relación opcional
+  contract       Contract? @relation(fields: [contractId], references: [id])
 }
 
 //////////////////////////////////////////////////////

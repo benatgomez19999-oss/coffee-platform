@@ -11,8 +11,6 @@ import {
   getSelectedContract
 } from "@/clientLayer/layer/contractController"
 
-import { registerEngineContract } from "@/engine/runtime"
-
 
 // =====================================================
 // TYPES
@@ -53,7 +51,6 @@ export default function Step3Preview({ draft }: Props) {
 
   const monthly = draft.supply.monthlyVolume
   const duration = draft.supply.duration
-  const total = monthly * duration
 
 
   // =====================================================
@@ -81,7 +78,7 @@ export default function Step3Preview({ draft }: Props) {
 
 
   // =====================================================
-  // SIGN CONTRACT → NOW OTP FLOW
+  // SIGN CONTRACT → OTP FLOW (NO CONTRACT YET)
   // =====================================================
 
   async function signContract() {
@@ -102,26 +99,18 @@ export default function Step3Preview({ draft }: Props) {
       const selectedContract = getSelectedContract()
 
       // =====================================================
-      // 🟡 AMEND EXISTING CONTRACT
+      // 🟡 AMEND EXISTING CONTRACT (solo prepara OTP)
       // =====================================================
 
       if (selectedContract) {
 
-        await fetch("/api/contracts/amend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contractId: selectedContract.id,
-            monthlyVolumeKg: monthly
-          })
-        })
-
-        // 👉 SEND OTP
         await fetch("/api/contracts/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contractId: selectedContract.id
+            mode: "amend",
+            contractId: selectedContract.id,
+            contractDraft: draft
           })
         })
 
@@ -131,43 +120,15 @@ export default function Step3Preview({ draft }: Props) {
 
 
       // =====================================================
-      // 🟢 CREATE NEW CONTRACT
+      // 🟢 NEW CONTRACT → SOLO ENVÍA OTP (NO CREA NADA)
       // =====================================================
 
-      const contract = {
-        id: crypto.randomUUID(),
-        product: draft.supply.origin,
-        monthlyVolumeKg: monthly,
-        durationMonths: duration,
-        remainingMonths: duration,
-        startDate: Date.now(),
-        nextExecution: Date.now(),
-        status: "pending_signature" as const
-      }
-
-      registerEngineContract(contract)
-
-      const createRes = await fetch("/api/contracts/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          id: contract.id,
-          monthlyVolumeKg: contract.monthlyVolumeKg,
-          durationMonths: contract.durationMonths
-        })
-      })
-
-      if (!createRes.ok) {
-        throw new Error("Contract creation failed")
-      }
-
-      // 👉 SEND OTP
       await fetch("/api/contracts/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contractId: contract.id
+          mode: "create",
+          contractDraft: draft
         })
       })
 
