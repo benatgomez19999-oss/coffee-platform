@@ -90,6 +90,24 @@ export default function Step3Preview({ draft }: Props) {
 
       const phone = draft.client.phone?.trim()
 
+// =====================================================
+// DEBUG + VALIDATION (CRITICAL FOR EMAIL FLOW)
+// =====================================================
+
+console.log("📤 SENDING DRAFT:", draft)
+
+if (!draft.client.email?.trim()) {
+  alert("Email is required before signing")
+  setLoading(false)
+  return
+}
+
+if (!phone) {
+  alert("Please enter a phone number before signing")
+  setLoading(false)
+  return
+}
+
       if (!phone) {
         alert("Please enter a phone number before signing")
         setLoading(false)
@@ -155,7 +173,7 @@ export default function Step3Preview({ draft }: Props) {
      // 2. SEND OTP (FIXED: include draft for email)
     // -----------------------------------------------
 
-await fetch("/api/contracts/send-otp", {
+  await fetch("/api/contracts/send-otp", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
