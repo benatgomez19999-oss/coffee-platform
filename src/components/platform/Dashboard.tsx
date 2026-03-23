@@ -11,6 +11,10 @@ import { initWebsocketClient }
 from "@/websocket/websocketClient"
 import OnboardingWizard from "@/components/platform/OnboardingWizard"
 import { getUserFromRequest } from "@/lib/auth"
+import Image from "next/image"
+
+
+
 
 // ENGINE
 import { stepSimulationReal } from "@/engine/simulationReal";
@@ -945,120 +949,139 @@ return (
       }}
     >
 
-      {/* LEFT */}
-      <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
-        <div style={{ fontWeight: 500 }}>
-          Altura Collective
-        </div>
+     {/* LEFT */}
+<div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
+  
+  {/* LOGO */}
+  <div style={{ display: "flex", alignItems: "center" }}>
+    <Image
+      src="/images/logo-altura-gold-final.png"
+      alt="Altura Collective"
+      width={140}
+      height={40}
+      style={{ objectFit: "contain" }}
+    />
+  </div>
 
-        <div style={{ display: "flex", gap: "20px", fontSize: "14px", color: "#aaa" }}>
-          <span style={{ color: "white" }}>Dashboard</span>
-          <span style={{ cursor: "pointer" }}>Contracts</span>
-          <span style={{ cursor: "pointer" }}>Settings</span>
-        </div>
-      </div>
+  {/* NAV */}
+  <div style={{ display: "flex", gap: "20px", fontSize: "14px", color: "#aaa" }}>
+    <span style={{ color: "white" }}>Dashboard</span>
 
-      {/* RIGHT */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <div style={{ fontSize: "14px", color: "#ccc" }}>
-          {user?.email}
-        </div>
+    <span
+      style={{ cursor: "pointer" }}
+      onClick={() => router.push("/contracts")}
+    >
+      Contracts
+    </span>
 
-        <div style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: "#4ade80"
-        }} />
+    <span style={{ cursor: "pointer" }}>Settings</span>
+  </div>
 
-        <button
-          onClick={async () => {
-            await fetch("/api/auth/logout", {
-              method: "POST",
-              credentials: "include"
-            })
-            window.location.href = "/"
-          }}
-          style={{
-            padding: "6px 12px",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.2)",
-            background: "transparent",
-            color: "white",
-            cursor: "pointer"
-          }}
-        >
-          Logout
-        </button>
-      </div>
+</div>
 
-    </div>
+{/* RIGHT */}
+<div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+  
+  <div style={{ fontSize: "14px", color: "#ccc" }}>
+    {user?.email}
+  </div>
 
-    {/* ====================================================== */}
-    {/* MAIN DASHBOARD */}
-    {/* ====================================================== */}
+  <div style={{
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    background: "#4ade80"
+  }} />
+
+  <button
+    onClick={async () => {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      })
+      window.location.href = "/"
+    }}
+    style={{
+      padding: "6px 12px",
+      borderRadius: "999px",
+      border: "1px solid rgba(255,255,255,0.2)",
+      background: "transparent",
+      color: "white",
+      cursor: "pointer"
+    }}
+  >
+    Logout
+  </button>
+
+</div>
+
+</div> {/* ← ESTE ES EL CIERRE DEL HEADER */}
+
+{/* ====================================================== */}
+{/* MAIN DASHBOARD */}
+{/* ====================================================== */}
+<div
+  style={{
+    minHeight: "100vh",
+    background: "#0b0f0f",
+    color: "white",
+    paddingTop: "120px"
+  }}
+>
+
+  {/* TITLE */}
+  <div style={{ padding: "0 80px" }}>
+    <h2 style={{
+      fontWeight: 300,
+      marginBottom: "40px"
+    }}>
+      Client Dashboard
+    </h2>
+  </div>
+
+  {/* SUCCESS MESSAGE */}
+  {showMessage && (
     <div
       style={{
-        minHeight: "100vh",
-        background: "#0b0f0f",
-        color: "white",
-        paddingTop: "120px"
+        margin: "0 80px 30px 80px",
+        padding: "16px 22px",
+        borderRadius: 12,
+        background: "rgba(74,222,128,0.1)",
+        border: "1px solid rgba(74,222,128,0.3)",
+        color: "#4ade80"
       }}
     >
+      Contract activated successfully.
+    </div>
+  )}
 
-      {/* TITLE */}
-      <div style={{ padding: "0 80px" }}>
-        <h2 style={{
-          fontWeight: 300,
-          marginBottom: "40px"
-        }}>
-          Client Dashboard
-        </h2>
-      </div>
+  {/* GRID */}
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "2fr 1fr",
+      gap: "60px",
+      padding: "0 80px"
+    }}
+  >
 
-      {/* SUCCESS MESSAGE */}
-      {showMessage && (
-        <div
-          style={{
-            margin: "0 80px 30px 80px",
-            padding: "16px 22px",
-            borderRadius: 12,
-            background: "rgba(74,222,128,0.1)",
-            border: "1px solid rgba(74,222,128,0.3)",
-            color: "#4ade80"
-          }}
-        >
-          Contract activated successfully.
-        </div>
-      )}
+    {/* LEFT */}
+    <ClientTradingPanel
+      key={searchParams?.toString?.() || "default"}
+      engineState={engineState}
+      updateContext={updateEngineContext}
+    />
 
-      {/* GRID */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "60px",
-          padding: "0 80px"
-        }}
-      >
-
-        {/* LEFT */}
-        <ClientTradingPanel
-          key={searchParams?.toString?.() || "default"}
-          engineState={engineState}
-          updateContext={updateEngineContext}
-        />
-
-        {/* RIGHT */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
-          <ClientOverviewPanel engineState={engineState} />
-          <ClientContractsPanel contracts={contracts} />
-        </div>
-
-      </div>
-
+    {/* RIGHT */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+      <ClientOverviewPanel engineState={engineState} />
+      <ClientContractsPanel contracts={contracts} />
     </div>
 
-  </>
+  </div>
+
+</div>
+
+</>
 )
-  }
+}

@@ -57,6 +57,12 @@ useEffect(() => {
   fetchUser()
 }, [pathname])
 
+useEffect(() => {
+  if (user) {
+    router.push("/platform")
+  }
+}, [user])
+
   const directRef = useRef(null)
   const directVisible = true 
 
@@ -250,35 +256,69 @@ useEffect(() => {
 
 
 
-<Link
-  href="/signup"
-  style={{
-    padding: "10px 24px",
-    borderRadius: "999px",
-    border: "1px solid rgba(212,175,55,0.6)",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    color: "#fff",
-    fontSize: "0.9rem",
-    letterSpacing: "0.5px",
-    textDecoration: "none",
-    transition: "all 0.35s ease",
-    backdropFilter: "blur(6px)"
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = "rgba(212,175,55,0.85)";
-    e.currentTarget.style.color = "#111";
-    e.currentTarget.style.transform = "translateY(-2px)";
-    e.currentTarget.style.boxShadow = "0 10px 25px rgba(212,175,55,0.25)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.4)";
-    e.currentTarget.style.color = "#fff";
-    e.currentTarget.style.transform = "translateY(0)";
-    e.currentTarget.style.boxShadow = "none";
-  }}
->
-  Get Started
-</Link>
+{user ? (
+  <button
+    onClick={() => router.push("/platform")}
+    style={{
+      padding: "10px 24px",
+      borderRadius: "999px",
+      border: "1px solid rgba(212,175,55,0.6)",
+      backgroundColor: "rgba(0,0,0,0.4)",
+      color: "#fff",
+      fontSize: "0.9rem",
+      letterSpacing: "0.5px",
+      textDecoration: "none",
+      transition: "all 0.35s ease",
+      backdropFilter: "blur(6px)",
+      cursor: "pointer"
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = "rgba(212,175,55,0.85)";
+      e.currentTarget.style.color = "#111";
+      e.currentTarget.style.transform = "translateY(-2px)";
+      e.currentTarget.style.boxShadow = "0 10px 25px rgba(212,175,55,0.25)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.4)";
+      e.currentTarget.style.color = "#fff";
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "none";
+    }}
+  >
+    Dashboard
+  </button>
+) : (
+  
+  <Link
+    href="/signup"
+    style={{
+      padding: "10px 24px",
+      borderRadius: "999px",
+      border: "1px solid rgba(212,175,55,0.6)",
+      backgroundColor: "rgba(0,0,0,0.4)",
+      color: "#fff",
+      fontSize: "0.9rem",
+      letterSpacing: "0.5px",
+      textDecoration: "none",
+      transition: "all 0.35s ease",
+      backdropFilter: "blur(6px)"
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = "rgba(212,175,55,0.85)";
+      e.currentTarget.style.color = "#111";
+      e.currentTarget.style.transform = "translateY(-2px)";
+      e.currentTarget.style.boxShadow = "0 10px 25px rgba(212,175,55,0.25)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.4)";
+      e.currentTarget.style.color = "#fff";
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "none";
+    }}
+  >
+    Get Started
+  </Link>
+)}
 
 </div>
       </header>
