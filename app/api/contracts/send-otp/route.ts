@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import twilioClient from "@/lib/twilio"
+import { sendEmail } from "@/lib/email"
 
 // ✅ necesario para Vercel
 export const runtime = "nodejs"
@@ -33,7 +34,7 @@ function formatPhone(phone: string) {
 }
 
 // =====================================================
-// SEND OTP (FIXED: SUPPORT CREATE + AMEND)
+// SEND OTP (SMS + EMAIL SUPPORT)
 // =====================================================
 
 export async function POST(req: Request) {
@@ -44,17 +45,15 @@ export async function POST(req: Request) {
     const {
       mode,
       contractDraft,
-      contractId
+      contractId,
+      channel // 🔥 NUEVO
     } = body
 
+    const sendChannel = channel || "sms"
 
     // =====================================================
-    // VALIDATION (FIXED)
+    // VALIDATION
     // =====================================================
-
-    // 👉 caso CREATE (nuevo flow)
-    // → necesitamos contractId
-    // → draft ya NO es obligatorio
 
     if (!contractId && !contractDraft) {
       return NextResponse.json(
@@ -63,44 +62,42 @@ export async function POST(req: Request) {
       )
     }
 
-
     // =====================================================
-    // GET PHONE (FLEXIBLE)
+    // GET PHONE
     // =====================================================
 
     let phone: string | null = null
 
-    // 🟡 PRIORIDAD 1 → contractDraft (amend o legacy)
     if (contractDraft?.client?.phone) {
       phone = contractDraft.client.phone
     }
 
-    // 🟢 PRIORIDAD 2 → buscar en DB (nuevo flow)
     if (!phone && contractId) {
-
       const contract = await prisma.contract.findUnique({
-  where: { id: contractId },
-  include: {
-    company: {
-      select: {
-        phone: true
-      }
-    }
-  }
-})
+        where: { id: contractId },
+        include: {
+          company: {
+            select: {
+              phone: true
+            }
+          }
+        }
+      })
 
-phone = contract?.company?.phone || null
-    }
-
-    if (!phone) {
-      return NextResponse.json(
-        { error: "Missing phone number" },
-        { status: 400 }
-      )
+      phone = contract?.company?.phone || null
     }
 
-    const phoneFormatted = formatPhone(phone)
+    // =====================================================
+    // GET EMAIL
+    // =====================================================
 
+    let email: string | null = null
+
+    if (contractDraft?.client?.email) {
+      email = contractDraft.client.email
+    }
+
+    // 👉 opcional: si luego quieres company.email lo añadimos aquí
 
     // =====================================================
     // GENERATE OTP
@@ -109,7 +106,6 @@ phone = contract?.company?.phone || null
     const otp = generateOTP()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-
     // =====================================================
     // SAVE TOKEN
     // =====================================================
@@ -117,47 +113,78 @@ phone = contract?.company?.phone || null
     await prisma.signatureToken.create({
       data: {
         token: otp,
-
-        // 👉 ahora SIEMPRE ligado a contractId si existe
         contractId: contractId || null,
-
-        // 👉 solo guardamos draft si viene (amend / fallback)
         contractDraft: contractDraft || null,
-
         mode: mode || "create",
-
-        phone: phoneFormatted,
-
+        phone: phone || "no-phone",
         expiresAt,
         verified: false,
         signed: false
       }
     })
 
+    console.log("🔐 OTP GENERATED:", otp)
 
     // =====================================================
-    // SEND SMS OTP
+    // SEND OTP (CHANNEL BASED)
     // =====================================================
 
     try {
 
-      await twilioClient.messages.create({
-        body: `Coffee Platform ☕️\nTu código de firma es: ${otp}\nNo lo compartas con nadie.`,
-        from: process.env.TWILIO_PHONE_NUMBER!,
-        to: phoneFormatted,
-      })
+      // -----------------------------------------------------
+      // 📱 SMS (TWILIO)
+      // -----------------------------------------------------
 
-      console.log("📱 OTP SMS SENT to:", phoneFormatted)
+      if (sendChannel === "sms") {
+
+        if (!phone) {
+          console.warn("⚠️ No phone available for SMS")
+        } else {
+
+          const phoneFormatted = formatPhone(phone)
+
+          await twilioClient.messages.create({
+            body: `Coffee Platform ☕️\nTu código de firma es: ${otp}\nNo lo compartas con nadie.`,
+            from: process.env.TWILIO_PHONE_NUMBER!,
+            to: phoneFormatted,
+          })
+
+          console.log("📱 OTP SMS SENT to:", phoneFormatted)
+        }
+      }
+
+      // -----------------------------------------------------
+      // 📧 EMAIL (RESEND)
+      // -----------------------------------------------------
+
+      if (sendChannel === "email") {
+
+        if (!email) {
+          console.warn("⚠️ No email available for OTP")
+        } else {
+
+          await sendEmail({
+            to: email,
+            subject: "Your verification code",
+            html: `
+              <div style="font-family: sans-serif">
+                <h2>Verify your contract</h2>
+                <p>Your verification code is:</p>
+                <p style="font-size:28px; font-weight:bold; letter-spacing:4px;">
+                  ${otp}
+                </p>
+                <p>This code expires in 10 minutes.</p>
+              </div>
+            `
+          })
+
+          console.log("📧 OTP EMAIL SENT to:", email)
+        }
+      }
 
     } catch (err) {
-
-      console.error("❌ TWILIO ERROR:", err)
-
-      // ⚠️ no rompemos flujo por fallo de SMS
+      console.error("❌ OTP SEND ERROR:", err)
     }
-
-    console.log("🔐 OTP GENERATED:", otp)
-
 
     // =====================================================
     // SUCCESS
