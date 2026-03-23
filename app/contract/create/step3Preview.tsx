@@ -78,7 +78,7 @@ export default function Step3Preview({ draft }: Props) {
 
 
   // =====================================================
-  // SIGN CONTRACT → OTP FLOW (FIXED ARCHITECTURE)
+  // SIGN CONTRACT → OTP FLOW (FINAL ARCHITECTURE)
   // =====================================================
 
   async function signContract() {
@@ -90,23 +90,17 @@ export default function Step3Preview({ draft }: Props) {
 
       const phone = draft.client.phone?.trim()
 
-// =====================================================
-// DEBUG + VALIDATION (CRITICAL FOR EMAIL FLOW)
-// =====================================================
+      // =====================================================
+      // DEBUG + VALIDATION
+      // =====================================================
 
-console.log("📤 SENDING DRAFT:", draft)
+      console.log("📤 SENDING DRAFT:", draft)
 
-if (!draft.client.email?.trim()) {
-  alert("Email is required before signing")
-  setLoading(false)
-  return
-}
-
-if (!phone) {
-  alert("Please enter a phone number before signing")
-  setLoading(false)
-  return
-}
+      if (!draft.client.email?.trim()) {
+        alert("Email is required before signing")
+        setLoading(false)
+        return
+      }
 
       if (!phone) {
         alert("Please enter a phone number before signing")
@@ -119,8 +113,6 @@ if (!phone) {
 
       // =====================================================
       // 🟡 AMEND EXISTING CONTRACT
-      // → ya existe contractId
-      // → solo enviamos OTP
       // =====================================================
 
       if (selectedContract) {
@@ -135,60 +127,32 @@ if (!phone) {
           })
         })
 
-        // ✅ REDIRECT A OTP PAGE (NO MÁS PLATFORM HACK)
         router.replace(`/contract/verify-otp?contractId=${selectedContract.id}`)
         return
       }
 
 
       // =====================================================
-      // 🟢 NEW CONTRACT (FIXED)
-      // → 1. crear contrato en DB
-      // → 2. enviar OTP ligado al contractId
-      // → 3. redirect a verify page
+      // 🟢 NEW CONTRACT (CORRECT FLOW)
+      // ❌ NO CREAR CONTRATO AQUÍ
+      // ✅ SOLO ENVIAR OTP CON DRAFT
       // =====================================================
 
-      // -----------------------------------------------
-      // 1. CREATE CONTRACT
-      // -----------------------------------------------
-
-      const createRes = await fetch("/api/contracts/create", {
+      await fetch("/api/contracts/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contractDraft: draft
+          mode: "create",
+          contractDraft: draft // 🔥 CLAVE TOTAL
         })
       })
 
-      const createData = await createRes.json()
 
-      if (!createData.success) {
-        throw new Error("Failed to create contract")
-      }
+      // =====================================================
+      // REDIRECT TO OTP PAGE
+      // =====================================================
 
-      const contractId = createData.contractId
-
-
-      // -----------------------------------------------
-     // 2. SEND OTP (FIXED: include draft for email)
-    // -----------------------------------------------
-
-  await fetch("/api/contracts/send-otp", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    mode: "create",
-    contractId,
-    contractDraft: draft // 🔥 CLAVE PARA EMAIL
-  })
-})
-
-
-      // -----------------------------------------------
-      // 3. REDIRECT TO OTP PAGE
-      // -----------------------------------------------
-
-      router.replace(`/contract/verify-otp?contractId=${contractId}`)
+      router.replace(`/contract/verify-otp`)
 
 
     } catch (err) {
