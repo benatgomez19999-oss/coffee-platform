@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/requireAuth"
 
 // ======================================================
 // CREATE CONTRACT — USER SCOPED (MULTI-TENANT SAFE)
+// FIXED: soporta contractDraft (nuevo flow)
 // ======================================================
 
 export async function POST(req: Request) {
@@ -30,23 +31,31 @@ export async function POST(req: Request) {
     const body = await req.json()
 
     const {
-      id,
-      monthlyVolumeKg,
-      durationMonths
+      contractDraft
     } = body
 
     // ======================================================
-    // VALIDATION
+    // VALIDATION (FIXED)
     // ======================================================
 
-    if (!id || !monthlyVolumeKg || !durationMonths) {
+    if (!contractDraft?.supply) {
       return NextResponse.json(
-        { error: "Missing fields" },
+        { error: "Invalid contract draft" },
         { status: 400 }
       )
     }
 
-    console.log("🟡 CREATE INPUT:", body)
+    console.log("🟡 CREATE INPUT:", contractDraft)
+
+    const monthlyVolumeKg = contractDraft.supply.monthlyVolume
+    const durationMonths = contractDraft.supply.duration
+
+    if (!monthlyVolumeKg || !durationMonths) {
+      return NextResponse.json(
+        { error: "Missing supply fields" },
+        { status: 400 }
+      )
+    }
 
     // ======================================================
     // CREATE CONTRACT (MULTI-TENANT SAFE)
@@ -54,9 +63,8 @@ export async function POST(req: Request) {
 
     const contract = await prisma.contract.create({
       data: {
-        id,
+        // 🔥 id auto generado por prisma (no lo pasamos manualmente)
 
-        // 🔥 clave: aislamiento por empresa
         companyId: user.companyId,
 
         // ======================================================
@@ -81,16 +89,23 @@ export async function POST(req: Request) {
         startDate: new Date(),
 
         // ======================================================
-        // STATUS
+        // STATUS (IMPORTANTE)
         // ======================================================
 
-        status: "PENDING",
+        status: "AWAITING_SIGNATURE",
       }
     })
 
     console.log("🟢 CONTRACT CREATED:", contract)
 
-    return NextResponse.json(contract)
+    // ======================================================
+    // SUCCESS (IMPORTANTE: devolvemos contractId)
+    // ======================================================
+
+    return NextResponse.json({
+      success: true,
+      contractId: contract.id
+    })
 
   } catch (error: any) {
 
