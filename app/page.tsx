@@ -58,11 +58,7 @@ useEffect(() => {
   fetchUser()
 }, [pathname])
 
-useEffect(() => {
-  if (user) {
-    router.push("/platform")
-  }
-}, [user])
+
 
   const directRef = useRef(null)
   const directVisible = true 
