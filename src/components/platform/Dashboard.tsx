@@ -977,6 +977,13 @@ return (
     <span style={{ cursor: "pointer" }}>Settings</span>
   </div>
 
+  <span
+  style={{ cursor: "pointer" }}
+  onClick={() => router.push("/")}
+>
+  Marketplace
+</span>
+
 </div>
 
 {/* RIGHT */}

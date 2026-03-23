@@ -33,6 +33,7 @@ useEffect(() => {
   // ======================================================
 
   const [user, setUser] = useState<any | null>(null)
+  const firstName = user?.name?.split(" ")[0] || "there"
 
  useEffect(() => {
   const fetchUser = async () => {
@@ -135,16 +136,26 @@ useEffect(() => {
 
   {/* CLIENT NAME */}
   {user && (
-    <div
-      style={{
-        fontSize: "0.8rem",
-        opacity: 0.7,
-        letterSpacing: "0.5px"
-      }}
-    >
-      {user.name}
-    </div>
-  )}
+  <div
+    onClick={() => router.push("/platform")}
+    style={{
+      fontSize: "0.8rem",
+      color: "#d4af37",
+      opacity: 0.9,
+      whiteSpace: "nowrap",
+      cursor: "pointer",
+      transition: "opacity 0.2s ease"
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.opacity = "1"
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.opacity = "0.9"
+    }}
+  >
+    Welcome back, {firstName}
+  </div>
+)}
 
   {/* LOGIN (ONLY IF NOT LOGGED) */}
 {!user && (
@@ -288,7 +299,7 @@ useEffect(() => {
     Dashboard
   </button>
 ) : (
-  
+
   <Link
     href="/signup"
     style={{
