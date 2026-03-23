@@ -28,6 +28,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  
 
   const [form, setForm] = useState<FormState>({
     country: "",
@@ -102,111 +103,107 @@ export default function OnboardingWizard({ onComplete }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
 
-      <div className="bg-neutral-900 p-8 rounded-xl w-full max-w-lg border border-white/10">
+    <div className="bg-neutral-900 p-8 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl">
 
-        {/* HEADER */}
-        <div className="mb-6">
-          <h2 className="text-xl text-white">
-            Setup your company
-          </h2>
+      {/* HEADER */}
+      <div className="mb-6">
+        <h2 className="text-xl text-white font-light">
+          Setup your company
+        </h2>
 
-          <p className="text-sm text-gray-400 mt-1">
-            Step {step} of 2
-          </p>
+        {/* PROGRESS BAR */}
+        <div className="mt-3 h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-white transition-all duration-300"
+            style={{ width: step === 1 ? "50%" : "100%" }}
+          />
         </div>
+      </div>
 
-        {/* STEP 1 */}
+      {/* FORM */}
+      <div className="flex flex-col gap-3">
+
         {step === 1 && (
-          <div className="flex flex-col gap-3">
-
+          <>
             <input
               name="country"
-              placeholder="Country *"
+              placeholder="Country"
               onChange={handleChange}
-              className="p-2 rounded bg-black border border-white/10 text-white"
+              className="p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             />
 
             <input
               name="contactName"
-              placeholder="Contact name *"
+              placeholder="Contact name"
               onChange={handleChange}
-              className="p-2 rounded bg-black border border-white/10 text-white"
+              className="p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             />
-
-          </div>
+          </>
         )}
 
-        {/* STEP 2 */}
         {step === 2 && (
-          <div className="flex flex-col gap-3">
-
+          <>
             <input
               name="phone"
               placeholder="Phone"
               onChange={handleChange}
-              className="p-2 rounded bg-black border border-white/10 text-white"
+              className="p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             />
 
             <input
               name="vat"
               placeholder="VAT / CIF"
               onChange={handleChange}
-              className="p-2 rounded bg-black border border-white/10 text-white"
+              className="p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             />
 
             <input
               name="address"
               placeholder="Address"
               onChange={handleChange}
-              className="p-2 rounded bg-black border border-white/10 text-white"
+              className="p-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
             />
-
-          </div>
+          </>
         )}
-
-        {/* ERROR */}
-        {error && (
-          <p className="text-red-400 text-sm mt-3">{error}</p>
-        )}
-
-        {/* ACTIONS */}
-        <div className="mt-6 flex justify-between">
-
-          {step === 2 && (
-            <button
-              onClick={handleBack}
-              className="text-gray-400"
-            >
-              Back
-            </button>
-          )}
-
-          {step === 1 && (
-            <div />
-          )}
-
-          {step === 1 ? (
-            <button
-              onClick={handleNext}
-              className="bg-white text-black px-4 py-2 rounded"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="bg-white text-black px-4 py-2 rounded"
-            >
-              {loading ? "Saving..." : "Finish"}
-            </button>
-          )}
-
-        </div>
 
       </div>
+
+      {/* ERROR */}
+      {error && (
+        <p className="text-red-400 text-sm mt-4">
+          {error}
+        </p>
+      )}
+
+      {/* ACTIONS */}
+      <div className="flex justify-between items-center mt-6">
+
+        {step === 2 ? (
+          <button
+            onClick={() => setStep(1)}
+            className="text-white/60 hover:text-white transition"
+          >
+            Back
+          </button>
+        ) : <div />}
+
+        <button
+          onClick={step === 1 ? () => setStep(2) : handleSubmit}
+          disabled={loading}
+          className="bg-white text-black px-5 py-2 rounded-lg hover:bg-neutral-200 transition flex items-center gap-2"
+        >
+          {loading ? (
+            <div className="h-4 w-4 border border-black border-t-transparent rounded-full animate-spin" />
+          ) : (
+            step === 1 ? "Next" : "Finish"
+          )}
+        </button>
+
+      </div>
+
     </div>
-  )
+  </div>
+)
 }
