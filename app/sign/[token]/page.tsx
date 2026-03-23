@@ -1,125 +1,60 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-
-
-// =====================================================
-// TYPES
-// =====================================================
-
-type Props = {
-  params: Promise<{
-    token: string
-  }>
-}
-
+import { useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 
 // =====================================================
 // COMPONENT
 // =====================================================
 
-export default function SignPage({ params }: Props) {
+export default function SignPage() {
 
   const router = useRouter()
+  const params = useParams()
 
-  const { token } = use(params)
+  const token = params.token as string
 
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [otp, setOtp] = useState("")
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [signed, setSigned] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-
+  const [success, setSuccess] = useState(false)
 
   // =====================================================
-  // VERIFY TOKEN
+  // VERIFY OTP
   // =====================================================
 
-  useEffect(() => {
+  async function handleVerify() {
 
-    async function verify() {
-
-      try {
-
-        const res = await fetch(
-          `/api/signature/verify?token=${token}`
-        )
-
-        let json: any = null
-
-        try {
-          json = await res.json()
-        } catch {
-          throw new Error("Invalid server response")
-        }
-
-        if (!res.ok) {
-          setError(json?.error || "Invalid link")
-          return
-        }
-
-        setData(json)
-
-      } catch (err) {
-
-        console.error("VERIFY ERROR:", err)
-        setError("Network or server error")
-
-      } finally {
-
-        setLoading(false)
-
-      }
-
+    if (!otp) {
+      setError("Introduce el código")
+      return
     }
 
-    verify()
-
-  }, [token])
-
-
-  // =====================================================
-  // SIGN CONTRACT
-  // =====================================================
-
-  async function signContract() {
-
-    if (submitting) return
-
-    setSubmitting(true)
+    setLoading(true)
+    setError(null)
 
     try {
 
       const res = await fetch(
-        "/api/signature/sign",
+        "/api/contracts/verify-otp",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ token })
+          body: JSON.stringify({ otp }) // 🔥 aquí usamos OTP real
         }
       )
 
-      let json: any = null
-
-      try {
-        json = await res.json()
-      } catch {
-        throw new Error("Invalid JSON response")
-      }
+      const json = await res.json()
 
       if (!res.ok) {
-
-        console.error("SIGN ERROR:", json)
-        alert(json?.error || "Error signing")
-        setSubmitting(false)
+        setError(json?.error || "Error verificando código")
+        setLoading(false)
         return
-
       }
 
-      setSigned(true)
+      setSuccess(true)
 
       // redirect suave
       setTimeout(() => {
@@ -128,43 +63,39 @@ export default function SignPage({ params }: Props) {
 
     } catch (err) {
 
-      console.error("SIGN FETCH ERROR:", err)
-      alert("Unexpected error during signing")
-      setSubmitting(false)
+      console.error("VERIFY ERROR:", err)
+      setError("Error de red")
+      setLoading(false)
 
     }
 
   }
 
-
   // =====================================================
-  // STATES
+  // RESEND OTP (placeholder)
   // =====================================================
 
-  if (loading) {
-    return (
-      <div style={{ padding: 40 }}>
-        Loading...
-      </div>
-    )
-  }
+  async function handleResend() {
 
-  if (error) {
-    return (
-      <div style={{ padding: 40 }}>
-        <h2>{error}</h2>
-      </div>
-    )
-  }
+    try {
 
-  if (!data) {
-    return (
-      <div style={{ padding: 40 }}>
-        No data
-      </div>
-    )
-  }
+      await fetch("/api/contracts/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          token // ⚠️ luego mejoramos esto
+        })
+      })
 
+      alert("Código reenviado")
+
+    } catch (err) {
+      alert("Error reenviando código")
+    }
+
+  }
 
   // =====================================================
   // UI
@@ -176,63 +107,84 @@ export default function SignPage({ params }: Props) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "#ffffff",
-      color: "#000",
-      position: "relative",
-      zIndex: 9999
+      background: "#f7f7f7"
     }}>
 
       <div style={{
         background: "#fff",
         padding: 32,
-        borderRadius: 12,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+        borderRadius: 16,
+        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
         width: "100%",
-        maxWidth: 400
+        maxWidth: 400,
+        textAlign: "center"
       }}>
 
-        <h2 style={{ fontSize: 24, marginBottom: 20 }}>
-          Contract Signature
+        <h2 style={{ fontSize: 22, marginBottom: 10 }}>
+          Verificación OTP
         </h2>
 
-        <p style={{ marginBottom: 10 }}>
-          Contract ID:
+        <p style={{ marginBottom: 20, color: "#666" }}>
+          Introduce el código enviado a tu móvil
         </p>
 
-        <p style={{
-          fontFamily: "monospace",
-          fontSize: 12,
-          marginBottom: 20
-        }}>
-          {data.contractId}
-        </p>
+        <input
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="123456"
+          maxLength={6}
+          style={{
+            width: "100%",
+            padding: 12,
+            fontSize: 20,
+            textAlign: "center",
+            letterSpacing: 6,
+            borderRadius: 8,
+            border: "1px solid #ccc",
+            marginBottom: 16
+          }}
+        />
 
-        {!signed && (
+        <button
+          onClick={handleVerify}
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: loading ? "#999" : "black",
+            color: "white",
+            borderRadius: 8,
+            cursor: loading ? "not-allowed" : "pointer"
+          }}
+        >
+          {loading ? "Verificando..." : "Confirmar"}
+        </button>
+
+        {error && (
+          <p style={{ color: "red", marginTop: 10 }}>
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p style={{ color: "green", marginTop: 10 }}>
+            ✅ Código verificado
+          </p>
+        )}
+
+        <div style={{ marginTop: 20 }}>
           <button
-            onClick={signContract}
-            disabled={submitting}
+            onClick={handleResend}
             style={{
-              width: "100%",
-              padding: "12px",
-              background: submitting ? "#666" : "black",
-              color: "white",
-              borderRadius: 8,
-              cursor: submitting ? "not-allowed" : "pointer"
+              background: "none",
+              border: "none",
+              color: "#666",
+              cursor: "pointer"
             }}
           >
-            {submitting ? "Signing..." : "Sign Contract"}
+            ¿did you receice the code?
           </button>
-        )}
-
-        {signed && (
-          <div style={{
-            color: "green",
-            marginTop: 10,
-            fontWeight: "bold"
-          }}>
-            ✅ Contract Signed Successfully
-          </div>
-        )}
+        </div>
 
       </div>
     </div>
