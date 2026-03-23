@@ -94,24 +94,41 @@ export async function POST(req: Request) {
     const otp = generateOTP()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-    // =====================================================
-    // SAVE TOKEN
-    // =====================================================
+// =====================================================
+// EXTRACT EMAIL (FOR PERSISTENCE)
+// =====================================================
 
-    await prisma.signatureToken.create({
-      data: {
-        token: otp,
-        contractId: contractId || null,
-        contractDraft: contractDraft || null,
-        mode: mode || "create",
-        phone: phone || "no-phone",
-        expiresAt,
-        verified: false,
-        signed: false
+let emailForStorage: string | null = null
+
+if (contractDraft?.client?.email) {
+  emailForStorage = contractDraft.client.email
+}
+
+// =====================================================
+// SAVE TOKEN (FIXED: ALWAYS STORE EMAIL)
+// =====================================================
+
+await prisma.signatureToken.create({
+  data: {
+    token: otp,
+    contractId: contractId || null,
+    mode: mode || "create",
+    phone: phone || "no-phone",
+
+    // 🔥 UNIFICADO (SIN DUPLICADOS)
+    contractDraft: {
+      ...(contractDraft || {}),
+      client: {
+        ...(contractDraft?.client || {}),
+        email: contractDraft?.client?.email || null
       }
-    })
+    },
 
-    console.log("🔐 OTP GENERATED:", otp)
+    expiresAt,
+    verified: false,
+    signed: false
+  }
+})
 
     // =====================================================
     // SEND OTP (CHANNEL BASED)
