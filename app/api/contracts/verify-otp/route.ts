@@ -61,8 +61,16 @@ export async function POST(req: Request) {
       )
     }
 
+    // 🔒 ensure valid mode
+    if (record.mode !== "create" && record.mode !== "amend") {
+      return NextResponse.json(
+        { error: "Invalid mode" },
+        { status: 400 }
+      )
+    }
+
     // =====================================================
-    // CREATE OR AMEND CONTRACT
+    // CREATE OR AMEND CONTRACT (TRANSACTION SAFE)
     // =====================================================
 
     let contractId = record.contractId
@@ -70,82 +78,75 @@ export async function POST(req: Request) {
     // 🔧 TEMP: tiparemos después
     const draft: any = record.contractDraft
 
-    // -----------------------------
-    // CREATE
-    // -----------------------------
+    // 🔒 basic draft validation
+    if (!draft.supply) {
+      return NextResponse.json(
+        { error: "Invalid draft structure" },
+        { status: 400 }
+      )
+    }
 
-    if (record.mode === "create") {
+    await prisma.$transaction(async (tx) => {
 
-      // 🔥 REQUIRED: companyId debe existir en draft
-      if (!draft.companyId) {
-        return NextResponse.json(
-          { error: "Missing companyId in draft" },
-          { status: 400 }
-        )
+      // -----------------------------
+      // CREATE
+      // -----------------------------
+      if (record.mode === "create") {
+
+        if (!draft.companyId) {
+          throw new Error("Missing companyId in draft")
+        }
+
+        const created = await tx.contract.create({
+          data: {
+            id: crypto.randomUUID(),
+            companyId: draft.companyId,
+            monthlyVolumeKg: draft.supply.monthlyVolume,
+            durationMonths: draft.supply.duration,
+            remainingMonths: draft.supply.duration,
+            pricePerBag: draft.pricePerBag ?? 0,
+            bagSizeKg: 20,
+            bagsPerDelivery: draft.bagsPerDelivery ?? 1,
+            startDate: new Date(),
+            status: "CONFIRMED"
+          }
+        })
+
+        contractId = created.id
       }
 
-      const created = await prisma.contract.create({
+      // -----------------------------
+      // AMEND
+      // -----------------------------
+      if (record.mode === "amend") {
+
+        if (!record.contractId) {
+          throw new Error("Missing contractId")
+        }
+
+        await tx.contract.update({
+          where: { id: record.contractId },
+          data: {
+            monthlyVolumeKg: draft.supply.monthlyVolume,
+            durationMonths: draft.supply.duration,
+            remainingMonths: draft.supply.duration
+          }
+        })
+
+        contractId = record.contractId
+      }
+
+      // -----------------------------
+      // MARK TOKEN AS USED
+      // -----------------------------
+      await tx.signatureToken.update({
+        where: { token: otp },
         data: {
-          id: crypto.randomUUID(),
-
-          // 🔥 RELATION
-          companyId: draft.companyId,
-
-          // 🔧 CORE DATA
-          monthlyVolumeKg: draft.supply.monthlyVolume,
-          durationMonths: draft.supply.duration,
-          remainingMonths: draft.supply.duration,
-
-          // 🔧 DEFAULTS (ajústalos luego si quieres)
-          pricePerBag: draft.pricePerBag ?? 0,
-          bagSizeKg: 20,
-          bagsPerDelivery: draft.bagsPerDelivery ?? 1,
-
-          startDate: new Date(),
-
-          // 🔥 YA FIRMADO → CONFIRMED
-          status: "CONFIRMED"
+          verified: true,
+          signed: true
         }
       })
 
-      contractId = created.id
-    }
-
-    // -----------------------------
-    // AMEND
-    // -----------------------------
-
-    if (record.mode === "amend") {
-
-      if (!record.contractId) {
-        return NextResponse.json(
-          { error: "Missing contractId" },
-          { status: 400 }
-        )
-      }
-
-      await prisma.contract.update({
-        where: { id: record.contractId },
-        data: {
-          monthlyVolumeKg: draft.supply.monthlyVolume,
-          durationMonths: draft.supply.duration,
-          remainingMonths: draft.supply.duration
-        }
-      })
-
-      contractId = record.contractId
-    }
-
-    // =====================================================
-    // MARK TOKEN AS USED
-    // =====================================================
-
-    await prisma.signatureToken.update({
-      where: { token: otp },
-      data: {
-        verified: true,
-        signed: true
-      }
     })
 
     // =====================================================
@@ -159,7 +160,7 @@ export async function POST(req: Request) {
 
   } catch (err) {
 
-    console.error("VERIFY OTP ERROR:", err)
+    console.error("❌ VERIFY OTP ERROR:", err)
 
     return NextResponse.json(
       { error: "Server error" },
