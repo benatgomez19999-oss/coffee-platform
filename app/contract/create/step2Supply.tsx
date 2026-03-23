@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { useEngineRuntime } from "@/hooks/useEngineRuntime"
 
@@ -22,6 +22,7 @@ type Props = {
   onNext: (data: Supply) => void
 }
 
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -32,30 +33,51 @@ export default function Step2Supply({ supply, onNext }: Props) {
 
   const [form, setForm] = useState<Supply>(supply)
 
- // =====================================================
-// UPDATE VOLUME
-// =====================================================
+  // =====================================================
+  // 🔥 SYNC WITH PARENT (IMPORTANT)
+  // =====================================================
 
-function updateVolume(v: number) {
+  useEffect(() => {
+    setForm(supply)
+  }, [supply])
 
-  // -------------------------------------------------
-  // UPDATE LOCAL FORM
-  // -------------------------------------------------
 
-  setForm(prev => ({
-    ...prev,
-    monthlyVolume: v
-  }))
+  // =====================================================
+  // UPDATE VOLUME
+  // =====================================================
 
-  // -------------------------------------------------
-  // ENGINE SIGNAL
-  // -------------------------------------------------
+  function updateVolume(v: number) {
 
-  updateContext({
-    requestedVolume: v
-  })
+    // -------------------------------------------------
+    // UPDATE LOCAL FORM
+    // -------------------------------------------------
 
-}
+    setForm(prev => ({
+      ...prev,
+      monthlyVolume: v
+    }))
+
+    // -------------------------------------------------
+    // ENGINE SIGNAL
+    // -------------------------------------------------
+
+    updateContext({
+      requestedVolume: v
+    })
+  }
+
+
+  // =====================================================
+  // UPDATE FIELD (GENERIC — FUTURE SAFE)
+  // =====================================================
+
+  function update(field: keyof Supply, value: any) {
+    setForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
 
   // =====================================================
   // SEMAPHORE COLOR
@@ -70,8 +92,8 @@ function updateVolume(v: number) {
     if (sem === "red") return "bg-red-500"
 
     return "bg-gray-400"
-
   }
+
 
   // =====================================================
   // SUBMIT
@@ -82,6 +104,10 @@ function updateVolume(v: number) {
     const semaphore =
       engineState?.liveDecision?.semaphore
 
+    // -------------------------------------------------
+    // BLOCK INVALID STATE
+    // -------------------------------------------------
+
     if (semaphore === "red") {
 
       alert(
@@ -91,9 +117,21 @@ function updateVolume(v: number) {
       return
     }
 
-    onNext(form)
+    // -------------------------------------------------
+    // DEBUG (VERY USEFUL)
+    // -------------------------------------------------
 
+    console.log("📦 STEP2 SUBMIT:", form)
+
+    // -------------------------------------------------
+    // NEXT STEP
+    // -------------------------------------------------
+
+    onNext({
+      ...form
+    })
   }
+
 
   // =====================================================
   // RENDER
