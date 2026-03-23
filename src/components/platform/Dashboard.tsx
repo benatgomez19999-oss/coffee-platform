@@ -12,6 +12,7 @@ from "@/websocket/websocketClient"
 import OnboardingWizard from "@/components/platform/OnboardingWizard"
 import { getUserFromRequest } from "@/lib/auth"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 
 
 
@@ -40,6 +41,7 @@ export default function Dashboard({ user }: { user: any }) {
 
 const router = useRouter()
 const [contracts, setContracts] = useState<any[]>([])
+const pathname = usePathname()
 
 
 
@@ -968,18 +970,33 @@ return (
     <span style={{ color: "white" }}>Dashboard</span>
 
     <span
-      style={{ cursor: "pointer" }}
-      onClick={() => router.push("/contracts")}
-    >
-      Contracts
-    </span>
+  onClick={() => router.push("/platform")}
+  style={{
+    cursor: "pointer",
+    color: pathname === "/platform" ? "white" : "#aaa"
+  }}
+>
+  Dashboard
+</span>
 
-    <span style={{ cursor: "pointer" }}>Settings</span>
+    <span
+  onClick={() => router.push("/contracts")}
+  style={{
+    cursor: "pointer",
+    color: pathname === "/contracts" ? "white" : "#aaa"
+  }}
+>
+  Contracts
+</span>
+
   </div>
 
   <span
-  style={{ cursor: "pointer" }}
   onClick={() => router.push("/")}
+  style={{
+    cursor: "pointer",
+    color: pathname === "/" ? "white" : "#aaa"
+  }}
 >
   Marketplace
 </span>
