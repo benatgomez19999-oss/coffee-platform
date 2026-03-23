@@ -967,7 +967,7 @@ return (
 
   {/* NAV */}
   <div style={{ display: "flex", gap: "20px", fontSize: "14px", color: "#aaa" }}>
-    <span style={{ color: "white" }}>Dashboard</span>
+    
 
     <span
   onClick={() => router.push("/platform")}
