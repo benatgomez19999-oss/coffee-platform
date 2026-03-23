@@ -114,7 +114,7 @@ useEffect(() => {
           address: prev.client.address || companyData?.address || "",
           contactName: prev.client.contactName || companyData?.contactName || "",
           phone: prev.client.phone || companyData?.phone || "",
-          email: prev.client.email || userEmail,
+         email: prev.client.email !== "" ? prev.client.email : userEmail,
         }
       }))
 
