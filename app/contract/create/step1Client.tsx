@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 type Client = {
   country: string
@@ -22,6 +22,11 @@ export default function Step1Client({ client, onNext }: Props) {
 
   const [form, setForm] = useState<Client>(client)
 
+  // 🔥 SYNC CON AUTOFILL
+  useEffect(() => {
+    setForm(client)
+  }, [client])
+
   function update(field: keyof Client, value: string) {
     setForm(prev => ({
       ...prev,
@@ -34,7 +39,7 @@ export default function Step1Client({ client, onNext }: Props) {
     onNext(form)
   }
 
-return (
+  return (
 
   <form
     onSubmit={submit}
