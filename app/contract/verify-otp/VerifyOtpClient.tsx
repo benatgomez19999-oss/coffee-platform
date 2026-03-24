@@ -98,30 +98,43 @@ export default function VerifyOtpClient({
   }
 
   // =====================================================
-  // RESEND (SMS / EMAIL)
-  // =====================================================
+// RESEND (SMS / EMAIL)
+// =====================================================
 
-  const resend = async (channel: "sms" | "email") => {
-    try {
-      setResending(true)
+const resend = async (channel: "sms" | "email") => {
+  try {
+    setResending(true)
 
-      await fetch("/api/contracts/send-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contractId,
-          channel
-        })
+    console.log("🔁 RESENDING OTP:", { contractId, channel })
+
+    const res = await fetch("/api/contracts/send-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contractId,   // 🔥 CLAVE para recovery
+        channel       // "sms" | "email"
       })
+    })
 
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setResending(false)
+    const data = await res.json()
+
+    if (!res.ok) {
+      console.error("❌ RESEND FAILED:", data)
+      alert(data?.error || "Failed to resend OTP")
+      return
     }
+
+    console.log("✅ RESEND SUCCESS:", channel)
+
+  } catch (err) {
+    console.error("❌ RESEND ERROR:", err)
+    alert("Unexpected error while resending OTP")
+  } finally {
+    setResending(false)
   }
+}
 
   // =====================================================
   // RENDER

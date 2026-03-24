@@ -59,8 +59,11 @@ let recoveredDraft: any = null
 
 if (!contractDraft) {
   const lastToken = await prisma.signatureToken.findFirst({
-    orderBy: { createdAt: "desc" }
-  })
+  where: {
+    contractId: contractId
+  },
+  orderBy: { createdAt: "desc" }
+})
 
   if (lastToken?.contractDraft) {
     recoveredDraft = lastToken.contractDraft
