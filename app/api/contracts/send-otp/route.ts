@@ -71,6 +71,7 @@ if (!contractDraft) {
 }
 
 const finalDraft = contractDraft || recoveredDraft
+console.log("♻️ RECOVERED DRAFT:", recoveredDraft)
 
 // =====================================================
 // VALIDATION (ALLOW RESEND WITHOUT DRAFT)
@@ -103,7 +104,7 @@ if (!contractDraft && !contractId) {
     // =====================================================
     // SAVE TOKEN (🔥 GUARANTEE EMAIL PERSISTENCE)
     // =====================================================
-
+    console.log("💾 SAVING TOKEN WITH EMAIL:", contractDraft?.client?.email)
     await prisma.signatureToken.create({
       data: {
         token: otp,
@@ -112,13 +113,14 @@ if (!contractDraft && !contractId) {
         phone: phone || "no-phone",
 
         // 🔥 CLAVE: GUARDAMOS EMAIL SIEMPRE
-        contractDraft: {
-  ...(finalDraft || {}),
-  client: {
-    ...(finalDraft?.client || {}),
-    email: email || null
-  }
-},
+     contractDraft: contractDraft
+  ? {
+      client: {
+        email: contractDraft.client?.email ?? null,
+        phone: contractDraft.client?.phone ?? null
+      }
+    }
+  : undefined,
 
         expiresAt,
         verified: false,
@@ -180,6 +182,7 @@ if (!contractDraft && !contractId) {
               </div>
             `
           })
+          
 
           console.log("📧 OTP EMAIL SENT to:", email)
         }
