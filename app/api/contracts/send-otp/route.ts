@@ -34,7 +34,7 @@ function formatPhone(phone: string) {
 }
 
 // =====================================================
-// SEND OTP (SMS + EMAIL SUPPORT)
+// SEND OTP (FINAL VERSION)
 // =====================================================
 
 export async function POST(req: Request) {
@@ -55,37 +55,25 @@ export async function POST(req: Request) {
     // VALIDATION
     // =====================================================
 
-    if (!contractId && !contractDraft) {
+    if (!contractDraft && !contractId) {
       return NextResponse.json(
-        { error: "Missing contractId or contractDraft" },
+        { error: "Missing contractDraft or contractId" },
         { status: 400 }
       )
     }
 
     // =====================================================
-    // GET PHONE
+    // EXTRACT DATA (SOURCE OF TRUTH = DRAFT)
     // =====================================================
 
-    let phone: string | null = null
+    const phone = contractDraft?.client?.phone || null
+    const email = contractDraft?.client?.email || null
 
-    if (contractDraft?.client?.phone) {
-      phone = contractDraft.client.phone
-    }
-
-    if (!phone && contractId) {
-      const contract = await prisma.contract.findUnique({
-        where: { id: contractId },
-        include: {
-          company: {
-            select: {
-              phone: true
-            }
-          }
-        }
-      })
-
-      phone = contract?.company?.phone || null
-    }
+    console.log("📥 OTP INPUT:", {
+      phone,
+      email,
+      mode
+    })
 
     // =====================================================
     // GENERATE OTP
@@ -94,50 +82,42 @@ export async function POST(req: Request) {
     const otp = generateOTP()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-// =====================================================
-// EXTRACT EMAIL (FOR PERSISTENCE)
-// =====================================================
+    // =====================================================
+    // SAVE TOKEN (🔥 GUARANTEE EMAIL PERSISTENCE)
+    // =====================================================
 
-let emailForStorage: string | null = null
+    await prisma.signatureToken.create({
+      data: {
+        token: otp,
+        contractId: contractId || null,
+        mode: mode || "create",
+        phone: phone || "no-phone",
 
-if (contractDraft?.client?.email) {
-  emailForStorage = contractDraft.client.email
-}
+        // 🔥 CLAVE: GUARDAMOS EMAIL SIEMPRE
+        contractDraft: {
+          ...(contractDraft || {}),
+          client: {
+            ...(contractDraft?.client || {}),
+            email: email || null
+          }
+        },
 
-// =====================================================
-// SAVE TOKEN (FIXED: ALWAYS STORE EMAIL)
-// =====================================================
-
-await prisma.signatureToken.create({
-  data: {
-    token: otp,
-    contractId: contractId || null,
-    mode: mode || "create",
-    phone: phone || "no-phone",
-
-    // 🔥 UNIFICADO (SIN DUPLICADOS)
-    contractDraft: {
-      ...(contractDraft || {}),
-      client: {
-        ...(contractDraft?.client || {}),
-        email: contractDraft?.client?.email || null
+        expiresAt,
+        verified: false,
+        signed: false
       }
-    },
+    })
 
-    expiresAt,
-    verified: false,
-    signed: false
-  }
-})
+    console.log("🔐 OTP GENERATED:", otp)
 
     // =====================================================
-    // SEND OTP (CHANNEL BASED)
+    // SEND CHANNEL
     // =====================================================
 
     try {
 
       // -----------------------------------------------------
-      // 📱 SMS (TWILIO)
+      // 📱 SMS
       // -----------------------------------------------------
 
       if (sendChannel === "sms") {
@@ -159,30 +139,10 @@ await prisma.signatureToken.create({
       }
 
       // -----------------------------------------------------
-      // 📧 EMAIL (RESEND + RECOVERY FLOW)
+      // 📧 EMAIL (🔥 SIMPLIFIED — NO RECOVERY NEEDED)
       // -----------------------------------------------------
 
       if (sendChannel === "email") {
-
-        let email: string | null = null
-
-        // 🟡 PRIORIDAD 1 → draft inicial
-        if (contractDraft?.client?.email) {
-          email = contractDraft.client.email
-        }
-
-        // 🟢 PRIORIDAD 2 → recuperar de token anterior
-        if (!email && contractId) {
-          const lastToken = await prisma.signatureToken.findFirst({
-            where: { contractId },
-            orderBy: { createdAt: "desc" }
-          })
-
-          if (lastToken?.contractDraft) {
-            const draft: any = lastToken.contractDraft
-            email = draft?.client?.email || null
-          }
-        }
 
         if (!email) {
           console.warn("⚠️ No email available for OTP")
