@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
 
+
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -13,6 +15,9 @@ export default function VerifyOtpClient({
   contractId?: string
 }) {
   const router = useRouter()
+
+
+console.log("📍 VERIFY PAGE CONTRACT ID:", contractId)
 
   // =====================================================
   // STATE
