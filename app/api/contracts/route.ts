@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/database/prisma";
+import { useSearchParams } from "next/navigation"
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
@@ -12,7 +13,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-   
+
+const searchParams = useSearchParams()
+const contractId = searchParams.get("contractId")
+console.log("📍 VERIFY PAGE CONTRACT ID:", contractId)
 
     // ======================================================
     // AUTH
