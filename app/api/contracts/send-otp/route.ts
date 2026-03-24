@@ -51,16 +51,31 @@ export async function POST(req: Request) {
 
     const sendChannel = channel || "sms"
 
-    // =====================================================
-    // VALIDATION
-    // =====================================================
+// =====================================================
+// RECOVER LAST TOKEN (FOR RESEND)
+// =====================================================
 
-    if (!contractDraft && !contractId) {
-      return NextResponse.json(
-        { error: "Missing contractDraft or contractId" },
-        { status: 400 }
-      )
-    }
+let recoveredDraft: any = null
+
+if (!contractDraft) {
+  const lastToken = await prisma.signatureToken.findFirst({
+    orderBy: { createdAt: "desc" }
+  })
+
+  if (lastToken?.contractDraft) {
+    recoveredDraft = lastToken.contractDraft
+  }
+}
+
+const finalDraft = contractDraft || recoveredDraft
+
+// =====================================================
+// VALIDATION (ALLOW RESEND WITHOUT DRAFT)
+// =====================================================
+
+if (!contractDraft && !contractId) {
+  console.warn("⚠️ No draft or contractId — attempting resend recovery")
+}
 
     // =====================================================
     // EXTRACT DATA (SOURCE OF TRUTH = DRAFT)
@@ -95,12 +110,12 @@ export async function POST(req: Request) {
 
         // 🔥 CLAVE: GUARDAMOS EMAIL SIEMPRE
         contractDraft: {
-          ...(contractDraft || {}),
-          client: {
-            ...(contractDraft?.client || {}),
-            email: email || null
-          }
-        },
+  ...(finalDraft || {}),
+  client: {
+    ...(finalDraft?.client || {}),
+    email: email || null
+  }
+},
 
         expiresAt,
         verified: false,
