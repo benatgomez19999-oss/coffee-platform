@@ -5,6 +5,10 @@
 export const dynamic = "force-dynamic"
 
 import VerifyOtpClient from "./VerifyOtpClient"
+import { useSearchParams } from "next/navigation"
+
+const searchParams = useSearchParams()
+const contractId = searchParams.get("contractId")
 
 type Props = {
   searchParams: {
