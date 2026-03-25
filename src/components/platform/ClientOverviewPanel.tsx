@@ -64,13 +64,32 @@ const safeContracts = Array.isArray(contracts)
   ? contracts
   : []
 
-const activeContracts = safeContracts.length
+// ======================================================
+// CONTRACT STATES (REAL LOGIC)
+// ======================================================
 
+const activeContracts = safeContracts.filter(
+  c => c.status === "ACTIVE"
+).length
+
+const pendingSignature = safeContracts.filter(
+  c => c.status === "AWAITING_SIGNATURE"
+).length
+
+const pendingPayment = safeContracts.filter(
+  c =>
+    c.status === "SIGNED" ||
+    c.status === "PAYMENT_PENDING"
+).length
+
+// 👇 solo volumen activo REAL
 const monthlyVolume =
-  safeContracts.reduce(
-    (sum, c) => sum + (c?.monthlyVolumeKg || 0),
-    0
-  )
+  safeContracts
+    .filter(c => c.status === "ACTIVE")
+    .reduce(
+      (sum, c) => sum + (c?.monthlyVolumeKg || 0),
+      0
+    )
 
   // ======================================================
   // AVAILABLE SUPPLY
@@ -126,10 +145,10 @@ const statusColor =
   // ======================================================
 
   const nextShipment =
-    activeContracts > 0
-      ? "Scheduled"
-      : "Pending"
-
+  activeContracts > 0
+    ? "Scheduled"
+    : "Pending"
+    
   // ======================================================
   // RESET CONTRACT (DEV TOOL)
   // ======================================================
@@ -242,10 +261,11 @@ const statusColor =
 
   {/* ACTIVE CONTRACTS */}
 
-  <Metric
-    label="Active Contracts"
-    value={activeContracts}
-  />
+ <Metric label="Active Contracts" value={activeContracts} />
+
+<Metric label="Pending Signature" value={pendingSignature} />
+
+<Metric label="Pending Payment" value={pendingPayment} />
 
   {/* MONTHLY VOLUME */}
 
