@@ -83,6 +83,10 @@ const pendingPayment = safeContracts.filter(
     c.status === "PAYMENT_PENDING"
 ).length
 
+const pendingSignatureContract = safeContracts.find(
+  c => c.status === "AWAITING_SIGNATURE"
+)
+
 // 👇 solo volumen activo REAL
 const monthlyVolume =
   safeContracts
@@ -265,6 +269,25 @@ const statusColor =
  <Metric label="Active Contracts" value={activeContracts} />
 
 <Metric label="Pending Signature" value={pendingSignature} />
+
+{pendingSignature > 0 && pendingSignatureContract && (
+  <button
+    onClick={() => {
+      window.location.href = `/contract/verify-otp?contractId=${pendingSignatureContract.id}`
+    }}
+    style={{
+      marginTop: 10,
+      padding: "10px 16px",
+      borderRadius: 8,
+      background: "#facc15",
+      color: "#000",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    Complete Signature
+  </button>
+)}
 
 <Metric label="Pending Payment" value={pendingPayment} />
 
