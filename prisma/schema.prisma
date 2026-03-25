@@ -128,12 +128,19 @@ model Contract {
   bagSizeKg       Float            @default(20)
   bagsPerDelivery Int
 
+  // 🔥 NUEVO → precio mensual total
+  monthlyPrice    Float
+
   startDate       DateTime
   endDate         DateTime?
   nextExecution   DateTime?
 
   status          ContractStatus   @default(PENDING)
   createdAt       DateTime         @default(now())
+
+  // 🔥 OPCIONAL (MUY RECOMENDADO para Stripe)
+  stripeSubscriptionId String?
+  stripeCustomerId     String?
 
   company         Company          @relation(fields: [companyId], references: [id])
   roastedBatch    RoastedBatch?    @relation(fields: [roastedBatchId], references: [id])
@@ -297,9 +304,10 @@ enum OrderStatus {
 enum ContractStatus {
   PENDING
   AWAITING_SIGNATURE
-  SIGNED          //  (firma hecha, sin pago)
+  SIGNED          // (firma hecha, sin pago)
   PAYMENT_PENDING // (listo para pagar)
   ACTIVE
+  PAST_DUE        // (fallo de pago)
   COMPLETED
   CANCELLED
 }
