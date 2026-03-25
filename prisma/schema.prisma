@@ -297,7 +297,8 @@ enum OrderStatus {
 enum ContractStatus {
   PENDING
   AWAITING_SIGNATURE
-  CONFIRMED
+  SIGNED          //  (firma hecha, sin pago)
+  PAYMENT_PENDING // (listo para pagar)
   ACTIVE
   COMPLETED
   CANCELLED
