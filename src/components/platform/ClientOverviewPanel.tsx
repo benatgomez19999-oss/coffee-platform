@@ -35,7 +35,6 @@ useEffect(() => {
     try {
 
       const res = await fetch("/api/contracts")
-
       const data = await res.json()
 
       setContracts(data)
@@ -47,6 +46,8 @@ useEffect(() => {
     } finally {
 
       setLoading(false)
+
+      
 
     }
 
@@ -148,7 +149,7 @@ const statusColor =
   activeContracts > 0
     ? "Scheduled"
     : "Pending"
-    
+
   // ======================================================
   // RESET CONTRACT (DEV TOOL)
   // ======================================================
