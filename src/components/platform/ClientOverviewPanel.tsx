@@ -1,6 +1,8 @@
 "use client"
 
 import type { EngineState } from "@/engine/runtime"
+import { useSearchParams, useRouter } from "next/navigation"
+
 
 
 
@@ -26,7 +28,9 @@ export default function ClientOverviewPanel({
   // ======================================================
 
  const [contracts, setContracts] = useState<any[]>([])
-const [loading, setLoading] = useState(true)
+ const [loading, setLoading] = useState(true)
+ const searchParams = useSearchParams()
+ const router = useRouter()
 
 useEffect(() => {
 
@@ -57,6 +61,23 @@ useEffect(() => {
 
 }, [])
 
+ // ======================================================
+// SUCCESS PAYMENT MESSAGE
+// ======================================================
+useEffect(() => {
+  const isSuccess = searchParams.get("payment") === "success"
+
+  if (!isSuccess) return
+
+ alert("✅ Payment successful")
+
+  // limpiar URL primero
+  router.replace("/platform")
+
+  // refrescar datos
+  router.refresh()
+
+}, [])
  // ======================================================
 // CONTRACT METRICS (SAFE)
 // ======================================================
