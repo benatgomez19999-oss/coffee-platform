@@ -4,15 +4,12 @@ import { requireAuth } from "@/lib/requireAuth"
 
 // ======================================================
 // CREATE CONTRACT — USER SCOPED (MULTI-TENANT SAFE)
-// FIXED: soporta contractDraft (nuevo flow)
 // ======================================================
 
 export async function POST(req: Request) {
-
   try {
-
     // ======================================================
-    // AUTH (GLOBAL GUARD)
+    // AUTH
     // ======================================================
 
     const user = await requireAuth()
@@ -29,13 +26,10 @@ export async function POST(req: Request) {
     // ======================================================
 
     const body = await req.json()
-
-    const {
-      contractDraft
-    } = body
+    const { contractDraft } = body
 
     // ======================================================
-    // VALIDATION (FIXED)
+    // VALIDATION
     // ======================================================
 
     if (!contractDraft?.supply) {
@@ -58,49 +52,43 @@ export async function POST(req: Request) {
     }
 
     // ======================================================
-    // CREATE CONTRACT (MULTI-TENANT SAFE)
+    // 💰 CALCULATE MONTHLY PRICE (🔥 NUEVO)
+    // ======================================================
+
+    const pricePerBag = 10
+    const bagSizeKg = 20
+
+    const bagsPerDelivery = Math.round(monthlyVolumeKg / bagSizeKg)
+    const monthlyPrice = bagsPerDelivery * pricePerBag
+
+    // ======================================================
+    // CREATE CONTRACT
     // ======================================================
 
     const contract = await prisma.contract.create({
       data: {
-        // 🔥 id auto generado por prisma (no lo pasamos manualmente)
-
         companyId: user.companyId,
 
-        // ======================================================
-        // BUSINESS LOGIC
-        // ======================================================
-
+        // BUSINESS
         monthlyVolumeKg,
         durationMonths,
         remainingMonths: durationMonths,
 
-        // ======================================================
-        // PRICING / DELIVERY
-        // ======================================================
+        // PRICING
+        pricePerBag,
+        bagSizeKg,
+        bagsPerDelivery,
+        monthlyPrice, // 🔥 FIX CLAVE
 
-        bagsPerDelivery: Math.round(monthlyVolumeKg / 20),
-        pricePerBag: 10,
-
-        // ======================================================
         // TIMELINE
-        // ======================================================
-
         startDate: new Date(),
 
-        // ======================================================
-        // STATUS (IMPORTANTE)
-        // ======================================================
-
+        // STATUS
         status: "AWAITING_SIGNATURE",
       }
     })
 
     console.log("🟢 CONTRACT CREATED:", contract)
-
-    // ======================================================
-    // SUCCESS (IMPORTANTE: devolvemos contractId)
-    // ======================================================
 
     return NextResponse.json({
       success: true,
@@ -108,10 +96,6 @@ export async function POST(req: Request) {
     })
 
   } catch (error: any) {
-
-    // ======================================================
-    // AUTH ERROR
-    // ======================================================
 
     if (error.message === "UNAUTHORIZED") {
       return NextResponse.json(
