@@ -40,6 +40,13 @@ model GreenLot {
   farm         Farm         @relation(fields: [farmId], references: [id])
   purchases    Purchase[]
   roastBatches RoastBatch[]
+
+// 💰 PRICING SNAPSHOT (1:1)
+  pricingSnapshot PricingSnapshot?
+
+// 📊 CALIDAD (para pricing engine)
+  scaScore Float?
+  altitude Int? // override farm altitude si hace falta
 }
 
 model Purchase {
@@ -87,6 +94,56 @@ model RoastedBatch {
   roastBatch   RoastBatch  @relation(fields: [roastBatchId], references: [id])
   contracts    Contract[]
   orders       OrderItem[]
+}
+
+//////////////////////////////////////////////////////
+// 💰 PRICING ENGINE
+//////////////////////////////////////////////////////
+
+model PricingSnapshot {
+  id        String   @id @default(uuid())
+
+  lotId     String   @unique
+  lot       GreenLot @relation(fields: [lotId], references: [id])
+
+  // 💸 precio pagado al productor
+  producerPricePerKg Float
+
+  // 💰 precio venta cliente
+  clientPricePerKg   Float
+
+  // 📊 margen (opcional pero útil)
+  marginPerKg        Float
+
+  // 🧠 versionado del algoritmo
+  pricingVersion     String
+
+  createdAt DateTime @default(now())
+}
+
+model PricingRule {
+  id String @id @default(uuid())
+
+  // 🎯 condiciones
+  minSca Float?
+  maxSca Float?
+
+  minAltitude Int?
+  maxAltitude Int?
+
+  variety String?
+  process ProcessType?
+
+  // 💰 outputs
+  producerPricePerKg Float
+  clientPricePerKg   Float
+
+  // 🧠 prioridad
+  priority Int
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
 }
 
 //////////////////////////////////////////////////////
