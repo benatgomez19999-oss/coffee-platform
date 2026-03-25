@@ -85,8 +85,8 @@ if (!contractDraft && !contractId) {
     // EXTRACT DATA (SOURCE OF TRUTH = DRAFT)
     // =====================================================
 
-    const phone = contractDraft?.client?.phone || null
-    const email = contractDraft?.client?.email || null
+   const phone = finalDraft?.client?.phone || null
+   const email = finalDraft?.client?.email || null
 
     console.log("📥 OTP INPUT:", {
       phone,
@@ -113,11 +113,11 @@ if (!contractDraft && !contractId) {
         phone: phone || "no-phone",
 
         // 🔥 CLAVE: GUARDAMOS EMAIL SIEMPRE
-     contractDraft: contractDraft
+    contractDraft: finalDraft
   ? {
       client: {
-        email: contractDraft.client?.email ?? null,
-        phone: contractDraft.client?.phone ?? null
+        email: finalDraft.client?.email ?? null,
+        phone: finalDraft.client?.phone ?? null
       }
     }
   : undefined,
