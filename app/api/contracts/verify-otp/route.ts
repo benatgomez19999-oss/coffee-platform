@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
+import { ContractStatus } from "@prisma/client"
+
+
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -78,7 +81,7 @@ export async function POST(req: Request) {
       await tx.contract.update({
         where: { id: record.contractId },
         data: {
-          status: "CONFIRMED"
+        status: ContractStatus.SIGNED
         }
       })
 

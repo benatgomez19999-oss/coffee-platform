@@ -3,6 +3,9 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
+import { ContractStatus } from "@prisma/client"
+
+
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";
@@ -73,7 +76,7 @@ try {
   await prisma.contract.update({
     where: { id: record.contractId },
     data: {
-      status: "CONFIRMED",
+    status: ContractStatus.SIGNED
     },
   })
 
