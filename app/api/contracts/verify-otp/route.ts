@@ -2,18 +2,15 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import { ContractStatus } from "@prisma/client"
 
-
-
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 // =====================================================
-// VERIFY OTP (FINAL FLOW)
+// VERIFY OTP (FINAL FLOW - FIXED)
 // =====================================================
 
 export async function POST(req: Request) {
   try {
-
     const body = await req.json()
     const { code, contractId } = body
 
@@ -29,17 +26,19 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // FIND TOKEN (OTP + CONTRACT LINKED)
+    // 🔥 GET LAST VALID TOKEN (IMPORTANT)
     // =====================================================
 
     const record = await prisma.signatureToken.findFirst({
       where: {
-        token: code,
-        contractId: contractId
+        contractId
+      },
+      orderBy: {
+        createdAt: "desc"
       }
     })
 
-    if (!record) {
+    if (!record || record.token !== code) {
       return NextResponse.json(
         { error: "Invalid code" },
         { status: 400 }
@@ -65,28 +64,58 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // TRANSACTION (CONFIRM CONTRACT)
+    // 🔥 GET CONTRACT (EXTRA SAFETY)
+    // =====================================================
+
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId }
+    })
+
+    if (!contract) {
+      return NextResponse.json(
+        { error: "Contract not found" },
+        { status: 404 }
+      )
+    }
+
+    if (contract.status === ContractStatus.SIGNED) {
+      return NextResponse.json(
+        { error: "Contract already signed" },
+        { status: 400 }
+      )
+    }
+
+    // =====================================================
+    // TRANSACTION
     // =====================================================
 
     await prisma.$transaction(async (tx) => {
 
       // -----------------------------
-      // 🟢 CONFIRM CONTRACT (NEW FLOW)
+      // 🔐 MARK TOKEN AS USED
       // -----------------------------
 
-      if (!record.contractId) {
-        throw new Error("Missing contractId on token")
-      }
-
-      await tx.contract.update({
-        where: { id: record.contractId },
+      await tx.signatureToken.update({
+        where: { token: record.token },
         data: {
-        status: ContractStatus.SIGNED
+          verified: true,
+          signed: true
         }
       })
 
       // -----------------------------
-      // 🟡 OPTIONAL: HANDLE AMEND
+      // 🟢 UPDATE CONTRACT STATUS
+      // -----------------------------
+
+      await tx.contract.update({
+        where: { id: contractId },
+        data: {
+          status: ContractStatus.SIGNED
+        }
+      })
+
+      // -----------------------------
+      // 🟡 HANDLE AMEND
       // -----------------------------
 
       if (record.mode === "amend" && record.contractDraft) {
@@ -94,7 +123,7 @@ export async function POST(req: Request) {
         const draft: any = record.contractDraft
 
         await tx.contract.update({
-          where: { id: record.contractId },
+          where: { id: contractId },
           data: {
             monthlyVolumeKg: draft?.supply?.monthlyVolume,
             durationMonths: draft?.supply?.duration,
@@ -102,18 +131,6 @@ export async function POST(req: Request) {
           }
         })
       }
-
-      // -----------------------------
-      // 🔐 MARK TOKEN AS USED
-      // -----------------------------
-
-      await tx.signatureToken.update({
-        where: { token: code },
-        data: {
-          verified: true,
-          signed: true
-        }
-      })
 
     })
 
