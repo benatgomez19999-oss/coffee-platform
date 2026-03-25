@@ -87,6 +87,12 @@ const pendingSignatureContract = safeContracts.find(
   c => c.status === "AWAITING_SIGNATURE"
 )
 
+const pendingPaymentContract = safeContracts.find(
+  c =>
+    c.status === "SIGNED" ||
+    c.status === "PAYMENT_PENDING"
+)
+
 // 👇 solo volumen activo REAL
 const monthlyVolume =
   safeContracts
@@ -290,6 +296,25 @@ const statusColor =
 )}
 
 <Metric label="Pending Payment" value={pendingPayment} />
+
+{pendingPayment > 0 && pendingPaymentContract && (
+  <button
+    onClick={() => {
+      window.location.href = `/contract/payment?contractId=${pendingPaymentContract.id}`
+    }}
+    style={{
+      marginTop: 10,
+      padding: "10px 16px",
+      borderRadius: 8,
+      background: "#4ade80",
+      color: "#000",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    Complete Payment
+  </button>
+)}
 
   {/* MONTHLY VOLUME */}
 
