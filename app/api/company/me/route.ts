@@ -33,8 +33,24 @@ export async function GET() {
       return NextResponse.json({ company: null })
     }
 
+    const c = user.company
+
+    // 🔥 RETURN EXPLÍCITO (FIX)
     return NextResponse.json({
-      company: user.company
+      company: {
+        id: c.id,
+        name: c.name,
+        country: c.country,
+
+        phone: c.phone,
+        address: c.address,
+        vat: c.vat,
+        contactName: c.contactName,
+
+        // ✅ NUEVOS
+        businessName: c.businessName,
+        legalCompanyName: c.legalCompanyName,
+      }
     })
 
   } catch (err) {
