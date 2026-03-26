@@ -8,12 +8,14 @@ export default function OnboardingProfile() {
   const router = useRouter()
 
   const [form, setForm] = useState({
-    country: "",
-    phone: "",
-    address: "",
-    vat: "",
-    contactName: ""
-  })
+  country: "",
+  phone: "",
+  address: "",
+  vat: "",
+  contactName: "",
+  businessName: "",
+  legalCompanyName: ""
+})
 
   const [loading, setLoading] = useState(false)
 
@@ -27,12 +29,14 @@ export default function OnboardingProfile() {
       .then(data => {
         if (data.company) {
           setForm({
-            country: data.company.country || "",
-            phone: data.company.phone || "",
-            address: data.company.address || "",
-            vat: data.company.vat || "",
-            contactName: data.company.contactName || ""
-          })
+  country: data.company.country || "",
+  phone: data.company.phone || "",
+  address: data.company.address || "",
+  vat: data.company.vat || "",
+  contactName: data.company.contactName || "",
+  businessName: data.company.businessName || "",
+  legalCompanyName: data.company.legalCompanyName || ""
+})
         }
       })
   }, [])
@@ -88,6 +92,18 @@ export default function OnboardingProfile() {
         <h2 className="text-xl font-semibold">
           Complete your profile
         </h2>
+
+        <input
+  placeholder="Business Name"
+  value={form.businessName}
+  onChange={e => handleChange("businessName", e.target.value)}
+/>
+
+<input
+  placeholder="Legal Company Name"
+  value={form.legalCompanyName}
+  onChange={e => handleChange("legalCompanyName", e.target.value)}
+/>
 
         <input
           placeholder="Country"

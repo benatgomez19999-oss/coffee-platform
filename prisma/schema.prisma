@@ -160,6 +160,8 @@ model Company {
   address      String?
   vat          String?   // CIF
   contactName  String?
+  businessName       String?
+  legalCompanyName   String?
 
   createdAt DateTime   @default(now())
 
