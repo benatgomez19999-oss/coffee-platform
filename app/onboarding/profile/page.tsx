@@ -174,47 +174,62 @@ export default function OnboardingProfile() {
 
         {step === 2 && (
           <>
-           <input
-  ref={inputRef}
+          <input
   value={form.address}
-  onChange={(e) => {
+  onChange={async (e) => {
     const value = e.target.value
     handleChange("address", value)
-    console.log("service:", serviceRef.current)
 
-    if (!serviceRef.current || value.length < 3) {
+    if (value.length < 3) {
       setPredictions([])
       return
     }
 
-    serviceRef.current.getPlacePredictions(
-      {
-        input: value,
-        types: ["address"]
-      },
-      (results: any) => {
-        setPredictions(results || [])
-      }
-    )
+    try {
+      const res = await fetch(
+        "https://places.googleapis.com/v1/places:autocomplete",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+          },
+          body: JSON.stringify({
+            input: value,
+            languageCode: "en"
+          })
+        }
+      )
+
+      const data = await res.json()
+
+      setPredictions(data.suggestions || [])
+    } catch (err) {
+      console.error(err)
+    }
   }}
   className="input"
   placeholder="Start typing your address..."
 />
 
 {predictions.length > 0 && (
-  <div className="bg-black border border-white/10 rounded-md mt-1 max-h-40 overflow-y-auto">
-    {predictions.map((p, i) => (
-      <div
-        key={i}
-        className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-        onClick={() => {
-          handleChange("address", p.description)
-          setPredictions([])
-        }}
-      >
-        {p.description}
-      </div>
-    ))}
+  <div className="bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto">
+    {predictions.map((p: any, i) => {
+      const text = p.placePrediction?.text?.text
+
+      return (
+        <div
+          key={i}
+          className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
+          onClick={() => {
+            handleChange("address", text)
+            setPredictions([])
+          }}
+        >
+          {text}
+        </div>
+      )
+    })}
   </div>
 )}
 
