@@ -105,18 +105,20 @@ useEffect(() => {
 
       // 💥 SIEMPRE PREFILL (aunque no haya company)
       setDraft(prev => ({
-        ...prev,
-        client: {
-          ...prev.client,
-          country: prev.client.country || companyData?.country || "",
-          businessName: prev.client.businessName || companyData?.name || "",
-          vat: prev.client.vat || companyData?.vat || "",
-          address: prev.client.address || companyData?.address || "",
-          contactName: prev.client.contactName || companyData?.contactName || "",
-          phone: prev.client.phone || companyData?.phone || "",
-         email: prev.client.email !== "" ? prev.client.email : userEmail,
-        }
-      }))
+  ...prev,
+  client: {
+    ...prev.client,
+    country: prev.client.country || companyData?.country || "",
+    businessName: prev.client.businessName || companyData?.businessName || "",
+    legalCompanyName: prev.client.legalCompanyName || companyData?.legalCompanyName || "", 
+
+    vat: prev.client.vat || companyData?.vat || "",
+    address: prev.client.address || companyData?.address || "",
+    contactName: prev.client.contactName || companyData?.contactName || "",
+    phone: prev.client.phone || companyData?.phone || "",
+    email: prev.client.email !== "" ? prev.client.email : userEmail,
+  }
+}))
 
     } catch (err) {
       console.error(err)

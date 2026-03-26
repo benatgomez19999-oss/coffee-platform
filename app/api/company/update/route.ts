@@ -24,7 +24,11 @@ export async function POST(req: Request) {
       phone,
       address,
       vat,
-      contactName
+      contactName,
+
+      // 🔥 NUEVOS CAMPOS
+      businessName,
+      legalCompanyName
     } = body
 
     // =====================================================
@@ -38,7 +42,11 @@ export async function POST(req: Request) {
         phone,
         address,
         vat,
-        contactName
+        contactName,
+
+        // 🔥 FIX
+        businessName,
+        legalCompanyName
       }
     })
 
