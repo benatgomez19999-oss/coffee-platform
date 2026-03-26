@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
+import { signToken } from "@/lib/auth";
 
 // =====================================================
 // CONFIG
@@ -99,39 +100,52 @@ export async function GET(req: Request) {
       );
     }
 
-    // =====================================================
-    // 🔥 CREATE USER
-    // =====================================================
+// =====================================================
+// 🔥 CREATE USER
+// =====================================================
 
-    await prisma.user.create({
-      data: {
-        email: record.email,
-        passwordHash: record.password,
-        name: record.name,
-        phone: record.phone,
-        companyId: record.companyId,
-      },
-    });
+const user = await prisma.user.create({
+  data: {
+    email: record.email,
+    passwordHash: record.password,
+    name: record.name,
+    phone: record.phone,
+    companyId: record.companyId,
+  },
+});
 
-    console.log("✅ USER CREATED");
+console.log("✅ USER CREATED");
 
-    // =====================================================
-    // DELETE TOKEN
-    // =====================================================
+// =====================================================
+// 🔐 AUTO LOGIN (🔥 CLAVE)
+// =====================================================
 
-    await prisma.verificationToken.delete({
-      where: { token },
-    });
 
-    console.log("🗑️ TOKEN DELETED");
+const authToken = signToken({ userId: user.id });
 
-    // =====================================================
-    // REDIRECT SUCCESS
-    // =====================================================
+const response = NextResponse.redirect(
+  `${baseUrl}/onboarding/role`
+);
 
-    return NextResponse.redirect(
-      `${baseUrl}/verify-page?status=success`
-    );
+response.cookies.set("auth_token", authToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: 60 * 60 * 24 * 7,
+});
+
+// =====================================================
+// DELETE TOKEN
+// =====================================================
+
+await prisma.verificationToken.delete({
+  where: { token },
+});
+
+console.log("🗑️ TOKEN DELETED");
+
+return response;
 
   } catch (error) {
     console.error("❌ VERIFY ERROR:", error);
