@@ -23,7 +23,8 @@
     "react-select": "^5.10.2",
     "resend": "^6.9.4",
     "stripe": "^20.4.1",
-    "twilio": "^5.13.0"
+    "twilio": "^5.13.0",
+    "use-places-autocomplete": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,10 +1,17 @@
 "use client"
 
+declare global {
+  interface Window {
+    google: any
+  }
+}
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Select from "react-select"
 import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
+ import { useRef } from "react"
 
 // 🌍 FULL COUNTRY LIST (simplificada pero amplia)
 const countryOptions = [
@@ -39,6 +46,9 @@ const countryOptions = [
 ]
 
 export default function OnboardingProfile() {
+
+
+
 
   const router = useRouter()
 
@@ -75,6 +85,27 @@ export default function OnboardingProfile() {
         }
       })
   }, [])
+
+ 
+
+const inputRef = useRef<HTMLInputElement>(null)
+
+useEffect(() => {
+  if (!window.google || !inputRef.current) return
+
+  const autocomplete = new window.google.maps.places.Autocomplete(
+    inputRef.current,
+    {
+      types: ["address"]
+    }
+  )
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace()
+
+    console.log(place) // 👈 aquí viene TODO (city, zip, etc)
+  })
+}, [])
 
   // =====================================================
   // HANDLE CHANGE
@@ -197,11 +228,10 @@ export default function OnboardingProfile() {
 />
 
         <input
-          className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
-          placeholder="Address"
-          value={form.address}
-          onChange={e => handleChange("address", e.target.value)}
-        />
+  ref={inputRef}
+  className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
+  placeholder="Address"
+/>
 
         <input
           className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
