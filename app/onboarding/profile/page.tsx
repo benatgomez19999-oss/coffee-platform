@@ -103,7 +103,7 @@ export default function OnboardingProfile() {
 
     const addressComponents = place.address_components || []
 
-    addressComponents.forEach((component: google.maps.GeocoderAddressComponent) => { // Aquí especificamos el tipo
+    addressComponents.forEach((component: any) => {
 
       const types = component.types
 
