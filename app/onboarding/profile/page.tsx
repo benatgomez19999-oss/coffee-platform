@@ -26,8 +26,6 @@ export default function OnboardingProfile() {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [predictions, setPredictions] = useState<any[]>([])
-  const serviceRef = useRef<any>(null)
 
   const [form, setForm] = useState({
     country: "",
@@ -46,7 +44,7 @@ export default function OnboardingProfile() {
   })
 
   const inputRef = useRef<HTMLInputElement>(null)
-  
+  const autocompleteRef = useRef<any>(null)
 
   // ================= LOAD DATA =================
   useEffect(() => {
@@ -59,19 +57,50 @@ export default function OnboardingProfile() {
       })
   }, [])
 
- useEffect(() => {
-  const interval = setInterval(() => {
-    if (window.google?.maps?.places) {
-      serviceRef.current = new window.google.maps.places.AutocompleteService()
-      clearInterval(interval)
-    }
-  }, 300)
+  // ================= GOOGLE AUTOCOMPLETE =================
+  useEffect(() => {
+    if (!window.google || !inputRef.current) return
+    if (autocompleteRef.current) return
 
-  return () => clearInterval(interval)
-}, [])
+    const autocomplete = new window.google.maps.places.Autocomplete(
+      inputRef.current,
+      {
+        types: ["address"],
+        fields: ["address_components", "formatted_address"]
+      }
+    )
 
+    autocompleteRef.current = autocomplete
 
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace()
+      if (!place?.address_components) return
 
+      const components = place.address_components
+
+      const get = (type: string) =>
+        components.find((c: any) => c.types.includes(type))?.long_name || ""
+
+      const getShort = (type: string) =>
+        components.find((c: any) => c.types.includes(type))?.short_name || ""
+
+      const street = get("route")
+      const streetNumber = get("street_number")
+
+      setForm(prev => ({
+        ...prev,
+        address: place.formatted_address || "",
+        street,
+        streetNumber,
+        city: get("locality") || get("postal_town"),
+        region: get("administrative_area_level_1"),
+        postalCode: get("postal_code"),
+        country: getShort("country") || prev.country
+      }))
+    })
+  }, [])
+
+  // ================= HANDLERS =================
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
@@ -95,7 +124,6 @@ export default function OnboardingProfile() {
       setLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
       <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-4">
@@ -175,63 +203,14 @@ export default function OnboardingProfile() {
         {step === 2 && (
           <>
           <input
+  ref={inputRef}
   value={form.address}
-  onChange={async (e) => {
-    const value = e.target.value
-    handleChange("address", value)
-
-    if (value.length < 3) {
-      setPredictions([])
-      return
-    }
-
-    try {
-      const res = await fetch(
-        "https://places.googleapis.com/v1/places:autocomplete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-          },
-          body: JSON.stringify({
-            input: value,
-            languageCode: "en"
-          })
-        }
-      )
-
-      const data = await res.json()
-
-      setPredictions(data.suggestions || [])
-    } catch (err) {
-      console.error(err)
-    }
-  }}
+  onChange={(e) => handleChange("address", e.target.value)}
   className="input"
   placeholder="Start typing your address..."
 />
 
-{predictions.length > 0 && (
-  <div className="bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto">
-    {predictions.map((p: any, i) => {
-      const text = p.placePrediction?.text?.text
 
-      return (
-        <div
-          key={i}
-          className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-          onClick={() => {
-            handleChange("address", text)
-            setPredictions([])
-          }}
-        >
-          {text}
-        </div>
-      )
-    })}
-  </div>
-)}
 
             <div className="grid grid-cols-2 gap-2">
               <input
