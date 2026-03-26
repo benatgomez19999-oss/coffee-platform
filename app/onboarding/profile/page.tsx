@@ -59,46 +59,54 @@ export default function OnboardingProfile() {
 
   // ================= GOOGLE AUTOCOMPLETE =================
   useEffect(() => {
-    if (!window.google || !inputRef.current) return
-    if (autocompleteRef.current) return
+  let interval: any
 
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types: ["address"],
-        fields: ["address_components", "formatted_address"]
-      }
-    )
+  interval = setInterval(() => {
+    if (window.google?.maps?.places && inputRef.current && !autocompleteRef.current) {
+      
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        inputRef.current,
+        {
+          types: ["address"],
+          fields: ["address_components", "formatted_address"]
+        }
+      )
 
-    autocompleteRef.current = autocomplete
+      autocompleteRef.current = autocomplete
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace()
-      if (!place?.address_components) return
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace()
+        if (!place?.address_components) return
 
-      const components = place.address_components
+        const components = place.address_components
 
-      const get = (type: string) =>
-        components.find((c: any) => c.types.includes(type))?.long_name || ""
+        const get = (type: string) =>
+          components.find((c: any) => c.types.includes(type))?.long_name || ""
 
-      const getShort = (type: string) =>
-        components.find((c: any) => c.types.includes(type))?.short_name || ""
+        const getShort = (type: string) =>
+          components.find((c: any) => c.types.includes(type))?.short_name || ""
 
-      const street = get("route")
-      const streetNumber = get("street_number")
+        const street = get("route")
+        const streetNumber = get("street_number")
 
-      setForm(prev => ({
-        ...prev,
-        address: place.formatted_address || "",
-        street,
-        streetNumber,
-        city: get("locality") || get("postal_town"),
-        region: get("administrative_area_level_1"),
-        postalCode: get("postal_code"),
-        country: getShort("country") || prev.country
-      }))
-    })
-  }, [])
+        setForm(prev => ({
+          ...prev,
+          address: place.formatted_address || "",
+          street,
+          streetNumber,
+          city: get("locality") || get("postal_town"),
+          region: get("administrative_area_level_1"),
+          postalCode: get("postal_code"),
+          country: getShort("country") || prev.country
+        }))
+      })
+
+      clearInterval(interval)
+    }
+  }, 300)
+
+  return () => clearInterval(interval)
+}, [])
 
   // ================= HANDLERS =================
   const handleChange = (field: string, value: string) => {
