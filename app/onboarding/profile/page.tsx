@@ -130,40 +130,76 @@ export default function OnboardingProfile() {
       <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-4">
         <h2 className="text-xl font-semibold">Complete your profile</h2>
 
-        {step === 1 && (
-          <>
-            <input
-              className="input"
-              placeholder="Business Name"
-              value={form.businessName}
-              onChange={e => handleChange("businessName", e.target.value)}
-            />
+       {step === 1 && (
+  <>
+    <input
+      className="input"
+      placeholder="Business Name"
+      value={form.businessName}
+      onChange={e => handleChange("businessName", e.target.value)}
+    />
 
-            <input
-              className="input"
-              placeholder="Legal Company Name"
-              value={form.legalCompanyName}
-              onChange={e => handleChange("legalCompanyName", e.target.value)}
-            />
+    <input
+      className="input"
+      placeholder="Legal Company Name"
+      value={form.legalCompanyName}
+      onChange={e => handleChange("legalCompanyName", e.target.value)}
+    />
 
-            <Select
-              options={countryOptions}
-              value={countryOptions.find(opt => opt.value === form.country)}
-              onChange={option => handleChange("country", option?.value || "")}
-            />
+    <Select
+      options={countryOptions}
+      value={countryOptions.find(opt => opt.value === form.country)}
+      onChange={option => handleChange("country", option?.value || "")}
+      styles={{
+        control: base => ({
+          ...base,
+          backgroundColor: "rgba(0,0,0,0.4)",
+          borderColor: "rgba(255,255,255,0.1)",
+          color: "white",
+          height: "42px",
+          boxShadow: "none"
+        }),
+        singleValue: base => ({
+          ...base,
+          color: "white"
+        }),
+        menu: base => ({
+          ...base,
+          backgroundColor: "#111",
+          color: "white"
+        }),
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isFocused ? "#222" : "#111",
+          color: "white"
+        })
+      }}
+    />
 
-            <PhoneInput
-              country={form.country?.toLowerCase() || "es"}
-              value={form.phone}
-              disableDropdown
-              onChange={(value) => handleChange("phone", value)}
-            />
+    <PhoneInput
+      country={form.country?.toLowerCase() || "es"}
+      value={form.phone}
+      disableDropdown
+      onChange={(value) => handleChange("phone", value)}
+      inputStyle={{
+        width: "100%",
+        background: "rgba(0,0,0,0.4)",
+        color: "white",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "6px",
+        height: "42px"
+      }}
+      buttonStyle={{
+        background: "#111",
+        border: "1px solid rgba(255,255,255,0.1)"
+      }}
+    />
 
-            <button onClick={() => setStep(2)} className="btn-primary">
-              Continue
-            </button>
-          </>
-        )}
+    <button onClick={() => setStep(2)} className="btn-primary">
+      Continue
+    </button>
+  </>
+)}
 
         {step === 2 && (
           <>
