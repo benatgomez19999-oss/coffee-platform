@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import { cookies } from "next/headers"
-import jwt from "jsonwebtoken"
+import { verifyToken } from "@/lib/auth"
 
 export const runtime = "nodejs"
 
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // 🔐 GET TOKEN (REAL AUTH)
+    // 🔐 GET TOKEN
     // =====================================================
 
     const token = cookies().get("auth_token")?.value
@@ -31,37 +31,26 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // 🔓 DECODE TOKEN
+    // 🔓 VERIFY TOKEN (TU SISTEMA)
     // =====================================================
 
-    let decoded: any
+    const payload = verifyToken(token)
 
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (err) {
+    if (!payload) {
       return NextResponse.json(
         { error: "Invalid token" },
         { status: 401 }
       )
     }
 
-    // 👇 IMPORTANTE: ajusta según tu token
-    const userId = decoded.userId || decoded.id || null
-    const email = decoded.email || null
-
-    if (!userId && !email) {
-      return NextResponse.json(
-        { error: "Invalid token payload" },
-        { status: 401 }
-      )
-    }
+    const userId = payload.userId
 
     // =====================================================
     // 🧠 UPDATE USER
     // =====================================================
 
     await prisma.user.update({
-      where: userId ? { id: userId } : { email: email! },
+      where: { id: userId },
       data: {
         role,
         onboardingCompleted: true,
