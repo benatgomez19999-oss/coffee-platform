@@ -17,6 +17,7 @@ const countryOptions = [
 
 export default function OnboardingProfile() {
   const router = useRouter()
+  console.log("KEY:", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -53,6 +54,7 @@ export default function OnboardingProfile() {
 const handleChange = (field: string, value: string) => {
   setForm(prev => ({ ...prev, [field]: value }))
 }
+console.log("HANDLER RUNNING")
 
 const handleAddressChange = async (e: any) => {
   const value = e.target.value
@@ -198,11 +200,11 @@ const handleSubmit = async () => {
           <>
             <div className="relative">
               <input
-                value={form.address}
-                onChange={handleAddressChange}
-                className="input"
-                placeholder="Start typing your address..."
-              />
+  value={form.address}
+  onChange={(e) => handleAddressChange(e)} // 🔥 wrapper
+  className="input"
+  placeholder="Start typing your address..."
+/>
 
               {predictions.length > 0 && (
                 <div className="absolute w-full bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto z-50">
