@@ -1,12 +1,6 @@
 "use client"
 
-declare global {
-  interface Window {
-    google: any
-  }
-}
-
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Select from "react-select"
 import PhoneInput from "react-phone-input-2"
@@ -26,6 +20,7 @@ export default function OnboardingProfile() {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [predictions, setPredictions] = useState<any[]>([])
 
   const [form, setForm] = useState({
     country: "",
@@ -43,9 +38,6 @@ export default function OnboardingProfile() {
     legalCompanyName: ""
   })
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<any>(null)
-
   // ================= LOAD DATA =================
   useEffect(() => {
     fetch("/api/company/me")
@@ -57,60 +49,41 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-  // ================= GOOGLE AUTOCOMPLETE =================
-  useEffect(() => {
-  let interval: any
-
-  interval = setInterval(() => {
-    if (window.google?.maps?.places && inputRef.current && !autocompleteRef.current) {
-      
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        inputRef.current,
-        {
-          types: ["address"],
-          fields: ["address_components", "formatted_address"]
-        }
-      )
-
-      autocompleteRef.current = autocomplete
-
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace()
-        if (!place?.address_components) return
-
-        const components = place.address_components
-
-        const get = (type: string) =>
-          components.find((c: any) => c.types.includes(type))?.long_name || ""
-
-        const getShort = (type: string) =>
-          components.find((c: any) => c.types.includes(type))?.short_name || ""
-
-        const street = get("route")
-        const streetNumber = get("street_number")
-
-        setForm(prev => ({
-          ...prev,
-          address: place.formatted_address || "",
-          street,
-          streetNumber,
-          city: get("locality") || get("postal_town"),
-          region: get("administrative_area_level_1"),
-          postalCode: get("postal_code"),
-          country: getShort("country") || prev.country
-        }))
-      })
-
-      clearInterval(interval)
-    }
-  }, 300)
-
-  return () => clearInterval(interval)
-}, [])
-
   // ================= HANDLERS =================
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleAddressChange = async (e: any) => {
+    const value = e.target.value
+    handleChange("address", value)
+
+    if (value.length < 3) {
+      setPredictions([])
+      return
+    }
+
+    try {
+      const res = await fetch(
+        "https://places.googleapis.com/v1/places:autocomplete",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+          },
+          body: JSON.stringify({
+            input: value,
+            languageCode: "en"
+          })
+        }
+      )
+
+      const data = await res.json()
+      setPredictions(data.suggestions || [])
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleSubmit = async () => {
@@ -132,93 +105,116 @@ export default function OnboardingProfile() {
       setLoading(false)
     }
   }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
       <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-4">
         <h2 className="text-xl font-semibold">Complete your profile</h2>
 
-       {step === 1 && (
-  <>
-    <input
-      className="input"
-      placeholder="Business Name"
-      value={form.businessName}
-      onChange={e => handleChange("businessName", e.target.value)}
-    />
+        {/* ================= STEP 1 (NO TOCADO) ================= */}
+        {step === 1 && (
+          <>
+            <input
+              className="input"
+              placeholder="Business Name"
+              value={form.businessName}
+              onChange={e => handleChange("businessName", e.target.value)}
+            />
 
-    <input
-      className="input"
-      placeholder="Legal Company Name"
-      value={form.legalCompanyName}
-      onChange={e => handleChange("legalCompanyName", e.target.value)}
-    />
+            <input
+              className="input"
+              placeholder="Legal Company Name"
+              value={form.legalCompanyName}
+              onChange={e => handleChange("legalCompanyName", e.target.value)}
+            />
 
-    <Select
-      options={countryOptions}
-      value={countryOptions.find(opt => opt.value === form.country)}
-      onChange={option => handleChange("country", option?.value || "")}
-      styles={{
-        control: base => ({
-          ...base,
-          backgroundColor: "rgba(0,0,0,0.4)",
-          borderColor: "rgba(255,255,255,0.1)",
-          color: "white",
-          height: "42px",
-          boxShadow: "none"
-        }),
-        singleValue: base => ({
-          ...base,
-          color: "white"
-        }),
-        menu: base => ({
-          ...base,
-          backgroundColor: "#111",
-          color: "white"
-        }),
-        option: (base, state) => ({
-          ...base,
-          backgroundColor: state.isFocused ? "#222" : "#111",
-          color: "white"
-        })
-      }}
-    />
+            <Select
+              options={countryOptions}
+              value={countryOptions.find(opt => opt.value === form.country)}
+              onChange={option => handleChange("country", option?.value || "")}
+              styles={{
+                control: base => ({
+                  ...base,
+                  backgroundColor: "rgba(0,0,0,0.4)",
+                  borderColor: "rgba(255,255,255,0.1)",
+                  color: "white",
+                  height: "42px",
+                  boxShadow: "none"
+                }),
+                singleValue: base => ({
+                  ...base,
+                  color: "white"
+                }),
+                menu: base => ({
+                  ...base,
+                  backgroundColor: "#111",
+                  color: "white"
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? "#222" : "#111",
+                  color: "white"
+                })
+              }}
+            />
 
-    <PhoneInput
-      country={form.country?.toLowerCase() || "es"}
-      value={form.phone}
-      disableDropdown
-      onChange={(value) => handleChange("phone", value)}
-      inputStyle={{
-        width: "100%",
-        background: "rgba(0,0,0,0.4)",
-        color: "white",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "6px",
-        height: "42px"
-      }}
-      buttonStyle={{
-        background: "#111",
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}
-    />
+            <PhoneInput
+              country={form.country?.toLowerCase() || "es"}
+              value={form.phone}
+              disableDropdown
+              onChange={(value) => handleChange("phone", value)}
+              inputStyle={{
+                width: "100%",
+                background: "rgba(0,0,0,0.4)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "6px",
+                height: "42px"
+              }}
+              buttonStyle={{
+                background: "#111",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            />
 
-    <button onClick={() => setStep(2)} className="btn-primary">
-      Continue
-    </button>
-  </>
-)}
+            <button onClick={() => setStep(2)} className="btn-primary">
+              Continue
+            </button>
+          </>
+        )}
 
+        {/* ================= STEP 2 ================= */}
         {step === 2 && (
           <>
-          <input
-  ref={inputRef}
-  value={form.address}
-  onChange={(e) => handleChange("address", e.target.value)}
-  className="input"
-  placeholder="Start typing your address..."
-/>
+            <div className="relative">
+              <input
+                value={form.address}
+                onChange={handleAddressChange}
+                className="input"
+                placeholder="Start typing your address..."
+              />
 
+              {predictions.length > 0 && (
+                <div className="absolute w-full bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto z-50">
+                  {predictions.map((p: any, i: number) => {
+                    const text = p.placePrediction?.text?.text
 
+                    return (
+                      <div
+                        key={i}
+                        className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
+                        onClick={() => {
+                          handleChange("address", text)
+                          setPredictions([])
+                        }}
+                      >
+                        {text}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
               <input
@@ -276,7 +272,6 @@ export default function OnboardingProfile() {
       </div>
 
       <style jsx global>{`
-        .pac-container { z-index: 9999 !important; }
         .input {
           width: 100%;
           background: rgba(0,0,0,0.4);
