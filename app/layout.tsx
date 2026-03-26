@@ -41,7 +41,7 @@ export default function RootLayout({
       <body className={playfair.className}>
         {children}
     <Script
-  src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyCYNXuEmy0rhtv7T__t4IbbOBisIx-lkQE&libraries=places`}
+  src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
   strategy="afterInteractive"
 />
       </body>
