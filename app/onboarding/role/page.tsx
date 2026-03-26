@@ -21,11 +21,8 @@ export default function RoleSelectionPage() {
       }
 
       // 🔥 REDIRECT SEGÚN ROLE
-      if (role === "PRODUCER") {
-        router.push("/producer/dashboard")
-      } else {
-        router.push("/platform")
-      }
+     // 🔥 REDIRECT A PROFILE (ONBOARDING)
+router.push("/onboarding/profile")
 
     } catch (err) {
       console.error(err)
