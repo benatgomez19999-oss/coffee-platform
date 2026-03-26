@@ -17,7 +17,7 @@ const countryOptions = [
 
 export default function OnboardingProfile() {
   const router = useRouter()
-  console.log("KEY:", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
+  
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -54,48 +54,45 @@ export default function OnboardingProfile() {
 const handleChange = (field: string, value: string) => {
   setForm(prev => ({ ...prev, [field]: value }))
 }
-console.log("HANDLER RUNNING")
 
-const handleAddressChange = async (e: any) => {
+
+let timeout: any
+
+const handleAddressChange = (e: any) => {
   const value = e.target.value
   handleChange("address", value)
 
-  if (value.length < 3) {
-    setPredictions([])
-    return
-  }
+  clearTimeout(timeout)
 
-  try {
-    const res = await fetch(
-      "https://places.googleapis.com/v1/places:autocomplete",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-          "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
-        },
-        body: JSON.stringify({
-          input: value,
-          languageCode: "en",
-          sessionToken: crypto.randomUUID() // 🔥 ESTO FALTABA
-        })
-      }
-    )
-
-    if (!res.ok) {
-      const text = await res.text()
-      console.error("API ERROR:", text)
+  timeout = setTimeout(async () => {
+    if (value.length < 3) {
+      setPredictions([])
       return
     }
 
-    const data = await res.json()
-    console.log("API RESPONSE:", data)
+    try {
+      const res = await fetch("/api/places", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ input: value })
+      })
 
-    setPredictions(data?.suggestions || [])
-  } catch (err) {
-    console.error("FETCH ERROR:", err)
-  }
+      if (!res.ok) {
+        const text = await res.text()
+        console.error("API ERROR:", text)
+        return
+      }
+
+      const data = await res.json()
+      console.log("API RESPONSE:", data)
+
+      setPredictions(data?.suggestions || [])
+    } catch (err) {
+      console.error("FETCH ERROR:", err)
+    }
+  }, 300)
 }
 
 const handleSubmit = async () => {
