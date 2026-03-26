@@ -8,12 +8,13 @@ export default function RoleSelectionPage() {
   async function selectRole(role: "BUYER" | "PRODUCER") {
     try {
       const res = await fetch("/api/user/set-role", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role }),
-      })
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  credentials: "include", // 🔥 ESTO ES LA CLAVE
+  body: JSON.stringify({ role }),
+})
 
       if (!res.ok) {
         throw new Error("Failed to set role")
