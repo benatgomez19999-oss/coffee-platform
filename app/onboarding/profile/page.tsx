@@ -81,6 +81,7 @@ export default function OnboardingProfile() {
 )
 
       const data = await res.json()
+      console.log("API RESPONSE:", data)
       setPredictions(data.suggestions || [])
     } catch (err) {
       console.error(err)
