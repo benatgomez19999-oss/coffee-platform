@@ -91,38 +91,35 @@ export default function OnboardingProfile() {
       })
   }, [])
 
- useEffect(() => {
+useEffect(() => {
   if (!window.google || !inputRef.current) return
 
-  const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-    types: ["address"]
-  })
+  const autocomplete = new window.google.maps.places.Autocomplete(
+    inputRef.current,
+    {
+      types: ["address"]
+    }
+  )
 
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace()
 
-    const addressComponents = place.address_components || []
+    const components = place.address_components || []
 
-    addressComponents.forEach((component: any) => {
+    const get = (type: string) =>
+      components.find((c: any) => c.types.includes(type))?.long_name || ""
 
-      const types = component.types
+    setForm(prev => ({
+      ...prev,
+      // 🔥 ADDRESS CORRECTO (NO SOLO "route")
+      address: place.formatted_address || "",
 
-      if (types.includes("locality")) {
-        setForm(prev => ({ ...prev, city: component.long_name }))
-      }
-
-      if (types.includes("administrative_area_level_1")) {
-        setForm(prev => ({ ...prev, region: component.long_name }))
-      }
-
-      if (types.includes("postal_code")) {
-        setForm(prev => ({ ...prev, postalCode: component.long_name }))
-      }
-
-      if (types.includes("route")) {
-        setForm(prev => ({ ...prev, address: component.long_name }))
-      }
-    })
+      // 🌍 CAMPOS NORMALIZADOS
+      city: get("locality"),
+      region: get("administrative_area_level_1"),
+      postalCode: get("postal_code"),
+      country: get("country")
+    }))
   })
 }, [])
 
@@ -244,44 +241,91 @@ export default function OnboardingProfile() {
           </>
         )}
 
-        {step === 2 && (
-          <>
-            <input
-              ref={inputRef}
-              className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
-              placeholder="Address"
-            />
+       {step === 2 && (
+  <>
+    {/* ADDRESS (MAIN FIELD) */}
+    <div className="space-y-1">
+      <label className="text-xs text-white/50">
+        Address
+      </label>
 
-            <input
-              className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
-              placeholder="City"
-              value={form.city}
-              onChange={e => handleChange("city", e.target.value)}
-            />
+      <input
+        ref={inputRef}
+        value={form.address}
+        onChange={e => handleChange("address", e.target.value)}
+        className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md focus:outline-none focus:border-yellow-400 transition"
+        placeholder="Start typing your address..."
+      />
+    </div>
 
-            <input
-              className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
-              placeholder="Region"
-              value={form.region}
-              onChange={e => handleChange("region", e.target.value)}
-            />
+    {/* CITY */}
+    <div className="space-y-1">
+      <label className="text-xs text-white/50">
+        City
+      </label>
 
-            <input
-              className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md"
-              placeholder="Postal Code"
-              value={form.postalCode}
-              onChange={e => handleChange("postalCode", e.target.value)}
-            />
+      <input
+        className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md focus:outline-none focus:border-yellow-400 transition"
+        placeholder="City"
+        value={form.city}
+        onChange={e => handleChange("city", e.target.value)}
+      />
+    </div>
 
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full mt-4 p-3 rounded-full bg-yellow-500 text-black font-medium"
-            >
-              {loading ? "Saving..." : "Finish"}
-            </button>
-          </>
-        )}
+    {/* REGION */}
+    <div className="space-y-1">
+      <label className="text-xs text-white/50">
+        Region / State
+      </label>
+
+      <input
+        className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md focus:outline-none focus:border-yellow-400 transition"
+        placeholder="Region or state"
+        value={form.region}
+        onChange={e => handleChange("region", e.target.value)}
+      />
+    </div>
+
+    {/* POSTAL CODE */}
+    <div className="space-y-1">
+      <label className="text-xs text-white/50">
+        Postal Code
+      </label>
+
+      <input
+        className="w-full bg-black/40 border border-white/10 px-4 py-2.5 rounded-md focus:outline-none focus:border-yellow-400 transition"
+        placeholder="Postal code"
+        value={form.postalCode}
+        onChange={e => handleChange("postalCode", e.target.value)}
+      />
+    </div>
+
+    {/* ACTION */}
+    <button
+      onClick={handleSubmit}
+      disabled={loading}
+      className="
+        w-full
+        mt-6
+        p-3
+        rounded-full
+        bg-gradient-to-r
+        from-yellow-500
+        to-yellow-300
+        text-black
+        font-semibold
+        tracking-wide
+        hover:scale-[1.02]
+        transition
+        duration-200
+        shadow-lg
+        shadow-yellow-500/20
+      "
+    >
+      {loading ? "Saving..." : "Finish"}
+    </button>
+  </>
+)}
       </div>
     </div>
   )
