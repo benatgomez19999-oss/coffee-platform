@@ -2,26 +2,7 @@
 // 💰 PRICING TABLE (SOURCE OF TRUTH)
 //////////////////////////////////////////////////////
 
-// 🧠 TYPES (importantes para evitar errores TS)
-
-export type Variety =
-  | "CASTILLO"
-  | "CATURRA"
-  | "COLOMBIA"
-  | "TYPICA"
-  | "BOURBON"
-  | "PINK_BOURBON"
-  | "GEISHA"
-  | "TABI"
-
-export type ScaRange = "80-83" | "84-86" | "86-90"
-
-// 💰 BASE PRICING
-
-export const BASE_PRICING: Record<
-  ScaRange,
-  Partial<Record<Variety, number>>
-> = {
+export const BASE_PRICING = {
   "80-83": {
     CASTILLO: 22,
     CATURRA: 24,
@@ -50,9 +31,7 @@ export const BASE_PRICING: Record<
     GEISHA: 95,
     TABI: 45,
   },
-}
-
-// ⛰️ ALTITUDE MODIFIER
+} as const
 
 export const ALTITUDE_MODIFIER = [
   { min: 0, max: 1400, value: -2 },

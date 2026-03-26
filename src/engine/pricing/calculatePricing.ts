@@ -62,9 +62,9 @@ export function calculatePricing(input: PricingInput): PricingOutput {
   const scaRange = getScaRange(scaScore)
 
   // 2. obtener precio base
-  const basePrice = BASE_PRICING[scaRange][variety]
+  const basePrice = BASE_PRICING[scaRange][variety as keyof typeof BASE_PRICING[typeof scaRange]]
 
-  if (!basePrice) {
+if (basePrice === undefined) {
     throw new Error(`No base price for variety ${variety} in range ${scaRange}`)
   }
 
