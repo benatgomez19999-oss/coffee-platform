@@ -59,10 +59,15 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-  useEffect(() => {
-  if (!window.google?.maps?.places) return
+ useEffect(() => {
+  const interval = setInterval(() => {
+    if (window.google?.maps?.places) {
+      serviceRef.current = new window.google.maps.places.AutocompleteService()
+      clearInterval(interval)
+    }
+  }, 300)
 
-  serviceRef.current = new window.google.maps.places.AutocompleteService()
+  return () => clearInterval(interval)
 }, [])
 
 
@@ -175,6 +180,7 @@ export default function OnboardingProfile() {
   onChange={(e) => {
     const value = e.target.value
     handleChange("address", value)
+    console.log("service:", serviceRef.current)
 
     if (!serviceRef.current || value.length < 3) {
       setPredictions([])
