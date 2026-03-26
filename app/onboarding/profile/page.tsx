@@ -65,19 +65,20 @@ export default function OnboardingProfile() {
 
     try {
       const res = await fetch(
-        "https://places.googleapis.com/v1/places:autocomplete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-          },
-          body: JSON.stringify({
-            input: value,
-            languageCode: "en"
-          })
-        }
-      )
+  "https://places.googleapis.com/v1/places:autocomplete",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+      "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
+    },
+    body: JSON.stringify({
+      input: value,
+      languageCode: "en"
+    })
+  }
+)
 
       const data = await res.json()
       setPredictions(data.suggestions || [])
