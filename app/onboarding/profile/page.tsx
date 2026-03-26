@@ -95,32 +95,38 @@ useEffect(() => {
   if (!window.google || !inputRef.current) return
 
   const autocomplete = new window.google.maps.places.Autocomplete(
-    inputRef.current,
-    {
-      types: ["address"]
+  inputRef.current,
+  {
+    types: ["address"],
+    componentRestrictions: {
+      country: form.country?.toLowerCase() || "es"
     }
-  )
+  }
+)
 
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace()
+ autocomplete.addListener("place_changed", () => {
+  const place = autocomplete.getPlace()
 
-    const components = place.address_components || []
+  if (!place || !place.address_components) return
 
-    const get = (type: string) =>
-      components.find((c: any) => c.types.includes(type))?.long_name || ""
+  const components = place.address_components
 
-    setForm(prev => ({
-      ...prev,
-      // 🔥 ADDRESS CORRECTO (NO SOLO "route")
-      address: place.formatted_address || "",
+  const get = (type: string) =>
+    components.find((c: any) => c.types.includes(type))?.long_name || ""
 
-      // 🌍 CAMPOS NORMALIZADOS
-      city: get("locality"),
-      region: get("administrative_area_level_1"),
-      postalCode: get("postal_code"),
-      country: get("country")
-    }))
-  })
+  setForm(prev => ({
+    ...prev,
+
+    // 🔥 ADDRESS COMPLETO REAL
+    address: place.formatted_address ?? "",
+
+    // 🌍 CAMPOS NORMALIZADOS (robustos internacionalmente)
+    city: get("locality") || get("postal_town") || "",
+    region: get("administrative_area_level_1"),
+    postalCode: get("postal_code"),
+    country: get("country")
+  }))
+})
 }, [])
 
   // =====================================================
