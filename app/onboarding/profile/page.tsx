@@ -75,12 +75,12 @@ const handleAddressChange = async (e: any) => {
         },
         body: JSON.stringify({
           input: value,
-          languageCode: "en"
+          languageCode: "en",
+          sessionToken: crypto.randomUUID() // 🔥 ESTO FALTABA
         })
       }
     )
 
-    // 🔥 CHECK IMPORTANTE
     if (!res.ok) {
       const text = await res.text()
       console.error("API ERROR:", text)
