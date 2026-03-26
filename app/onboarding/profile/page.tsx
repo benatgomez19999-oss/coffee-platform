@@ -172,14 +172,14 @@ export default function OnboardingProfile() {
   }}
 />
 
-     <PhoneInput
+    <PhoneInput
   country={form.country?.toLowerCase() || "es"}
   value={form.phone}
+  disableDropdown // 🔥 quitamos dropdown feo
   onChange={(value, data: any) => {
     setForm(prev => ({
       ...prev,
-      phone: value,
-      country: data.countryCode.toUpperCase() // 🔥 sync real
+      phone: value
     }))
   }}
   inputStyle={{
