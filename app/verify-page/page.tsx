@@ -29,7 +29,7 @@ export default function VerifyPage({
             </p>
 
             {/* AUTO REDIRECT */}
-            <meta httpEquiv="refresh" content="2; url=/login" />
+            <meta httpEquiv="refresh" content="2; url=/onboarding/role" />
           </>
         );
 
