@@ -49,64 +49,72 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-  // ================= HANDLERS =================
-  const handleChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
+ // ================= HANDLERS =================
+const handleChange = (field: string, value: string) => {
+  setForm(prev => ({ ...prev, [field]: value }))
+}
+
+const handleAddressChange = async (e: any) => {
+  const value = e.target.value
+  handleChange("address", value)
+
+  if (value.length < 3) {
+    setPredictions([])
+    return
   }
 
-  const handleAddressChange = async (e: any) => {
-    const value = e.target.value
-    handleChange("address", value)
+  try {
+    const res = await fetch(
+      "https://places.googleapis.com/v1/places:autocomplete",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+          "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
+        },
+        body: JSON.stringify({
+          input: value,
+          languageCode: "en"
+        })
+      }
+    )
 
-    if (value.length < 3) {
-      setPredictions([])
+    // 🔥 CHECK IMPORTANTE
+    if (!res.ok) {
+      const text = await res.text()
+      console.error("API ERROR:", text)
       return
     }
 
-    try {
-      const res = await fetch(
-  "https://places.googleapis.com/v1/places:autocomplete",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-      "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
-    },
-    body: JSON.stringify({
-      input: value,
-      languageCode: "en"
+    const data = await res.json()
+    console.log("API RESPONSE:", data)
+
+    setPredictions(data?.suggestions || [])
+  } catch (err) {
+    console.error("FETCH ERROR:", err)
+  }
+}
+
+const handleSubmit = async () => {
+  setLoading(true)
+
+  try {
+    const res = await fetch("/api/company/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
     })
+
+    if (!res.ok) throw new Error()
+
+    router.push("/platform")
+  } catch (err) {
+    alert("Error saving profile")
+  } finally {
+    setLoading(false)
   }
-)
-
-      const data = await res.json()
-      console.log("API RESPONSE:", data)
-      setPredictions(data.suggestions || [])
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const handleSubmit = async () => {
-    setLoading(true)
-
-    try {
-      const res = await fetch("/api/company/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      })
-
-      if (!res.ok) throw new Error()
-
-      router.push("/platform")
-    } catch (err) {
-      alert("Error saving profile")
-    } finally {
-      setLoading(false)
-    }
-  }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
