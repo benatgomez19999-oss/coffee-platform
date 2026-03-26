@@ -57,49 +57,68 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-  // ================= AUTOCOMPLETE =================
-  useEffect(() => {
-    if (step !== 2) return
-    if (!window.google || !inputRef.current) return
-    if (autocompleteRef.current) return
+// ================= AUTOCOMPLETE =================
+useEffect(() => {
+  if (step !== 2) return
+  if (!window.google || !inputRef.current) return
+  if (autocompleteRef.current) return
 
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types: ["address"],
-        fields: ["address_components", "formatted_address"]
-      }
-    )
+  const input = inputRef.current
 
-    autocompleteRef.current = autocomplete
+  const autocomplete = new window.google.maps.places.Autocomplete(input, {
+    types: ["address"],
+    fields: ["address_components", "formatted_address"]
+  })
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace()
-      if (!place?.address_components) return
+  autocompleteRef.current = autocomplete
 
-      const components = place.address_components
+  // 🔥 Cuando seleccionas del dropdown
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace()
+    if (!place?.address_components) return
 
-      const get = (type: string) =>
-        components.find((c: any) => c.types.includes(type))?.long_name || ""
+    const components = place.address_components
 
-      const getShort = (type: string) =>
-        components.find((c: any) => c.types.includes(type))?.short_name || ""
+    const get = (type: string) =>
+      components.find((c: any) => c.types.includes(type))?.long_name || ""
 
-      const street = get("route")
-      const streetNumber = get("street_number")
+    const getShort = (type: string) =>
+      components.find((c: any) => c.types.includes(type))?.short_name || ""
 
-      setForm(prev => ({
-        ...prev,
-        address: place.formatted_address || "",
-        street,
-        streetNumber,
-        city: get("locality") || get("postal_town"),
-        region: get("administrative_area_level_1"),
-        postalCode: get("postal_code"),
-        country: getShort("country") || prev.country
-      }))
-    })
-  }, [step])
+    const street = get("route")
+    const streetNumber = get("street_number")
+
+    // 🔥 SINCRONIZA INPUT (clave)
+    input.value = place.formatted_address || ""
+
+    setForm(prev => ({
+      ...prev,
+      address: place.formatted_address || "",
+      street,
+      streetNumber,
+      city: get("locality") || get("postal_town"),
+      region: get("administrative_area_level_1"),
+      postalCode: get("postal_code"),
+      country: getShort("country") || prev.country
+    }))
+  })
+
+  // 🔥 SOPORTE ESCRITURA MANUAL (muy importante)
+  const handleManualInput = () => {
+    setForm(prev => ({
+      ...prev,
+      address: input.value
+    }))
+  }
+
+  input.addEventListener("input", handleManualInput)
+
+  // 🔥 CLEANUP PRO (evita bugs raros en React)
+  return () => {
+    input.removeEventListener("input", handleManualInput)
+  }
+
+}, [step])
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -204,12 +223,11 @@ export default function OnboardingProfile() {
         {step === 2 && (
           <>
             <input
-              ref={inputRef}
-              value={form.address}
-              onChange={e => handleChange("address", e.target.value)}
-              className="input"
-              placeholder="Start typing your address..."
-            />
+  ref={inputRef}
+  defaultValue={form.address}
+  className="input"
+  placeholder="Start typing your address..."
+/>
 
             <div className="grid grid-cols-2 gap-2">
               <input
