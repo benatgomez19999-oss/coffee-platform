@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import { getUserFromRequest } from "@/lib/auth" 
 
+
 // =====================================================
 // UPDATE COMPANY (ONBOARDING)
 // =====================================================
