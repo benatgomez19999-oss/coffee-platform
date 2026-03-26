@@ -18,7 +18,7 @@
 //
 // =====================================================
 
-import { updateEngineContext } from "@/engine/runtime"
+import { updateEngineContext } from "@/engine/core/runtime"
 
 import { computeWeatherSignal } from "@/AI/sensing/WeatherIntelligence"
 import { computeDemandSignal } from "@/AI/sensing/DemandIntelligence"
@@ -31,7 +31,7 @@ import { computeStrategicForecast } from "@/AI/foresight/StrategicForecastEngine
 import type { StrategicForecast }
 from "@/AI/foresight/StrategicForecastEngine"
 
-import type { EngineState, EngineContext } from "@/engine/runtime"
+import type { EngineState, EngineContext } from "@/engine/core/runtime"
 
 import type { WeatherInput } from "@/AI/sensing/WeatherIntelligence"
 import type { DemandInput } from "@/AI/sensing/DemandIntelligence"

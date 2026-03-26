@@ -3,7 +3,7 @@
 // Detecta escasez futura antes de que ocurra
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 export function computeAnticipatoryShortage(
   state: EngineState

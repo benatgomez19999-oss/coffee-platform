@@ -3,7 +3,7 @@
 // Detecta colapso progresivo en la red de regiones
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 export function computeSupplyCascadeRisk(
   state: EngineState

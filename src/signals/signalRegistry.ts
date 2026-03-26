@@ -23,7 +23,7 @@
 // — Acceso coherente por tick
 // =====================================================
 
-import { getEngineSignals } from "@/engine/runtime"
+import { getEngineSignals } from "@/engine/core/runtime"
 
 // =====================================================
 // SIGNAL ACCESS — LIVE RUNTIME REFERENCE

@@ -18,7 +18,7 @@
 
 import { getSignals } from "@/signals/signalRegistry"
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 // =====================================================
 // MAIN FUNCTION

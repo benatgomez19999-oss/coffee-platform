@@ -12,7 +12,7 @@
 // =====================================================
 
 import type { EngineState }
-from "@/engine/runtime"
+from "@/engine/core/runtime"
 
 
 export type SupplyChainEvent = {

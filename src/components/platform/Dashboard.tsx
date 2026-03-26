@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import ClientTradingPanel from "@/components/platform/ClientTradingPanel"
 import ClientContractsPanel from "@/components/platform/ClientContractsPanel"
 import ClientOverviewPanel from "@/components/platform/ClientOverviewPanel"
-import { startEngineRuntime } from "@/engine/runtime"
+import { startEngineRuntime } from "@/engine/core/runtime"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/websocket/websocketClient"
@@ -18,20 +18,20 @@ import { usePathname } from "next/navigation"
 
 
 // ENGINE
-import { stepSimulationReal } from "@/engine/simulationReal";
+import { stepSimulationReal } from "@/engine/core/simulationReal";
 import {
   updateEngineContext,
   subscribeEngine,
   getInitialEngineState,
   submitOperationalRequest
-} from "@/engine/runtime";
+} from "@/engine/core/runtime";
 
 import { runDecisionPipeline } from "@/decision/decisionPipeline";
 import { evaluateSystemDecision } from "@/decision/decisionBridge"
 import { getSignals } from "@/signals/signalRegistry"
 import { safeSignal } from "@/signals/signalFirewall";
 
-import type { EngineState } from "@/engine/runtime";
+import type { EngineState } from "@/engine/core/runtime";
 import { useRouter } from "next/navigation"
 
 

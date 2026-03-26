@@ -16,10 +16,10 @@
 // estabilidad de oportunidades
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 import { stepSimulationReal }
-from "@/engine/simulationReal"
+from "@/engine/core/simulationReal"
 
 
 

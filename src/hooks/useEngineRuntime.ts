@@ -8,9 +8,9 @@ import {
   updateEngineContext,
   getInitialEngineState,
   type EngineState
-} from "@/engine/runtime"
+} from "@/engine/core/runtime"
 
-import { getEngineContext } from "@/engine/runtime"
+import { getEngineContext } from "@/engine/core/runtime"
 import { updateCommodityPrices }
 from "@/AI/market/CommodityPriceEngine"
 

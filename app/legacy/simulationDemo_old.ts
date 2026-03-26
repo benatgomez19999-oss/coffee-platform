@@ -1,6 +1,6 @@
-import { PHYSICS } from "../../src/engine/modelPhysics";
-import type { EngineState, EngineContext } from "../../src/engine/runtime";
-import { engineRandom, getEngineSignals } from "../../src/engine/runtime";
+import { PHYSICS } from "../../src/engine/core/modelPhysics";
+import type { EngineState, EngineContext } from "../../src/engine/core/runtime";
+import { engineRandom, getEngineSignals } from "../../src/engine/core/runtime";
 
 
 const signals = getEngineSignals()

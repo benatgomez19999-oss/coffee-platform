@@ -26,7 +26,7 @@
 // - dependencias estructurales
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 import { commodityDependencyGraph }
 from "../graph/commodityDependencyGraph"

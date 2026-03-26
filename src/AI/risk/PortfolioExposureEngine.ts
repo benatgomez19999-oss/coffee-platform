@@ -7,7 +7,7 @@
 //
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 // =====================================================
 // COMPUTE EXPOSURE

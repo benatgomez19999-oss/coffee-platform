@@ -9,7 +9,7 @@ import { EVENTS }
 from "@/events/eventTypes"
 
 import { registerEngineContract }
-from "@/engine/runtime"
+from "@/engine/core/runtime"
 
 
 // =====================================================

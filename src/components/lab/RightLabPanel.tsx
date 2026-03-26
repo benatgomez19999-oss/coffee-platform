@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import type { EngineState, EngineContext } from "@/engine/runtime"
+import type { EngineState, EngineContext } from "@/engine/core/runtime"
 import EngineCalibrationPanel from "@/components/lab/EngineCalibrationPanel"
 
 type Props = {

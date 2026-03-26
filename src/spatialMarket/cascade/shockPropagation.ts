@@ -15,7 +15,7 @@
 // regional cascade stress
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 import type { CommodityFlow } from "../flows/commodityFlowEngine"
 
 

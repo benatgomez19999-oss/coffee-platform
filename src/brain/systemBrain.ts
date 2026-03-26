@@ -1,5 +1,5 @@
-import { PHYSICS } from "../engine/modelPhysics";
-import type { EngineState, EngineContext } from "../engine/runtime";
+import { PHYSICS } from "../engine/core/modelPhysics";
+import type { EngineState, EngineContext } from "../engine/core/runtime";
 
 // =====================================================
 // SYSTEM BRAIN — ENGINE OWNED

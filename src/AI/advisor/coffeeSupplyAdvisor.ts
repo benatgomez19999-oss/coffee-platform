@@ -16,7 +16,7 @@
 // - recomendaciones estratégicas
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 import {
   analyzeMicroLotPortfolio
 } from "@/clientLayer/microlots/microLotPortfolioEngine"

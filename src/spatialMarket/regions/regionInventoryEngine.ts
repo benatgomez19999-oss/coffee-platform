@@ -17,7 +17,7 @@
 // =====================================================
 
 import type { EngineState }
-from "@/engine/runtime"
+from "@/engine/core/runtime"
 
 import type { RegionMarket }
 from "@/spatialMarket/regions/regionTypes"

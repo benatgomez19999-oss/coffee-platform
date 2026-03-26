@@ -13,7 +13,7 @@
 // Se ejecuta inmediatamente después de una operación.
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 export function applyMarketImpact(
 

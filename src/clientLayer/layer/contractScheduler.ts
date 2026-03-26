@@ -2,7 +2,7 @@
 // IMPORT ENGINE RUNTIME
 // =====================================================
 
-import { submitOperationalRequest } from "@/engine/runtime"
+import { submitOperationalRequest } from "@/engine/core/runtime"
 
 // =====================================================
 // IMPORT EVENTS 

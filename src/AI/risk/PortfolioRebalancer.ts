@@ -7,10 +7,10 @@
 //
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 import { submitOperationalRequest }
-from "@/engine/runtime"
+from "@/engine/core/runtime"
 
 // =====================================================
 // MAIN FUNCTION

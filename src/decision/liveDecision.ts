@@ -1,4 +1,4 @@
-import type { EngineState, EngineContext } from "@/engine/runtime"
+import type { EngineState, EngineContext } from "@/engine/core/runtime"
 import { computeAdjustedRisk } from "./riskModel"
 import { updateDecisionMomentum } from "./decisionMomentum"
 import { computeSemaphore } from "./semaphoreLogic"

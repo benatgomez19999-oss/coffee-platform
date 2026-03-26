@@ -8,7 +8,7 @@
 // Solo interpreta señales ya existentes.
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 export function computeCascadeRisk(
   state: EngineState

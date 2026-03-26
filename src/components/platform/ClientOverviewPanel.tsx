@@ -1,6 +1,6 @@
 "use client"
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 import { useSearchParams, useRouter } from "next/navigation"
 
 
@@ -15,7 +15,7 @@ type Props = {
   engineState: EngineState
 }
 
-import { getEngineContext } from "@/engine/runtime"
+import { getEngineContext } from "@/engine/core/runtime"
 
 export default function ClientOverviewPanel({
   engineState

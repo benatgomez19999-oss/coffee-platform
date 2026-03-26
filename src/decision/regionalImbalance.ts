@@ -3,7 +3,7 @@
 // Detecta distribución desigual de supply.
 // =====================================================
 
-import type { EngineState } from "@/engine/runtime"
+import type { EngineState } from "@/engine/core/runtime"
 
 export function computeRegionalImbalance(
   state: EngineState
