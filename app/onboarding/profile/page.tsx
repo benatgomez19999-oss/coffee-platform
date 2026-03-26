@@ -26,6 +26,8 @@ export default function OnboardingProfile() {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [predictions, setPredictions] = useState<any[]>([])
+  const serviceRef = useRef<any>(null)
 
   const [form, setForm] = useState({
     country: "",
@@ -44,7 +46,7 @@ export default function OnboardingProfile() {
   })
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<any>(null)
+  
 
   // ================= LOAD DATA =================
   useEffect(() => {
@@ -57,68 +59,13 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-// ================= AUTOCOMPLETE =================
-useEffect(() => {
-  if (step !== 2) return
-  if (!window.google || !inputRef.current) return
-  if (autocompleteRef.current) return
+  useEffect(() => {
+  if (!window.google?.maps?.places) return
 
-  const input = inputRef.current
+  serviceRef.current = new window.google.maps.places.AutocompleteService()
+}, [])
 
-  const autocomplete = new window.google.maps.places.Autocomplete(input, {
-    types: ["address"],
-    fields: ["address_components", "formatted_address"]
-  })
 
-  autocompleteRef.current = autocomplete
-
-  // 🔥 Cuando seleccionas del dropdown
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace()
-    if (!place?.address_components) return
-
-    const components = place.address_components
-
-    const get = (type: string) =>
-      components.find((c: any) => c.types.includes(type))?.long_name || ""
-
-    const getShort = (type: string) =>
-      components.find((c: any) => c.types.includes(type))?.short_name || ""
-
-    const street = get("route")
-    const streetNumber = get("street_number")
-
-    // 🔥 SINCRONIZA INPUT (clave)
-    input.value = place.formatted_address || ""
-
-    setForm(prev => ({
-      ...prev,
-      address: place.formatted_address || "",
-      street,
-      streetNumber,
-      city: get("locality") || get("postal_town"),
-      region: get("administrative_area_level_1"),
-      postalCode: get("postal_code"),
-      country: getShort("country") || prev.country
-    }))
-  })
-
-  // 🔥 SOPORTE ESCRITURA MANUAL (muy importante)
-  const handleManualInput = () => {
-    setForm(prev => ({
-      ...prev,
-      address: input.value
-    }))
-  }
-
-  input.addEventListener("input", handleManualInput)
-
-  // 🔥 CLEANUP PRO (evita bugs raros en React)
-  return () => {
-    input.removeEventListener("input", handleManualInput)
-  }
-
-}, [step])
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -222,12 +169,48 @@ useEffect(() => {
 
         {step === 2 && (
           <>
-            <input
+           <input
   ref={inputRef}
-  defaultValue={form.address}
+  value={form.address}
+  onChange={(e) => {
+    const value = e.target.value
+    handleChange("address", value)
+
+    if (!serviceRef.current || value.length < 3) {
+      setPredictions([])
+      return
+    }
+
+    serviceRef.current.getPlacePredictions(
+      {
+        input: value,
+        types: ["address"]
+      },
+      (results: any) => {
+        setPredictions(results || [])
+      }
+    )
+  }}
   className="input"
   placeholder="Start typing your address..."
 />
+
+{predictions.length > 0 && (
+  <div className="bg-black border border-white/10 rounded-md mt-1 max-h-40 overflow-y-auto">
+    {predictions.map((p, i) => (
+      <div
+        key={i}
+        className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
+        onClick={() => {
+          handleChange("address", p.description)
+          setPredictions([])
+        }}
+      >
+        {p.description}
+      </div>
+    ))}
+  </div>
+)}
 
             <div className="grid grid-cols-2 gap-2">
               <input
