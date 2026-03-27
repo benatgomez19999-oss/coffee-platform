@@ -88,7 +88,12 @@ const handleAddressChange = (e: any) => {
       const data = await res.json()
       console.log("API RESPONSE:", data)
 
-      setPredictions(data?.suggestions || [])
+      const suggestions =
+      data?.suggestions ||
+     data?.suggestions?.suggestions ||
+     []
+
+setPredictions(suggestions)
     } catch (err) {
       console.error("FETCH ERROR:", err)
     }
