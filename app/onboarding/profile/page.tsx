@@ -215,6 +215,14 @@ const handleSubmit = async () => {
         value={form.legalCompanyName}
         onChange={e => handleChange("legalCompanyName", e.target.value)}
       />
+      {config.fields.vat && (
+  <input
+    className="input"
+    placeholder="VAT / CIF"
+    value={form.vat}
+    onChange={e => handleChange("vat", e.target.value)}
+  />
+)}
 
       <Select
         options={countryOptions}
