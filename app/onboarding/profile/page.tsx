@@ -204,9 +204,9 @@ const handleSubmit = async () => {
 />
 
               {predictions.length > 0 && (
-                <div className="absolute w-full bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto z-50">
+                <div className="absolute top-full left-0 w-full bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto z-[9999]">
                   {predictions.map((p: any, i: number) => {
-                    const text = p.placePrediction?.text?.text
+                    const text = p.placePrediction?.text?.text || ""
 
                     return (
                       <div
