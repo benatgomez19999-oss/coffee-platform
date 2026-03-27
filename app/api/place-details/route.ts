@@ -5,16 +5,16 @@ function parseAddressComponents(components: any[]) {
     components.find((c: any) => c.types.includes(type))
 
   return {
-    streetNumber: get("street_number")?.long_name || "",
-    route: get("route")?.long_name || "",
+    streetNumber: get("street_number")?.longText || "",
+    route: get("route")?.longText || "",
     city:
-      get("locality")?.long_name ||
-      get("postal_town")?.long_name ||
+      get("locality")?.longText ||
+      get("postal_town")?.longText ||
       "",
     region:
-      get("administrative_area_level_1")?.short_name || "",
-    postalCode: get("postal_code")?.long_name || "",
-    country: get("country")?.long_name || "",
+      get("administrative_area_level_1")?.shortText || "",
+    postalCode: get("postal_code")?.longText || "",
+    country: get("country")?.longText || "",
   }
 }
 
@@ -32,7 +32,12 @@ export async function POST(req: Request) {
 
   const data = await res.json()
 
-  const parsed = parseAddressComponents(data.addressComponents || [])
+  const components =
+    data.addressComponents ||
+    data.address_components ||
+    []
+
+  const parsed = parseAddressComponents(components)
 
   return NextResponse.json({
     address: data.formattedAddress || "",
