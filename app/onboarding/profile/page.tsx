@@ -221,6 +221,7 @@ const handleSubmit = async () => {
   body: JSON.stringify({ placeId })
 })
                       const data = await res.json()
+                      console.log("DETAILS DATA 👉", data) // 🔥 AÑADE ESTO
 
                       handleChange("city", data.city || "")
                       handleChange("region", data.region || "")
