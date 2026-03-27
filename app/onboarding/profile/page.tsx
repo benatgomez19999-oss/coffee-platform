@@ -138,10 +138,11 @@ const handleSubmit = async () => {
           
           <img
             src="/images/logo-altura-gold-final.png"
-            className="w-20 opacity-80 animate-pulse select-none"
+            className="w-40 md:w-56 opacity-90 animate-[pulse_1.8s_ease-in-out_infinite] select-none"
           />
+          <div className="w-40 h-[1px] bg-white/10 animate-pulse" />
 
-          <p className="text-white/60 text-sm">
+          <p className="text-white/50 text-sm tracking-wide">
             Setting up your workspace...
           </p>
 
