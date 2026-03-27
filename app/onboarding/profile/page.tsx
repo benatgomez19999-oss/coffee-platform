@@ -81,7 +81,7 @@ console.log("ROLE 👉", role)
 // ================= TYPES =================
 type RoleConfig = {
   businessName: string
-  legalCompanyName: string
+  legalCompanyName?: string
   loadingText: string
   redirect: string
   fields: {
@@ -105,7 +105,6 @@ const roleConfigs: Record<"BUYER" | "PRODUCER", RoleConfig> = {
 
   PRODUCER: {
     businessName: "Farm Name",
-    legalCompanyName: "Legal Farm Name",
     loadingText: "Setting up your farm...",
     redirect: "/platform/producer",
     fields: {
