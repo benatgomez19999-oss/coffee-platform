@@ -125,228 +125,236 @@ const handleSubmit = async () => {
 }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-      <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-neutral-950 text-white px-4">
+      <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-5">
         <h2 className="text-xl font-semibold">Complete your profile</h2>
+          {/* 🔥 STEP INDICATOR */}
+  <div className="text-xs text-white/40 -mt-2 mb-2">
+    Step {step} of 2
+  </div>
 
         {/* ================= STEP 1 (NO TOCADO) ================= */}
-        {step === 1 && (
-          <>
-            <input
-              className="input"
-              placeholder="Business Name"
-              value={form.businessName}
-              onChange={e => handleChange("businessName", e.target.value)}
-            />
+       {step === 1 && (
+  <div className="transition-all duration-300 opacity-100">
+    <>
+      <input
+        className="input"
+        placeholder="Business Name"
+        value={form.businessName}
+        onChange={e => handleChange("businessName", e.target.value)}
+      />
 
-            <input
-              className="input"
-              placeholder="Legal Company Name"
-              value={form.legalCompanyName}
-              onChange={e => handleChange("legalCompanyName", e.target.value)}
-            />
+      <input
+        className="input"
+        placeholder="Legal Company Name"
+        value={form.legalCompanyName}
+        onChange={e => handleChange("legalCompanyName", e.target.value)}
+      />
 
-            <Select
-              options={countryOptions}
-              value={countryOptions.find(opt => opt.value === form.country)}
-              onChange={option => handleChange("country", option?.value || "")}
-              styles={{
-                control: base => ({
-                  ...base,
-                  backgroundColor: "rgba(0,0,0,0.4)",
-                  borderColor: "rgba(255,255,255,0.1)",
-                  color: "white",
-                  height: "42px",
-                  boxShadow: "none"
-                }),
-                singleValue: base => ({
-                  ...base,
-                  color: "white"
-                }),
-                menu: base => ({
-                  ...base,
-                  backgroundColor: "#111",
-                  color: "white"
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isFocused ? "#222" : "#111",
-                  color: "white"
-                })
-              }}
-            />
+      <Select
+        options={countryOptions}
+        value={countryOptions.find(opt => opt.value === form.country)}
+        onChange={option => handleChange("country", option?.value || "")}
+        styles={{
+          control: base => ({
+            ...base,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            borderColor: "rgba(255,255,255,0.1)",
+            color: "white",
+            height: "42px",
+            boxShadow: "none"
+          }),
+          singleValue: base => ({
+            ...base,
+            color: "white"
+          }),
+          menu: base => ({
+            ...base,
+            backgroundColor: "#111",
+            color: "white"
+          }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isFocused ? "#222" : "#111",
+            color: "white"
+          })
+        }}
+      />
 
-            <PhoneInput
-              country={form.country?.toLowerCase() || "es"}
-              value={form.phone}
-              disableDropdown
-              onChange={(value) => handleChange("phone", value)}
-              inputStyle={{
-                width: "100%",
-                background: "rgba(0,0,0,0.4)",
-                color: "white",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "6px",
-                height: "42px"
-              }}
-              buttonStyle={{
-                background: "#111",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
-            />
+      <PhoneInput
+        country={form.country?.toLowerCase() || "es"}
+        value={form.phone}
+        disableDropdown
+        onChange={(value) => handleChange("phone", value)}
+        inputStyle={{
+          width: "100%",
+          background: "rgba(0,0,0,0.4)",
+          color: "white",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "6px",
+          height: "42px"
+        }}
+        buttonStyle={{
+          background: "#111",
+          border: "1px solid rgba(255,255,255,0.1)"
+        }}
+      />
 
-            <button onClick={() => setStep(2)} className="btn-primary">
-              Continue
-            </button>
-          </>
-        )}
+      <button onClick={() => setStep(2)} className="btn-primary">
+        Continue
+      </button>
+    </>
+  </div>
+)}
 
         {/* ================= STEP 2 ================= */}
-        {step === 2 && (
-          <>
-            <div className="relative">
-              <input
-  value={form.address}
-  onChange={(e) => handleAddressChange(e)} // 🔥 wrapper
-  className="input"
-  placeholder="Start typing your address..."
-/>
+       {step === 2 && (
+  <div className="transition-all duration-300 opacity-100">
+    <>
+      <div className="relative">
+        <input
+          value={form.address}
+          onChange={(e) => handleAddressChange(e)} // 🔥 wrapper
+          className="input"
+          placeholder="Start typing your address..."
+        />
 
-              {predictions.length > 0 && !isAutofilled && (
-                <div className="absolute left-0 top-full mt-1 w-full bg-black border border-white/10 rounded-md max-h-48 overflow-y-auto z-[9999]">
-                  {predictions.map((p: any, i: number) => {
-                    const text = p.placePrediction?.text?.text || ""
-                    const placeId = p.placePrediction?.placeId
+        {predictions.length > 0 && !isAutofilled && (
+          <div className="absolute left-0 top-full mt-1 w-full bg-black border border-white/10 rounded-md max-h-48 overflow-y-auto z-[9999]">
+            {predictions.map((p: any, i: number) => {
+              const text = p.placePrediction?.text?.text || ""
+              const placeId = p.placePrediction?.placeId
 
-                    return (
-                      <div
-                        key={i}
-                        className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-                        onClick={async () => {
-                       setPredictions([])
+              return (
+                <div
+                  key={i}
+                  className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
+                  onClick={async () => {
+                    setPredictions([])
 
-                       // 🔥 STEP 4 aquí mismo
-                      const res = await fetch("/api/place-details", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-  placeId,
-  language: navigator.language || "en"
-})
-})
-                      const data = await res.json()
-                      // ================= VALIDATE ADDRESS =================
-if (!data.city || !data.country) {
-  console.error("Invalid address", data)
-  return
-}
-// ================= ADVANCED VALIDATION =================
+                    // 🔥 STEP 4 aquí mismo
+                    const res = await fetch("/api/place-details", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json"
+                      },
+                      body: JSON.stringify({
+                        placeId,
+                        language: navigator.language || "en"
+                      })
+                    })
 
-// ❌ Detect PO Box (common shipping issue)
-const addressLower = (data.address || "").toLowerCase()
+                    const data = await res.json()
 
-if (
-  addressLower.includes("po box") ||
-  addressLower.includes("apartado") ||
-  addressLower.includes("p.o.")
-) {
-  console.error("PO Box not allowed", data)
-  return
-}
+                    // ================= VALIDATE ADDRESS =================
+                    if (!data.city || !data.country) {
+                      console.error("Invalid address", data)
+                      return
+                    }
 
-// ⚠️ Detect incomplete address (no street)
-const isOnlyCity = !data.street && data.city
+                    // ================= ADVANCED VALIDATION =================
 
-if (isOnlyCity) {
-  console.warn("City selected without street", data)
-  // 👉 NO bloqueamos, UX continúa
-}
-                      console.log("DETAILS DATA 👉", data) // 🔥 AÑADE ESTO
+                    const addressLower = (data.address || "").toLowerCase()
 
-                     // ================= APPLY ADDRESS (Stripe style) =================
-handleChange("address", data.addressLine1 || data.address || "")
+                    if (
+                      addressLower.includes("po box") ||
+                      addressLower.includes("apartado") ||
+                      addressLower.includes("p.o.")
+                    ) {
+                      console.error("PO Box not allowed", data)
+                      return
+                    }
 
-handleChange("street", data.street || "")
-handleChange("streetNumber", data.streetNumber || "")
+                    const isOnlyCity = !data.street && data.city
 
-handleChange("city", data.city || "")
+                    if (isOnlyCity) {
+                      console.warn("City selected without street", data)
+                    }
 
-// 🔥 SMART REGION (key part)
-handleChange("region", data.region || data.subregion || "")
+                    console.log("DETAILS DATA 👉", data)
 
-handleChange("postalCode", data.postalCode || "")
-// 🔥 AUTO FOCUS IF NO STREET (city selected)
-if (!data.street) {
-  setTimeout(() => {
-    streetRef.current?.focus()
-  }, 100)
-}
-                      }}
-                      >
-                        {text}
-                      </div>
-                    )
-                  })}
+                    // ================= APPLY ADDRESS (Stripe style) =================
+                    handleChange("address", data.addressLine1 || data.address || "")
+                    handleChange("street", data.street || "")
+                    handleChange("streetNumber", data.streetNumber || "")
+                    handleChange("city", data.city || "")
+
+                    // 🔥 SMART REGION
+                    handleChange("region", data.region || data.subregion || "")
+
+                    handleChange("postalCode", data.postalCode || "")
+
+                    // 🔥 AUTO FOCUS
+                    if (!data.street) {
+                      setTimeout(() => {
+                        streetRef.current?.focus()
+                      }, 100)
+                    }
+                  }}
+                >
+                  {text}
                 </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                className="input"
-                placeholder="Street"
-                ref={streetRef}
-                value={form.street}
-                onChange={e => handleChange("street", e.target.value)}
-              />
-
-              <input
-                className="input"
-                placeholder="Number"
-                value={form.streetNumber}
-                onChange={e => handleChange("streetNumber", e.target.value)}
-              />
-            </div>
-
-            <input
-              className="input"
-              placeholder="Unit / Apt / Door"
-              value={form.unit}
-              onChange={e => handleChange("unit", e.target.value)}
-            />
-
-            <input
-              className="input"
-              placeholder="City"
-              value={form.city}
-              onChange={e => handleChange("city", e.target.value)}
-            />
-
-            <input
-              className="input"
-              placeholder="Region"
-              value={form.region}
-              onChange={e => handleChange("region", e.target.value)}
-            />
-
-            <input
-              className="input"
-              placeholder="Postal Code"
-              value={form.postalCode}
-              onChange={e => handleChange("postalCode", e.target.value)}
-            />
-
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="btn-primary"
-            >
-              {loading ? "Saving..." : "Finish"}
-            </button>
-          </>
+              )
+            })}
+          </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          className="input"
+          placeholder="Street"
+          ref={streetRef}
+          value={form.street}
+          onChange={e => handleChange("street", e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Number"
+          value={form.streetNumber}
+          onChange={e => handleChange("streetNumber", e.target.value)}
+        />
+      </div>
+
+      <input
+        className="input"
+        placeholder="Unit / Apt / Door"
+        value={form.unit}
+        onChange={e => handleChange("unit", e.target.value)}
+      />
+
+      <input
+        className="input"
+        placeholder="City"
+        value={form.city}
+        onChange={e => handleChange("city", e.target.value)}
+      />
+
+      <input
+        className="input"
+        placeholder="Region"
+        value={form.region}
+        onChange={e => handleChange("region", e.target.value)}
+      />
+
+      <input
+        className="input"
+        placeholder="Postal Code"
+        value={form.postalCode}
+        onChange={e => handleChange("postalCode", e.target.value)}
+      />
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="btn-primary"
+      >
+        {loading ? "Saving..." : "Finish"}
+      </button>
+    </>
+  </div>
+)}
       </div>
 
       <style jsx global>{`
@@ -358,6 +366,11 @@ if (!data.street) {
           border-radius: 6px;
           color: white;
         }
+          .input:focus {
+  outline: none;
+  border-color: #facc15;
+  box-shadow: 0 0 0 1px #facc15;
+}
         .btn-primary {
           width: 100%;
           padding: 12px;
@@ -366,6 +379,17 @@ if (!data.street) {
           color: black;
           font-weight: 600;
         }
+          .btn-primary {
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.02);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
       `}</style>
     </div>
   )
