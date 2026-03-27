@@ -38,14 +38,15 @@ function parseAddressComponents(components: any[]) {
 }
 
 export async function POST(req: Request) {
-  const { placeId } = await req.json()
+  const { placeId, language } = await req.json()
 
   const res = await fetch(
     `https://places.googleapis.com/v1/places/${placeId}?fields=addressComponents,formattedAddress,location`,
     {
       headers: {
-        "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
-      },
+  "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
+  "Accept-Language": language || "en",
+},
     }
   )
 

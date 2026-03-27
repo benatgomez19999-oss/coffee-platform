@@ -219,7 +219,10 @@ const handleSubmit = async () => {
   headers: {
     "Content-Type": "application/json"
   },
-  body: JSON.stringify({ placeId })
+  body: JSON.stringify({
+  placeId,
+  language: navigator.language || "en"
+})
 })
                       const data = await res.json()
                       // ================= VALIDATE ADDRESS =================
