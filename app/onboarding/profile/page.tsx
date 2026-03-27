@@ -262,7 +262,7 @@ handleChange("streetNumber", data.streetNumber || "")
 handleChange("city", data.city || "")
 
 // 🔥 SMART REGION (key part)
-handleChange("region", data.subregion || data.region || "")
+handleChange("region", data.region || data.subregion || "")
 
 handleChange("postalCode", data.postalCode || "")
 // 🔥 AUTO FOCUS IF NO STREET (city selected)
