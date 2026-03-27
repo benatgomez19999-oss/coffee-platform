@@ -25,6 +25,7 @@ export default function OnboardingProfile() {
   const [predictions, setPredictions] = useState<any[]>([])
   const [debounceTimeout, setDebounceTimeout] = useState<any>(null)
   const streetRef = useRef<HTMLInputElement>(null)
+  const [isAutofilled, setIsAutofilled] = useState(false)
   
 
   const [form, setForm] = useState({
@@ -64,30 +65,40 @@ const handleChange = (field: string, value: string) => {
 
 const handleAddressChange = (e: any) => {
   const value = e.target.value
+
   handleChange("address", value)
+
+  // 🔥 detect autofill (no typing event)
+  if (e.nativeEvent?.inputType === "insertReplacementText") {
+    setIsAutofilled(true)
+    setPredictions([])
+    return
+  }
+
+  setIsAutofilled(false)
 
   if (debounceTimeout) {
     clearTimeout(debounceTimeout)
   }
 
   const timeout = setTimeout(() => {
-  fetch("/api/places", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      input: value,
-      country: form.country,
-    }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      const suggestions = data?.suggestions || []
-      setPredictions(suggestions)
+    fetch("/api/places", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        input: value,
+        country: form.country,
+      }),
     })
-    .catch(err => console.error(err))
-}, 300)
+      .then(res => res.json())
+      .then(data => {
+        const suggestions = data?.suggestions || []
+        setPredictions(suggestions)
+      })
+      .catch(err => console.error(err))
+  }, 300)
 
   setDebounceTimeout(timeout)
 }
@@ -200,7 +211,7 @@ const handleSubmit = async () => {
   placeholder="Start typing your address..."
 />
 
-              {predictions.length > 0 && (
+              {predictions.length > 0 && !isAutofilled && (
                 <div className="absolute left-0 top-full mt-1 w-full bg-black border border-white/10 rounded-md max-h-48 overflow-y-auto z-[9999]">
                   {predictions.map((p: any, i: number) => {
                     const text = p.placePrediction?.text?.text || ""
