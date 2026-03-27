@@ -16,21 +16,29 @@ function generateOTP() {
 }
 
 // =====================================================
-// FORMAT PHONE (E.164)
+// FORMAT PHONE (E.164 FIXED)
 // =====================================================
 
 function formatPhone(phone: string) {
   let cleaned = phone.replace(/\s+/g, "")
 
+  // ya tiene +
+  if (cleaned.startsWith("+")) {
+    return cleaned
+  }
+
+  // empieza con 00 → convertir a +
   if (cleaned.startsWith("00")) {
-    cleaned = "+" + cleaned.slice(2)
+    return "+" + cleaned.slice(2)
   }
 
-  if (!cleaned.startsWith("+")) {
-    cleaned = "+34" + cleaned
+  // empieza con 34 → añadir + solo
+  if (cleaned.startsWith("34")) {
+    return "+" + cleaned
   }
 
-  return cleaned
+  // número local (ej: 612...) → añadir +34
+  return "+34" + cleaned
 }
 
 // =====================================================
