@@ -230,12 +230,14 @@ const handleSubmit = async () => {
         onChange={e => handleChange("businessName", e.target.value)}
       />
 
-      <input
-        className="input"
-        placeholder={config.legalCompanyName}
-        value={form.legalCompanyName}
-        onChange={e => handleChange("legalCompanyName", e.target.value)}
-      />
+     {config.legalCompanyName && (
+  <input
+    className="input"
+    placeholder={config.legalCompanyName}
+    value={form.legalCompanyName}
+    onChange={e => handleChange("legalCompanyName", e.target.value)}
+  />
+)}
       <input
   className="input"
   placeholder="Contact Name"
