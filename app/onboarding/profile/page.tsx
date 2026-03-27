@@ -22,6 +22,8 @@ export default function OnboardingProfile() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [predictions, setPredictions] = useState<any[]>([])
+  const [debounceTimeout, setDebounceTimeout] = useState<any>(null)
+  
 
   const [form, setForm] = useState({
     country: "",
@@ -56,48 +58,36 @@ const handleChange = (field: string, value: string) => {
 }
 
 
-let timeout: any
+
 
 const handleAddressChange = (e: any) => {
   const value = e.target.value
   handleChange("address", value)
 
-  clearTimeout(timeout)
+  if (debounceTimeout) {
+    clearTimeout(debounceTimeout)
+  }
 
-  timeout = setTimeout(async () => {
-    if (value.length < 3) {
-      setPredictions([])
-      return
-    }
+  const timeout = setTimeout(() => {
+  fetch("/api/places", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      input: value,
+      country: form.country,
+    }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      const suggestions = data?.suggestions || []
+      setPredictions(suggestions)
+    })
+    .catch(err => console.error(err))
+}, 300)
 
-    try {
-      const res = await fetch("/api/places", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ input: value })
-      })
-
-      if (!res.ok) {
-        const text = await res.text()
-        console.error("API ERROR:", text)
-        return
-      }
-
-      const data = await res.json()
-      console.log("API RESPONSE:", data)
-
-      const suggestions =
-      data?.suggestions ||
-     data?.suggestions?.suggestions ||
-     []
-
-setPredictions(suggestions)
-    } catch (err) {
-      console.error("FETCH ERROR:", err)
-    }
-  }, 300)
+  setDebounceTimeout(timeout)
 }
 
 const handleSubmit = async () => {

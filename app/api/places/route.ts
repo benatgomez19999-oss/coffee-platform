@@ -10,20 +10,23 @@ export async function POST(req: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!, // 🔥 SERVER KEY
-          "X-Goog-FieldMask": "suggestions.placePrediction.text.text"
+          "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
+          "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text"
         },
         body: JSON.stringify({
           input: body.input,
           languageCode: "en",
-          sessionToken: crypto.randomUUID()
+          sessionToken: crypto.randomUUID(),
+          ...(body.country && {
+            includedRegionCodes: [body.country.toLowerCase()]
+          })
         })
       }
     )
 
     const data = await res.json()
-
     return NextResponse.json(data)
+
   } catch (err) {
     return NextResponse.json({ error: "fail" }, { status: 500 })
   }
