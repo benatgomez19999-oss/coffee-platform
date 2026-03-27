@@ -223,7 +223,13 @@ const handleSubmit = async () => {
                        setPredictions([])
 
                        // 🔥 STEP 4 aquí mismo
-                      const res = await fetch(`/api/place-details?placeId=${placeId}`)
+                      const res = await fetch("/api/place-details", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ placeId })
+})
                       const data = await res.json()
 
                       handleChange("city", data.city || "")
