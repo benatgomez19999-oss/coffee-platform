@@ -26,6 +26,7 @@ export default function OnboardingProfile() {
   const [debounceTimeout, setDebounceTimeout] = useState<any>(null)
   const streetRef = useRef<HTMLInputElement>(null)
   const [isAutofilled, setIsAutofilled] = useState(false)
+  const [isFinishing, setIsFinishing] = useState(false)
   
 
   const [form, setForm] = useState({
@@ -105,7 +106,7 @@ const handleAddressChange = (e: any) => {
 }
 
 const handleSubmit = async () => {
-  setLoading(true)
+  setIsFinishing(true) // 🔥 show loader
 
   try {
     const res = await fetch("/api/company/update", {
@@ -116,15 +117,39 @@ const handleSubmit = async () => {
 
     if (!res.ok) throw new Error()
 
-    router.push("/platform")
+    // 🔥 pequeño delay para efecto pro
+    setTimeout(() => {
+      router.push("/platform")
+    }, 1200)
+
   } catch (err) {
     alert("Error saving profile")
-  } finally {
-    setLoading(false)
+    setIsFinishing(false)
   }
 }
 
   return (
+
+     <>
+    {/* 🔥 LOADER OVERLAY */}
+    {isFinishing && (
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[99999]">
+        <div className="flex flex-col items-center gap-4">
+          
+          <img
+            src="/images/logo-altura-gold-final.png"
+            className="w-20 opacity-80 animate-pulse select-none"
+          />
+
+          <p className="text-white/60 text-sm">
+            Setting up your workspace...
+          </p>
+
+        </div>
+      </div>
+    )}
+
+    
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-neutral-950 text-white px-4">
       <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl space-y-5">
         <h2 className="text-xl font-semibold">Complete your profile</h2>
@@ -200,7 +225,7 @@ const handleSubmit = async () => {
         }}
       />
 
-      <button onClick={() => setStep(2)} className="btn-primary">
+      <button onClick={() => setStep(2)} className="btn-primary mt-4">
         Continue
       </button>
     </>
@@ -347,8 +372,8 @@ const handleSubmit = async () => {
 
       <button
         onClick={handleSubmit}
-        disabled={loading}
-        className="btn-primary"
+        disabled={isFinishing}
+        className="btn-primary mt-4"
       >
         {loading ? "Saving..." : "Finish"}
       </button>
@@ -392,5 +417,6 @@ const handleSubmit = async () => {
 }
       `}</style>
     </div>
-  )
+  </>
+)
 }
