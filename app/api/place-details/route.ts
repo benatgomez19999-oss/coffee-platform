@@ -44,9 +44,9 @@ export async function POST(req: Request) {
     `https://places.googleapis.com/v1/places/${placeId}?fields=addressComponents,formattedAddress,location`,
     {
       headers: {
-  "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
-  "Accept-Language": language || "en",
-},
+        "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
+        "Accept-Language": language || "en",
+      },
     }
   )
 
@@ -59,27 +59,37 @@ export async function POST(req: Request) {
 
   const parsed = parseAddressComponents(components)
 
- return NextResponse.json({
-  address: data.formattedAddress || "",
+  // 🌍 REGION STRATEGY (like Stripe)
+  const SUBREGION_PRIORITY = ["ES", "FR", "IT"]
 
-  // 🔥 NEW STRUCTURE
-  addressLine1: parsed.addressLine1,
+  let finalRegion = parsed.region
 
-  street: parsed.street,
-  streetNumber: parsed.streetNumber,
+  if (SUBREGION_PRIORITY.includes(parsed.country)) {
+    finalRegion = parsed.subregion || parsed.region
+  }
 
-  city: parsed.city,
+  return NextResponse.json({
+    address: data.formattedAddress || "",
 
-  region: parsed.region,
-  regionCode: parsed.regionCode,
-  subregion: parsed.subregion,
+    // 🔥 NEW STRUCTURE
+    addressLine1: parsed.addressLine1,
 
-  postalCode: parsed.postalCode,
-  country: parsed.country,
+    street: parsed.street,
+    streetNumber: parsed.streetNumber,
 
-  // 🔥 PRO DATA
-  placeId,
-  lat: data.location?.latitude || null,
-  lng: data.location?.longitude || null,
-})
+    city: parsed.city,
+
+    // 🔥 SMART REGION
+    region: finalRegion,
+    regionCode: parsed.regionCode,
+    subregion: parsed.subregion,
+
+    postalCode: parsed.postalCode,
+    country: parsed.country,
+
+    // 🔥 PRO DATA
+    placeId,
+    lat: data.location?.latitude || null,
+    lng: data.location?.longitude || null,
+  })
 }
