@@ -1084,23 +1084,36 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-thumb {
   transition: none !important;
 }
-/* ===== INPUT AUTOFILL FIX (DARK MODE) ===== */
+/* ===== INPUT AUTOFILL FIX (MATCH UI PERFECT) ===== */
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
+
+  /* 🔥 fondo EXACTO como tus inputs */
   -webkit-box-shadow: 0 0 0px 1000px rgba(0,0,0,0.4) inset !important;
   box-shadow: 0 0 0px 1000px rgba(0,0,0,0.4) inset !important;
 
+  /* 🔥 texto blanco */
   -webkit-text-fill-color: #ffffff !important;
 
+  /* 🔥 borde igual */
   border: 1px solid rgba(255,255,255,0.1) !important;
 
-  transition: background-color 5000s ease-in-out 0s;
+  /* 🔥 evita flash blanco */
+  transition: background-color 9999s ease-in-out 0s;
 }
 
+/* 🔥 FOCUS STATE (MUY IMPORTANTE PARA CONSISTENCIA) */
+
+input:-webkit-autofill:focus {
+  border-color: #facc15 !important;
+  box-shadow:
+    0 0 0 1px #facc15,
+    0 0 0px 1000px rgba(0,0,0,0.4) inset !important;
+}
 
 
 
