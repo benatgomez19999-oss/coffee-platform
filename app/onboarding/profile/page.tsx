@@ -78,13 +78,29 @@ useEffect(() => {
 }, [])
 console.log("ROLE 👉", role)
 
+// ================= TYPES =================
+type RoleConfig = {
+  businessName: string
+  legalCompanyName: string
+  loadingText: string
+  redirect: string
+  fields: {
+    vat: boolean
+    contactName: boolean
+  }
+}
+
 // ================= ROLE CONFIG =================
-const config = {
+const roleConfigs: Record<"BUYER" | "PRODUCER", RoleConfig> = {
   BUYER: {
     businessName: "Business Name",
     legalCompanyName: "Legal Company Name",
-    loadingText: "{config.loadingText}",
+    loadingText: "Setting up your workspace...",
     redirect: "/platform",
+    fields: {
+      vat: true,
+      contactName: true,
+    },
   },
 
   PRODUCER: {
@@ -92,8 +108,14 @@ const config = {
     legalCompanyName: "Legal Farm Name",
     loadingText: "Setting up your farm...",
     redirect: "/platform/producer",
+    fields: {
+      vat: false,
+      contactName: true,
+    },
   },
-}[role || "BUYER"]
+}
+// ================= ACTIVE CONFIG =================
+const config = roleConfigs[role || "BUYER"]
 
  // ================= HANDLERS =================
 const handleChange = (field: string, value: string) => {
