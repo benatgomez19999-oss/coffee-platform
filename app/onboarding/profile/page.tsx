@@ -209,18 +209,29 @@ const handleSubmit = async () => {
 />
 
               {predictions.length > 0 && (
-                <div className="absolute top-full left-0 w-full bg-black border border-white/10 rounded-md mt-1 max-h-48 overflow-y-auto z-[9999]">
+                <div className="absolute left-0 top-full mt-1 w-full bg-black border border-white/10 rounded-md max-h-48 overflow-y-auto z-[9999]">
                   {predictions.map((p: any, i: number) => {
                     const text = p.placePrediction?.text?.text || ""
+                    const placeId = p.placePrediction?.placeId
 
                     return (
                       <div
                         key={i}
                         className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-                        onClick={() => {
-                          handleChange("address", text)
-                          setPredictions([])
-                        }}
+                        onClick={async () => {
+                       handleChange("address", text)
+                       setPredictions([])
+
+                       // 🔥 STEP 4 aquí mismo
+                      const res = await fetch(`/api/place-details?placeId=${placeId}`)
+                      const data = await res.json()
+
+                      handleChange("city", data.city || "")
+                      handleChange("region", data.region || "")
+                      handleChange("postalCode", data.postalCode || "")
+                      handleChange("street", data.street || "")
+                      handleChange("streetNumber", data.streetNumber || "")
+                      }}
                       >
                         {text}
                       </div>
