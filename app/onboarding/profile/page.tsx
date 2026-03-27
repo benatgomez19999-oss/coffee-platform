@@ -68,8 +68,10 @@ const handleAddressChange = (e: any) => {
 
   handleChange("address", value)
 
-  // 🔥 detect autofill (no typing event)
-  if (e.nativeEvent?.inputType === "insertReplacementText") {
+  // 🔥 DETECTAR AUTOFILL REAL (clave)
+  const isFastFill = value.length > 10 && !e.nativeEvent?.data
+
+  if (isFastFill) {
     setIsAutofilled(true)
     setPredictions([])
     return
@@ -94,10 +96,9 @@ const handleAddressChange = (e: any) => {
     })
       .then(res => res.json())
       .then(data => {
-        const suggestions = data?.suggestions || []
-        setPredictions(suggestions)
+        setPredictions(data?.suggestions || [])
       })
-      .catch(err => console.error(err))
+      .catch(console.error)
   }, 300)
 
   setDebounceTimeout(timeout)
