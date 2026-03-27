@@ -22,11 +22,13 @@ export default function OnboardingProfile() {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [role, setRole] = useState<"BUYER" | "PRODUCER" | null>(null)
   const [predictions, setPredictions] = useState<any[]>([])
   const [debounceTimeout, setDebounceTimeout] = useState<any>(null)
   const streetRef = useRef<HTMLInputElement>(null)
   const [isAutofilled, setIsAutofilled] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
+
   
 
   const [form, setForm] = useState({
@@ -55,6 +57,19 @@ export default function OnboardingProfile() {
         }
       })
   }, [])
+
+  // ================= LOAD ROLE =================
+useEffect(() => {
+  fetch("/api/auth/me", {
+    credentials: "include",
+  })
+    .then(res => res.json())
+    .then(data => {
+      setRole(data.user?.role)
+    })
+    .catch(console.error)
+}, [])
+console.log("ROLE 👉", role)
 
  // ================= HANDLERS =================
 const handleChange = (field: string, value: string) => {
@@ -258,7 +273,7 @@ const handleSubmit = async () => {
                   onClick={async () => {
                     setPredictions([])
 
-                    // 🔥 STEP 4 aquí mismo
+                    
                     const res = await fetch("/api/place-details", {
                       method: "POST",
                       headers: {

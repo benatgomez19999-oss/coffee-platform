@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 
 export default function RoleSelectionPage() {
   const router = useRouter()
+  
 
   async function selectRole(role: "BUYER" | "PRODUCER") {
     try {
