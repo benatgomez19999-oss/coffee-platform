@@ -78,6 +78,23 @@ useEffect(() => {
 }, [])
 console.log("ROLE 👉", role)
 
+// ================= ROLE CONFIG =================
+const config = {
+  BUYER: {
+    businessName: "Business Name",
+    legalCompanyName: "Legal Company Name",
+    loadingText: "{config.loadingText}",
+    redirect: "/platform",
+  },
+
+  PRODUCER: {
+    businessName: "Farm Name",
+    legalCompanyName: "Legal Farm Name",
+    loadingText: "Setting up your farm...",
+    redirect: "/platform/producer",
+  },
+}[role || "BUYER"]
+
  // ================= HANDLERS =================
 const handleChange = (field: string, value: string) => {
   setForm(prev => ({ ...prev, [field]: value }))
@@ -141,7 +158,7 @@ const handleSubmit = async () => {
 
     // 🔥 pequeño delay para efecto pro
     setTimeout(() => {
-      router.push("/platform")
+      router.push(config.redirect)
     }, 1200)
 
   } catch (err) {
@@ -187,14 +204,14 @@ const handleSubmit = async () => {
     <>
       <input
         className="input"
-        placeholder="Business Name"
+        placeholder={config.businessName}
         value={form.businessName}
         onChange={e => handleChange("businessName", e.target.value)}
       />
 
       <input
         className="input"
-        placeholder="Legal Company Name"
+        placeholder={config.legalCompanyName}
         value={form.legalCompanyName}
         onChange={e => handleChange("legalCompanyName", e.target.value)}
       />
