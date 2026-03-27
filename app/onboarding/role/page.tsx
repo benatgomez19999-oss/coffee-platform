@@ -6,16 +6,20 @@ export default function RoleSelectionPage() {
   const router = useRouter()
   
 
-  async function selectRole(role: "BUYER" | "PRODUCER") {
-    try {
-      const res = await fetch("/api/user/set-role", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  credentials: "include", // 🔥 ESTO ES LA CLAVE
-  body: JSON.stringify({ role }),
-})
+ async function selectRole(role: "BUYER" | "PRODUCER") {
+  try {
+
+    // ================= SAVE ROLE LOCAL =================
+    localStorage.setItem("user_role", role)
+
+    const res = await fetch("/api/user/set-role", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ role }),
+    })
 
       if (!res.ok) {
         throw new Error("Failed to set role")

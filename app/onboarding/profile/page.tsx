@@ -58,16 +58,23 @@ export default function OnboardingProfile() {
       })
   }, [])
 
-  // ================= LOAD ROLE =================
+ // ================= LOAD ROLE =================
 useEffect(() => {
-  fetch("/api/auth/me", {
-    credentials: "include",
-  })
-    .then(res => res.json())
-    .then(data => {
-      setRole(data.user?.role)
+  const storedRole = localStorage.getItem("user_role")
+
+  if (storedRole === "BUYER" || storedRole === "PRODUCER") {
+    setRole(storedRole)
+  } else {
+    // fallback a backend si no existe
+    fetch("/api/auth/me", {
+      credentials: "include",
     })
-    .catch(console.error)
+      .then(res => res.json())
+      .then(data => {
+        setRole(data.user?.role)
+      })
+      .catch(console.error)
+  }
 }, [])
 console.log("ROLE 👉", role)
 
