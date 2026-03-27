@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Select from "react-select"
 import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
+import { useRef } from "react"
 
 const countryOptions = [
   { value: "ES", label: "Spain 🇪🇸" },
@@ -23,6 +24,7 @@ export default function OnboardingProfile() {
   const [loading, setLoading] = useState(false)
   const [predictions, setPredictions] = useState<any[]>([])
   const [debounceTimeout, setDebounceTimeout] = useState<any>(null)
+  const streetRef = useRef<HTMLInputElement>(null)
   
 
   const [form, setForm] = useState({
@@ -209,7 +211,6 @@ const handleSubmit = async () => {
                         key={i}
                         className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
                         onClick={async () => {
-                       handleChange("address", text)
                        setPredictions([])
 
                        // 🔥 STEP 4 aquí mismo
@@ -221,13 +222,52 @@ const handleSubmit = async () => {
   body: JSON.stringify({ placeId })
 })
                       const data = await res.json()
+                      // ================= VALIDATE ADDRESS =================
+if (!data.city || !data.country) {
+  console.error("Invalid address", data)
+  return
+}
+// ================= ADVANCED VALIDATION =================
+
+// ❌ Detect PO Box (common shipping issue)
+const addressLower = (data.address || "").toLowerCase()
+
+if (
+  addressLower.includes("po box") ||
+  addressLower.includes("apartado") ||
+  addressLower.includes("p.o.")
+) {
+  console.error("PO Box not allowed", data)
+  return
+}
+
+// ⚠️ Detect incomplete address (no street)
+const isOnlyCity = !data.street && data.city
+
+if (isOnlyCity) {
+  console.warn("City selected without street", data)
+  // 👉 NO bloqueamos, UX continúa
+}
                       console.log("DETAILS DATA 👉", data) // 🔥 AÑADE ESTO
 
-                      handleChange("city", data.city || "")
-                      handleChange("region", data.region || "")
-                      handleChange("postalCode", data.postalCode || "")
-                      handleChange("street", data.street || "")
-                      handleChange("streetNumber", data.streetNumber || "")
+                     // ================= APPLY ADDRESS (Stripe style) =================
+handleChange("address", data.addressLine1 || data.address || "")
+
+handleChange("street", data.street || "")
+handleChange("streetNumber", data.streetNumber || "")
+
+handleChange("city", data.city || "")
+
+// 🔥 SMART REGION (key part)
+handleChange("region", data.subregion || data.region || "")
+
+handleChange("postalCode", data.postalCode || "")
+// 🔥 AUTO FOCUS IF NO STREET (city selected)
+if (!data.street) {
+  setTimeout(() => {
+    streetRef.current?.focus()
+  }, 100)
+}
                       }}
                       >
                         {text}
@@ -242,6 +282,7 @@ const handleSubmit = async () => {
               <input
                 className="input"
                 placeholder="Street"
+                ref={streetRef}
                 value={form.street}
                 onChange={e => handleChange("street", e.target.value)}
               />
