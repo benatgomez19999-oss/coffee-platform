@@ -237,6 +237,12 @@ const handleSubmit = async () => {
         value={form.legalCompanyName}
         onChange={e => handleChange("legalCompanyName", e.target.value)}
       />
+      <input
+  className="input"
+  placeholder="Contact Name"
+  value={form.contactName}
+  onChange={e => handleChange("contactName", e.target.value)}
+/>
       {config.fields.vat && (
   <input
     className="input"
@@ -280,7 +286,7 @@ const handleSubmit = async () => {
         country={form.country?.toLowerCase() || "es"}
         value={form.phone}
         disableDropdown
-        onChange={(value) => handleChange("phone", value)}
+        onChange={(value) => handleChange("phone", `+${value}`)}
         inputStyle={{
           width: "100%",
           background: "rgba(0,0,0,0.4)",
