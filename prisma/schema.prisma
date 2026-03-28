@@ -28,26 +28,72 @@ model Farm {
   lots       GreenLot[]
 }
 
+//////////////////////////////////////////////////////
+// 🌱 GREEN LOT (MARKETPLACE READY)
+//////////////////////////////////////////////////////
+
 model GreenLot {
   id           String       @id @default(uuid())
   farmId       String
+
+  // =====================================================
+  // PRODUCT INFO (VISIBLE EN MARKETPLACE)
+  // =====================================================
+
+  name         String?
+  description  String?
+  imageUrl     String?
+
   variety      String
   process      ProcessType
   harvestYear  Int
-  quantityKg   Float
+
+  // 📊 CALIDAD (para pricing engine)
+  scaScore     Float?
+  altitude     Int? // override farm altitude si hace falta
+
+  // =====================================================
+  // VOLUME (CRÍTICO PARA CONTRATOS)
+  // =====================================================
+
+  totalKg      Float
+  availableKg  Float
+
+  // =====================================================
+  // PRICING (AUTO CALCULATED)
+  // =====================================================
+
+  pricePerKg   Float
+  currency     String       @default("EUR")
+
+  // =====================================================
+  // STATUS (MARKETPLACE FLOW)
+  // =====================================================
+
+  status       LotStatus    @default(DRAFT)
+
   createdAt    DateTime     @default(now())
+
+  // =====================================================
+  // RELATIONS
+  // =====================================================
 
   farm         Farm         @relation(fields: [farmId], references: [id])
   purchases    Purchase[]
   roastBatches RoastBatch[]
 
-// 💰 PRICING SNAPSHOT (1:1)
+  // 💰 PRICING SNAPSHOT (1:1)
   pricingSnapshot PricingSnapshot?
-
-// 📊 CALIDAD (para pricing engine)
-  scaScore Float?
-  altitude Int? // override farm altitude si hace falta
 }
+
+enum LotStatus {
+  DRAFT
+  PUBLISHED
+  RESERVED
+  SOLD
+}
+
+
 
 model Purchase {
   id          String   @id @default(uuid())
@@ -117,6 +163,19 @@ model PricingSnapshot {
 
   // 🧠 versionado del algoritmo
   pricingVersion     String
+
+  //////////////////////////////////////////////////////
+  // 🧠 PRICING BREAKDOWN (CRÍTICO)
+  //////////////////////////////////////////////////////
+
+  breakdown Json?
+
+  //////////////////////////////////////////////////////
+  // 📊 METADATA (FUTURO / DEBUG)
+  //////////////////////////////////////////////////////
+
+  // input original del cálculo (opcional)
+  context   Json?
 
   createdAt DateTime @default(now())
 }

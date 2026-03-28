@@ -1,9 +1,7 @@
-//////////////////////////////////////////////////////
-// 💰 PRICING PREVIEW API
-//////////////////////////////////////////////////////
+// app/api/pricing/client/preview/route.ts
 
 import { NextResponse } from "next/server"
-import { calculatePricing } from "@/engine/pricing/calculatePricing"
+import { calculatePricing } from "@/engine/pricing/client/calculatePricing"
 
 export async function POST(req: Request) {
   try {
