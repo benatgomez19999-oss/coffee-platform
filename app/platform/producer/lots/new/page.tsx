@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ProcessType } from "@prisma/client"
+import { useRouter } from "next/navigation"
 
 export default function NewLotPage() {
   //////////////////////////////////////////////////////
@@ -9,6 +10,7 @@ export default function NewLotPage() {
   //////////////////////////////////////////////////////
 
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const [form, setForm] = useState({
     farmId: "",
@@ -68,7 +70,7 @@ export default function NewLotPage() {
         parchmentKg: "",
       })
 
-      alert("Lot draft created successfully")
+      router.push("/platform/producer/lots")
 
     } catch (err) {
       console.error(err)

@@ -31,10 +31,32 @@ export default function ProducerLotsPage() {
     fetchLots();
   }, []);
 
+  //////////////////////////////////////////////////////
+  // 🔌 SEND TO LAB
+  //////////////////////////////////////////////////////
+
+  const sendToLab = async (id: string) => {
+    try {
+      await fetch(`/api/producer/lot-draft/${id}/send-to-lab`, {
+        method: "PATCH",
+      });
+
+      // refresh simple (luego lo mejoramos)
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  //////////////////////////////////////////////////////
+  // 🧩 UI
+  //////////////////////////////////////////////////////
+
   return (
     <div className="min-h-screen bg-[#f5f1e6] px-6 py-12 pt-24">
       <div className="max-w-4xl mx-auto">
 
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-10">
           <div>
             <h1 className="text-3xl font-semibold">Your Lots</h1>
@@ -51,6 +73,7 @@ export default function ProducerLotsPage() {
           </a>
         </div>
 
+        {/* CONTENT */}
         {loading ? (
           <p>Loading...</p>
         ) : lots.length === 0 ? (
@@ -60,8 +83,9 @@ export default function ProducerLotsPage() {
             {lots.map((lot) => (
               <div
                 key={lot.id}
-                className="bg-white border rounded-xl p-4 flex justify-between"
+                className="bg-white border rounded-xl p-4 flex justify-between items-center"
               >
+                {/* LEFT */}
                 <div>
                   <p className="font-medium">
                     {lot.name || "Unnamed Lot"}
@@ -76,7 +100,21 @@ export default function ProducerLotsPage() {
                   </p>
                 </div>
 
-                <StatusBadge status={lot.status} />
+                {/* RIGHT (STATUS + ACTION) */}
+                <div className="flex items-center gap-3">
+
+                  <StatusBadge status={lot.status} />
+
+                  {lot.status === "PENDING" && (
+                    <button
+                      onClick={() => sendToLab(lot.id)}
+                      className="px-3 py-1 text-xs bg-black text-white rounded"
+                    >
+                      Send to Lab
+                    </button>
+                  )}
+
+                </div>
               </div>
             ))}
           </div>
@@ -85,6 +123,10 @@ export default function ProducerLotsPage() {
     </div>
   );
 }
+
+//////////////////////////////////////////////////////
+// 🎨 STATUS BADGE
+//////////////////////////////////////////////////////
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
