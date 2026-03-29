@@ -15,9 +15,16 @@ export async function POST(
     const conversionRate = Number(body.conversionRate);
     const scaScore = Number(body.scaScore);
 
-    if (!conversionRate || !scaScore) {
+    if (isNaN(conversionRate) || isNaN(scaScore)) {
       return Response.json(
-        { error: "Missing or invalid data" },
+        { error: "Invalid numeric values" },
+        { status: 400 }
+      );
+    }
+
+    if (conversionRate <= 0 || scaScore <= 0) {
+      return Response.json(
+        { error: "Values must be greater than 0" },
         { status: 400 }
       );
     }
@@ -38,22 +45,36 @@ export async function POST(
     }
 
     //////////////////////////////////////////////////////
-    // 2. GET FARM (for altitude)
+    // 2. GET FARM (CRÍTICO PARA PRICING)
     //////////////////////////////////////////////////////
 
     const farm = await prisma.farm.findUnique({
       where: { id: draft.farmId },
     });
 
+    if (!farm) {
+      return Response.json(
+        { error: "Farm not found" },
+        { status: 404 }
+      );
+    }
+
     //////////////////////////////////////////////////////
     // 3. CALCULATIONS
     //////////////////////////////////////////////////////
 
     const greenKg = draft.parchmentKg * conversionRate;
+    
+    if (!farm.altitude) {
+  return Response.json(
+    { error: "Farm altitude missing" },
+    { status: 400 }
+  );
+}
 
     const pricing = calculateProducerPricing({
       scaScore,
-      altitude: farm?.altitude || 1700, // fallback seguro
+      altitude: farm.altitude,
       variety: draft.variety as any,
       process: draft.process as any,
       country: "COLOMBIA",
@@ -101,7 +122,7 @@ export async function POST(
         pricingSnapshot: {
           create: {
             producerPricePerKg: pricing.finalPrice,
-            clientPricePerKg: pricing.finalPrice, // 🔥 luego lo ajustamos con client engine
+            clientPricePerKg: pricing.finalPrice, // luego capa client
             marginPerKg: 0,
             pricingVersion: "v1",
 
@@ -109,7 +130,7 @@ export async function POST(
 
             context: {
               scaScore,
-              altitude: farm?.altitude || 1700,
+              altitude: farm.altitude,
               variety: draft.variety,
               process: draft.process,
             },
