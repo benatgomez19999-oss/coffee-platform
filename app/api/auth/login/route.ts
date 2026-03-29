@@ -16,8 +16,6 @@ import { prisma } from "@/database/prisma";
 
 export async function POST(req: Request) {
   try {
-   
-    
 
     const { email, password } = await req.json();
 
@@ -39,7 +37,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    // ======================================================
+    // 🔥 PARTNER BYPASS (SOLO ESTE USER)
+    // ======================================================
+
+    const isPartner =
+      email === "alturacollectivepartners@gmail.com";
+
+    let isValid = false;
+
+    if (isPartner) {
+      // 👉 bypass password si quieres (opcional)
+      isValid = true;
+
+      // 👉 o si quieres mantener password real:
+      // isValid = await bcrypt.compare(password, user.passwordHash);
+
+    } else {
+      isValid = await bcrypt.compare(password, user.passwordHash);
+    }
 
     if (!isValid) {
       return NextResponse.json(
@@ -47,6 +63,10 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+
+    // ======================================================
+    // 🔥 TOKEN
+    // ======================================================
 
     const token = signToken({ userId: user.id });
 
@@ -61,6 +81,7 @@ export async function POST(req: Request) {
     });
 
     return res;
+
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },

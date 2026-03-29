@@ -9,11 +9,22 @@ export default async function PlatformPage() {
     redirect("/signup")
   }
 
-  // 🔥 CLAVE — routing por role
+  //////////////////////////////////////////////////////
+  // 🧠 ROLE ROUTING
+  //////////////////////////////////////////////////////
+
+  // 🔥 PARTNER FIRST (importante)
+  if (user.role === "PARTNER") {
+    redirect("/platform/partner")
+  }
+
   if (user.role === "PRODUCER") {
     redirect("/platform/producer")
   }
 
-  // 👇 cliente (default)
+  //////////////////////////////////////////////////////
+  // 👇 CLIENT (DEFAULT)
+  //////////////////////////////////////////////////////
+
   redirect("/platform/client")
 }
