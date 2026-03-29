@@ -1,55 +1,161 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function AnalyzeLotPage({ params }: any) {
-  const [form, setForm] = useState({
-    scaScore: "",
-    aroma: "",
-    flavor: "",
-    conversionRate: "",
-  });
+type LotDraft = {
+  id: string;
+  name: string | null;
+  variety: string;
+  process: string;
+  harvestYear: number;
+  parchmentKg: number;
+};
 
-  const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+export default function PartnerLotDetail({ params }: { params: { id: string } }) {
+
+  const [lot, setLot] = useState<LotDraft | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // lab inputs
+  const [sca, setSca] = useState("");
+  const [aroma, setAroma] = useState("");
+  const [flavor, setFlavor] = useState("");
+  const [conversion, setConversion] = useState("");
+
+  //////////////////////////////////////////////////////
+  // FETCH LOT
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    const fetchLot = async () => {
+      try {
+        const res = await fetch(`/api/partner/lots/${params.id}`);
+        const data = await res.json();
+        setLot(data);
+      } catch (err) {
+        console.error(err);
+      }
+      setLoading(false);
+    };
+
+    fetchLot();
+  }, [params.id]);
+
+  //////////////////////////////////////////////////////
+  // SUBMIT (placeholder)
+  //////////////////////////////////////////////////////
+
+  const handleVerify = async () => {
+    try {
+      await fetch(`/api/partner/lots/${params.id}/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sca: Number(sca),
+          aroma,
+          flavor,
+          conversion: Number(conversion),
+        }),
+      });
+
+      alert("Lot verified (mock)");
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleSubmit = async () => {
-    await fetch(`/api/partner/lots/${params.id}/verify`, {
-      method: "POST",
-      body: JSON.stringify(form),
-    });
+  //////////////////////////////////////////////////////
+  // RENDER
+  //////////////////////////////////////////////////////
 
-    alert("Lot verified");
-  };
+  if (loading) return <p className="p-10">Loading...</p>;
+
+  if (!lot) return <p className="p-10">Lot not found</p>;
 
   return (
-    <div className="p-10 space-y-4">
-      <h1 className="text-xl font-semibold">Analyze Lot</h1>
+    <div className="min-h-screen bg-[#f5f1e6] px-6 py-12 pt-24">
+      <div className="max-w-3xl mx-auto space-y-8">
 
-      <input
-        placeholder="SCA Score"
-        onChange={(e) => handleChange("scaScore", e.target.value)}
-      />
+        {/* HEADER */}
+        <div>
+          <h1 className="text-3xl font-semibold">
+            {lot.name || "Unnamed Lot"}
+          </h1>
 
-      <input
-        placeholder="Aroma"
-        onChange={(e) => handleChange("aroma", e.target.value)}
-      />
+          <p className="text-sm text-black/60 mt-2">
+            {lot.variety} • {lot.process} • {lot.harvestYear}
+          </p>
 
-      <input
-        placeholder="Flavor"
-        onChange={(e) => handleChange("flavor", e.target.value)}
-      />
+          <p className="text-sm text-black/40">
+            {lot.parchmentKg} kg
+          </p>
+        </div>
 
-      <input
-        placeholder="Conversion Rate"
-        onChange={(e) => handleChange("conversionRate", e.target.value)}
-      />
+        {/* FORM */}
+        <div className="bg-white border rounded-xl p-6 space-y-6">
 
-      <button onClick={handleSubmit}>
-        Create Green Lot
-      </button>
+          <h2 className="text-lg font-medium">
+            Lab Analysis
+          </h2>
+
+          {/* SCA */}
+          <div>
+            <label className="text-sm">SCA Score</label>
+            <input
+              value={sca}
+              onChange={(e) => setSca(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 mt-1"
+              placeholder="e.g. 87.5"
+            />
+          </div>
+
+          {/* AROMA */}
+          <div>
+            <label className="text-sm">Aroma</label>
+            <input
+              value={aroma}
+              onChange={(e) => setAroma(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 mt-1"
+              placeholder="Floral, citrus..."
+            />
+          </div>
+
+          {/* FLAVOR */}
+          <div>
+            <label className="text-sm">Flavor Notes</label>
+            <input
+              value={flavor}
+              onChange={(e) => setFlavor(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 mt-1"
+              placeholder="Chocolate, red fruits..."
+            />
+          </div>
+
+          {/* CONVERSION */}
+          <div>
+            <label className="text-sm">Conversion Rate</label>
+            <input
+              value={conversion}
+              onChange={(e) => setConversion(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 mt-1"
+              placeholder="e.g. 0.84"
+            />
+          </div>
+
+          {/* BUTTON */}
+          <button
+            onClick={handleVerify}
+            className="w-full py-3 rounded-full bg-[#3f6b3f] text-white"
+          >
+            Verify & Create Lot
+          </button>
+
+        </div>
+
+      </div>
     </div>
   );
 }
