@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type LotDraft = {
   id: string;
@@ -15,6 +16,7 @@ type LotDraft = {
 export default function ProducerLotsPage() {
   const [lots, setLots] = useState<LotDraft[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchLots = async () => {
@@ -36,17 +38,17 @@ export default function ProducerLotsPage() {
   //////////////////////////////////////////////////////
 
   const sendToLab = async (id: string) => {
-    try {
-      await fetch(`/api/producer/lot-draft/${id}/send-to-lab`, {
-        method: "PATCH",
-      });
+  try {
+    await fetch(`/api/producer/lot-draft/${id}/send-to-lab`, {
+      method: "PATCH",
+    });
 
-      // refresh simple (luego lo mejoramos)
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    router.push("/platform/producer");
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   //////////////////////////////////////////////////////
   // 🧩 UI
