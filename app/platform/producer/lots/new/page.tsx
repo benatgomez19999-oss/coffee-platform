@@ -205,6 +205,10 @@ export default function NewLotPage() {
             />
           </div>
 
+          <p className="text-xs text-black/50 mt-2">
+  This is your total parchment volume. A small sample (~300g) will be sent for lab analysis.
+</p>
+
         </div>
 
         {/* ACTION */}
