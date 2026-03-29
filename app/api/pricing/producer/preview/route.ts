@@ -67,6 +67,7 @@ export async function POST(req: Request) {
             country,
           },
         },
+        
         create: {
           lotId,
           producerPricePerKg: pricing.finalPrice,

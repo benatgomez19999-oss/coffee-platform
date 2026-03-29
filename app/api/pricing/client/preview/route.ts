@@ -7,14 +7,31 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    const { scaScore, altitude, variety, process } = body
+    const {
+  scaScore,
+  altitude,
+  variety,
+  process,
+  country,
+  marketData,
+  region,
+  port,
+  freightType,
+  marginTarget,
+} = body
 
-    const pricing = calculatePricing({
-      scaScore,
-      altitude,
-      variety,
-      process,
-    })
+   const pricing = calculatePricing({
+  scaScore,
+  altitude,
+  variety,
+  process,
+  country,
+  marketData,
+  region,
+  port,
+  freightType,
+  marginTarget,
+})
 
     return NextResponse.json(pricing)
   } catch (error) {

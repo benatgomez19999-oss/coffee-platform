@@ -1,7 +1,9 @@
 "use client"
 import PlatformHeader from "@/components/platform/PlatformHeader"
+import { useRouter } from "next/navigation"
 
 export default function ProducerDashboard({ user }: { user: any }) {
+  const router = useRouter()
   return (
     
     <div className="min-h-screen bg-[#f5f1e6] text-[#1f1f1f] px-6 py-12 pt-24">
@@ -40,21 +42,22 @@ export default function ProducerDashboard({ user }: { user: any }) {
             </p>
           </div>
 
-          <button
-           className="
-  px-10 py-4
-  rounded-full
-  bg-[#3f6b3f]
-  hover:bg-[#4f7d4f]
-  text-white
-  font-semibold
-  text-lg
-  transition
-  shadow-md
-"
-          >
-            + New Lot
-          </button>
+         <button
+  onClick={() => router.push("/platform/producer/lots/new")}
+  className="
+    px-10 py-4
+    rounded-full
+    bg-[#3f6b3f]
+    hover:bg-[#4f7d4f]
+    text-white
+    font-semibold
+    text-lg
+    transition
+    shadow-md
+  "
+>
+  + New Lot
+</button>
 
         </div>
 

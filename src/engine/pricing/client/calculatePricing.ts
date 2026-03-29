@@ -1,8 +1,10 @@
 //////////////////////////////////////////////////////
-// 🧠 PRICING ENGINE (CLIENT)
+// 🧠 CLIENT PRICING ENGINE (ADAPTED)
 //////////////////////////////////////////////////////
 
-import { BASE_PRICING, ALTITUDE_MODIFIER } from "./pricingTable"
+import { calculateProducerPricing } from "../producer/calculatePricing"
+import { calculateTotalCost } from "../costs/calculateCosts"
+import { applyRoastedPricing } from "../roasted/applyRoastedPricing"
 
 type ProcessType = "WASHED" | "NATURAL" | "HONEY" | "ANAEROBIC"
 
@@ -21,34 +23,59 @@ type PricingInput = {
   altitude: number
   variety: Variety
   process: ProcessType
+
+  //////////////////////////////////////////////////////
+  // 🌍 MARKET
+  //////////////////////////////////////////////////////
+
+  country?: string
+  marketData?: {
+    cPrice?: number
+    demandIndex?: number
+  }
+
+  //////////////////////////////////////////////////////
+  // 🚢 COSTS
+  //////////////////////////////////////////////////////
+
+  region: any
+  port: any
+  freightType: "FCL" | "LCL"
+
+  //////////////////////////////////////////////////////
+  // 💰 BUSINESS
+  //////////////////////////////////////////////////////
+
+  marginTarget?: number
 }
 
 type PricingOutput = {
-  basePrice: number
-  altitudeModifier: number
-  finalPrice: number
-}
+  producerPrice: number
 
-//////////////////////////////////////////////////////
-// 🔍 HELPERS
-//////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  // 💸 COSTS
+  //////////////////////////////////////////////////////
 
-function getScaRange(sca: number): "80-83" | "84-86" | "86-90" {
-  if (sca >= 80 && sca <= 83) return "80-83"
-  if (sca >= 84 && sca <= 86) return "84-86"
-  if (sca >= 87) return "86-90"
+  totalCost: number
+  costBasis: number
 
-  throw new Error("SCA score out of supported range")
-}
+  //////////////////////////////////////////////////////
+  // 💰 PRICING
+  //////////////////////////////////////////////////////
 
-function getAltitudeModifier(altitude: number): number {
-  const match = ALTITUDE_MODIFIER.find(
-    (range) => altitude >= range.min && altitude < range.max
-  )
+  clientPrice: number
+  roastedPrice: number
+  margin: number
 
-  if (!match) return 0
+  //////////////////////////////////////////////////////
+  // 🧾 BREAKDOWN (FULL TRACEABILITY)
+  //////////////////////////////////////////////////////
 
-  return match.value
+  breakdown: {
+    producer: any[]
+    costs: any
+    roastedMultiplier: number
+  }
 }
 
 //////////////////////////////////////////////////////
@@ -56,27 +83,129 @@ function getAltitudeModifier(altitude: number): number {
 //////////////////////////////////////////////////////
 
 export function calculatePricing(input: PricingInput): PricingOutput {
-  const { scaScore, altitude, variety } = input
+  const {
+    scaScore,
+    altitude,
+    variety,
+    process,
+    country,
+    marketData,
 
-  // 1. determinar rango SCA
-  const scaRange = getScaRange(scaScore)
+    region,
+    port,
+    freightType,
 
-  // 2. obtener precio base
-  const basePrice = BASE_PRICING[scaRange][variety as keyof typeof BASE_PRICING[typeof scaRange]]
+    marginTarget = 0.2,
+  } = input
 
-if (basePrice === undefined) {
-    throw new Error(`No base price for variety ${variety} in range ${scaRange}`)
-  }
+  //////////////////////////////////////////////////////
+  // 1. PRODUCER PRICING (reuse engine)
+  //////////////////////////////////////////////////////
 
-  // 3. modifier altitud
-  const altitudeModifier = getAltitudeModifier(altitude)
+  const producer = calculateProducerPricing({
+    scaScore,
+    altitude,
+    variety,
+    process,
+    country,
+    marketData,
+  })
 
-  // 4. precio final
-  const finalPrice = basePrice + altitudeModifier
+  //////////////////////////////////////////////////////
+  // 2. COST ENGINE (NEW MODULAR SYSTEM)
+  //////////////////////////////////////////////////////
+
+  const costResult = calculateTotalCost({
+    region,
+    port,
+    freightType,
+  })
+
+  const totalCost = costResult.total
+
+  //////////////////////////////////////////////////////
+  // 3. COST BASIS (GREEN COFFEE)
+  //////////////////////////////////////////////////////
+
+  const costBasis = producer.finalPrice + totalCost
+
+  //////////////////////////////////////////////////////
+  // 4. CLIENT PRICE (GREEN B2B)
+  //////////////////////////////////////////////////////
+
+  const clientPrice = costBasis * (1 + marginTarget)
+
+  //////////////////////////////////////////////////////
+  // 🔥 5. ROASTED VALUE LAYER
+  //////////////////////////////////////////////////////
+
+  const roasted = applyRoastedPricing({
+    basePrice: clientPrice,
+    variety,
+    scaScore,
+    altitude,
+  })
+
+  //////////////////////////////////////////////////////
+  // 6. MARGIN (CONTROLLED)
+  //////////////////////////////////////////////////////
+
+  const margin = clientPrice - costBasis
+
+  //////////////////////////////////////////////////////
+  // 🧾 FINAL OUTPUT
+  //////////////////////////////////////////////////////
 
   return {
-    basePrice,
-    altitudeModifier,
-    finalPrice,
+    //////////////////////////////////////////////////////
+    // 🌱 PRODUCER
+    //////////////////////////////////////////////////////
+
+    producerPrice: Number(producer.finalPrice.toFixed(2)),
+
+    //////////////////////////////////////////////////////
+    // 💸 COSTS
+    //////////////////////////////////////////////////////
+
+    totalCost: Number(totalCost.toFixed(2)),
+    costBasis: Number(costBasis.toFixed(2)),
+
+    //////////////////////////////////////////////////////
+    // 💰 GREEN (B2B TOSTADORES)
+    //////////////////////////////////////////////////////
+
+    clientPrice: Number(clientPrice.toFixed(2)),
+
+    //////////////////////////////////////////////////////
+    // 🔥 ROASTED (FINAL MARKET VALUE)
+    //////////////////////////////////////////////////////
+
+    roastedPrice: Number(roasted.roastedPrice.toFixed(2)),
+
+    //////////////////////////////////////////////////////
+    // 📊 MARGIN
+    //////////////////////////////////////////////////////
+
+    margin: Number(margin.toFixed(2)),
+
+    //////////////////////////////////////////////////////
+    // 🧾 BREAKDOWN (KEY FOR AI + DEBUG)
+    //////////////////////////////////////////////////////
+
+    breakdown: {
+      producer: producer.breakdown,
+
+      //////////////////////////////////////////////////////
+      // 🔥 FULL COST BREAKDOWN (NEW)
+      //////////////////////////////////////////////////////
+
+      costs: costResult.breakdown,
+
+      //////////////////////////////////////////////////////
+      // 🔥 ROASTED LOGIC
+      //////////////////////////////////////////////////////
+
+      roastedMultiplier: roasted.multiplier,
+    },
   }
 }
