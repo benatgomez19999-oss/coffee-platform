@@ -9,48 +9,89 @@ type LotDraft = {
   process: string;
   harvestYear: number;
   parchmentKg: number;
+  status: string;
 };
 
 export default function PartnerLotsPage() {
+
   const [lots, setLots] = useState<LotDraft[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  //////////////////////////////////////////////////////
+  // FETCH LOTS
+  //////////////////////////////////////////////////////
 
   useEffect(() => {
     const fetchLots = async () => {
-      const res = await fetch("/api/partner/lots");
-      const data = await res.json();
-      setLots(data);
+      try {
+        const res = await fetch("/api/partner/lots");
+        const data = await res.json();
+        setLots(data);
+      } catch (err) {
+        console.error(err);
+      }
+      setLoading(false);
     };
 
     fetchLots();
   }, []);
 
+  //////////////////////////////////////////////////////
+  // RENDER
+  //////////////////////////////////////////////////////
+
   return (
-    <div className="p-10">
-      <h1 className="text-2xl font-semibold mb-6">
-        Lots Pending Analysis
-      </h1>
+    <div className="min-h-screen bg-[#f5f1e6] px-6 py-12 pt-24">
+      <div className="max-w-4xl mx-auto">
 
-      <div className="space-y-4">
-        {lots.map((lot) => (
-          <div
-            key={lot.id}
-            className="border p-4 rounded flex justify-between"
-          >
-            <div>
-              <p>{lot.name || "Unnamed Lot"}</p>
-              <p className="text-sm text-gray-500">
-                {lot.variety} • {lot.process}
-              </p>
-            </div>
+        {/* HEADER */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-semibold">Incoming Lots</h1>
+          <p className="text-sm text-black/60">
+            Lots sent by producers awaiting lab verification
+          </p>
+        </div>
 
-            <a
-              href={`/platform/partner/lots/${lot.id}`}
-              className="bg-black text-white px-4 py-2 rounded"
-            >
-              Analyze
-            </a>
+        {/* STATES */}
+        {loading ? (
+          <p>Loading...</p>
+        ) : lots.length === 0 ? (
+          <p>No lots to verify</p>
+        ) : (
+          <div className="space-y-4">
+
+            {lots.map((lot) => (
+              <div
+                key={lot.id}
+                className="bg-white border rounded-xl p-4 flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">
+                    {lot.name || "Unnamed Lot"}
+                  </p>
+
+                  <p className="text-sm text-black/60">
+                    {lot.variety} • {lot.process} • {lot.harvestYear}
+                  </p>
+
+                  <p className="text-sm text-black/40">
+                    {lot.parchmentKg} kg
+                  </p>
+                </div>
+
+                {/* ACTION */}
+                <a
+                  href={`/platform/partner/lots/${lot.id}`}
+                  className="px-4 py-2 rounded-full bg-black text-white text-sm"
+                >
+                  Review
+                </a>
+              </div>
+            ))}
+
           </div>
-        ))}
+        )}
+
       </div>
     </div>
   );
