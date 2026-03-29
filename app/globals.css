@@ -1117,6 +1117,12 @@ input:-webkit-autofill:focus {
     0 0 0px 1000px transparent inset !important;
 }
 
+@media print {
+  body {
+    background: white;
+  }
+}
+
 
 
 

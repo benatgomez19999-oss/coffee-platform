@@ -218,7 +218,7 @@ export default function NewLotPage() {
             disabled={loading}
             className="px-6 py-3 rounded-full bg-[#3f6b3f] text-white font-medium hover:bg-[#4f7d4f]"
           >
-            {loading ? "Creating..." : "Create Draft"}
+            {loading ? "Creating..." : "Save Lot for Analysis"}
           </button>
         </div>
 

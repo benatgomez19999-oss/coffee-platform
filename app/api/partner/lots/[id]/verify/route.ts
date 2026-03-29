@@ -1,4 +1,5 @@
 import { prisma } from "@/database/prisma";
+import { calculateProducerPricing } from "@/engine/pricing/producer/calculatePricing";
 
 export async function POST(
   req: Request,
@@ -6,6 +7,20 @@ export async function POST(
 ) {
   try {
     const body = await req.json();
+
+    //////////////////////////////////////////////////////
+    // 🧠 INPUT NORMALIZATION
+    //////////////////////////////////////////////////////
+
+    const conversionRate = Number(body.conversionRate);
+    const scaScore = Number(body.scaScore);
+
+    if (!conversionRate || !scaScore) {
+      return Response.json(
+        { error: "Missing or invalid data" },
+        { status: 400 }
+      );
+    }
 
     //////////////////////////////////////////////////////
     // 1. GET DRAFT
@@ -16,35 +31,95 @@ export async function POST(
     });
 
     if (!draft) {
-      return Response.json({ error: "Draft not found" }, { status: 404 });
+      return Response.json(
+        { error: "Draft not found" },
+        { status: 404 }
+      );
     }
 
     //////////////////////////////////////////////////////
-    // 2. CREATE GREEN LOT
+    // 2. GET FARM (for altitude)
+    //////////////////////////////////////////////////////
+
+    const farm = await prisma.farm.findUnique({
+      where: { id: draft.farmId },
+    });
+
+    //////////////////////////////////////////////////////
+    // 3. CALCULATIONS
+    //////////////////////////////////////////////////////
+
+    const greenKg = draft.parchmentKg * conversionRate;
+
+    const pricing = calculateProducerPricing({
+      scaScore,
+      altitude: farm?.altitude || 1700, // fallback seguro
+      variety: draft.variety as any,
+      process: draft.process as any,
+      country: "COLOMBIA",
+    });
+
+    //////////////////////////////////////////////////////
+    // 4. CREATE GREEN LOT
     //////////////////////////////////////////////////////
 
     const greenLot = await prisma.greenLot.create({
       data: {
+        //////////////////////////////////////////////////////
+        // 🔢 TRACEABILITY
+        //////////////////////////////////////////////////////
+        lotNumber: draft.lotNumber,
+
+        //////////////////////////////////////////////////////
+        // 🌱 PRODUCT INFO
+        //////////////////////////////////////////////////////
         farmId: draft.farmId,
         name: draft.name,
         variety: draft.variety,
         process: draft.process,
         harvestYear: draft.harvestYear,
 
-        // 🔥 volumen real
-        totalKg: draft.parchmentKg * Number(body.conversionRate),
-        availableKg: draft.parchmentKg * Number(body.conversionRate),
+        //////////////////////////////////////////////////////
+        // 📦 VOLUME
+        //////////////////////////////////////////////////////
+        totalKg: greenKg,
+        availableKg: greenKg,
 
-        // 📊 calidad
-        scaScore: Number(body.scaScore),
+        //////////////////////////////////////////////////////
+        // 📊 QUALITY
+        //////////////////////////////////////////////////////
+        scaScore,
 
-        // 💰 pricing (temporal)
-        pricePerKg: 10,
+        //////////////////////////////////////////////////////
+        // 💰 PRICING (REAL)
+        //////////////////////////////////////////////////////
+        pricePerKg: pricing.finalPrice,
+
+        //////////////////////////////////////////////////////
+        // 📊 PRICING SNAPSHOT (CLAVE)
+        //////////////////////////////////////////////////////
+        pricingSnapshot: {
+          create: {
+            producerPricePerKg: pricing.finalPrice,
+            clientPricePerKg: pricing.finalPrice, // 🔥 luego lo ajustamos con client engine
+            marginPerKg: 0,
+            pricingVersion: "v1",
+
+            breakdown: pricing.breakdown,
+
+            context: {
+              scaScore,
+              altitude: farm?.altitude || 1700,
+              variety: draft.variety,
+              process: draft.process,
+            },
+          },
+        },
       },
     });
 
     //////////////////////////////////////////////////////
-    // 3. UPDATE DRAFT
+    // 5. UPDATE DRAFT
     //////////////////////////////////////////////////////
 
     await prisma.producerLotDraft.update({
@@ -52,18 +127,22 @@ export async function POST(
       data: {
         status: "VERIFIED",
         greenLotId: greenLot.id,
-        conversionRate: Number(body.conversionRate),
+        conversionRate,
       },
     });
 
     //////////////////////////////////////////////////////
-    // 4. DONE
+    // 6. DONE
     //////////////////////////////////////////////////////
 
     return Response.json(greenLot);
 
   } catch (err) {
-    console.error(err);
-    return Response.json({ error: "Failed to verify lot" }, { status: 500 });
+    console.error("VERIFY LOT ERROR:", err);
+
+    return Response.json(
+      { error: "Failed to verify lot" },
+      { status: 500 }
+    );
   }
 }

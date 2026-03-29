@@ -1,0 +1,200 @@
+Date : 2026-03-30 00:59:19
+Directory : c:\Users\BG420\coffee-platform
+Total : 85 files,  3582 codes, 650 comments, 801 blanks, all 5033 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| TypeScript     |         53 |      1,483 |        460 |        493 |      2,436 |
+| TypeScript JSX |         24 |      1,459 |        149 |        284 |      1,892 |
+| JSON           |          2 |        549 |          0 |          0 |        549 |
+| MS SQL         |          5 |         73 |         35 |         17 |        125 |
+| PostCSS        |          1 |         18 |          6 |          7 |         31 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                  | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                     |         85 |      3,582 |        650 |        801 |      5,033 |
+| . (Files)                                                                                             |          2 |        549 |          0 |          0 |        549 |
+| app                                                                                                   |         41 |      2,094 |        317 |        487 |      2,898 |
+| app (Files)                                                                                           |          2 |         23 |          6 |          7 |         36 |
+| app\api                                                                                               |         21 |        810 |        180 |        241 |      1,231 |
+| app\api\auth                                                                                          |          2 |         17 |          9 |          9 |         35 |
+| app\api\auth\login                                                                                    |          1 |          7 |          9 |          5 |         21 |
+| app\api\auth\verify                                                                                   |          1 |         10 |          0 |          4 |         14 |
+| app\api\company                                                                                       |          2 |         15 |          4 |          6 |         25 |
+| app\api\company\me                                                                                    |          1 |         11 |          2 |          3 |         16 |
+| app\api\company\update                                                                                |          1 |          4 |          2 |          3 |          9 |
+| app\api\contracts                                                                                     |          5 |        237 |         53 |         70 |        360 |
+| app\api\contracts (Files)                                                                             |          1 |          0 |          0 |          3 |          3 |
+| app\api\contracts\create                                                                              |          1 |         12 |         -9 |         -4 |         -1 |
+| app\api\contracts\create-payment-session                                                              |          1 |         57 |          7 |         14 |         78 |
+| app\api\contracts\send-otp                                                                            |          1 |         74 |         25 |         26 |        125 |
+| app\api\contracts\verify-otp                                                                          |          1 |         94 |         30 |         31 |        155 |
+| app\api\partner                                                                                       |          3 |        126 |         46 |         40 |        212 |
+| app\api\partner\lots                                                                                  |          3 |        126 |         46 |         40 |        212 |
+| app\api\partner\lots (Files)                                                                          |          1 |         26 |          7 |          8 |         41 |
+| app\api\partner\lots\[id]                                                                             |          2 |        100 |         39 |         32 |        171 |
+| app\api\partner\lots\[id] (Files)                                                                     |          1 |         18 |          0 |          5 |         23 |
+| app\api\partner\lots\[id]\verify                                                                      |          1 |         82 |         39 |         27 |        148 |
+| app\api\place-details                                                                                 |          1 |         59 |         12 |         24 |         95 |
+| app\api\places                                                                                        |          1 |         29 |          0 |          4 |         33 |
+| app\api\pricing                                                                                       |          2 |        104 |         19 |         22 |        145 |
+| app\api\pricing\client                                                                                |          1 |         37 |          1 |          5 |         43 |
+| app\api\pricing\client\preview                                                                        |          1 |         37 |          1 |          5 |         43 |
+| app\api\pricing\producer                                                                              |          1 |         67 |         18 |         17 |        102 |
+| app\api\pricing\producer\preview                                                                      |          1 |         67 |         18 |         17 |        102 |
+| app\api\producer                                                                                      |          2 |         64 |          5 |         12 |         81 |
+| app\api\producer\lot-draft                                                                            |          2 |         64 |          5 |         12 |         81 |
+| app\api\producer\lot-draft (Files)                                                                    |          1 |         46 |          3 |         10 |         59 |
+| app\api\producer\lot-draft\[id]                                                                       |          1 |         18 |          2 |          2 |         22 |
+| app\api\producer\lot-draft\[id]\send-to-lab                                                           |          1 |         18 |          2 |          2 |         22 |
+| app\api\signature-legacy                                                                              |          1 |          7 |          1 |          5 |         13 |
+| app\api\signature-legacy\sign                                                                         |          1 |          7 |          1 |          5 |         13 |
+| app\api\stripe                                                                                        |          1 |        106 |         22 |         34 |        162 |
+| app\api\stripe\webhook                                                                                |          1 |        106 |         22 |         34 |        162 |
+| app\api\user                                                                                          |          1 |         46 |          9 |         15 |         70 |
+| app\api\user\set-role                                                                                 |          1 |         46 |          9 |         15 |         70 |
+| app\contract                                                                                          |          7 |        297 |         52 |         76 |        425 |
+| app\contract\create                                                                                   |          3 |         52 |          6 |         -2 |         56 |
+| app\contract\payment                                                                                  |          2 |         83 |          3 |         21 |        107 |
+| app\contract\verify-otp                                                                               |          2 |        162 |         43 |         57 |        262 |
+| app\onboarding                                                                                        |          2 |        464 |         21 |         85 |        570 |
+| app\onboarding\profile                                                                                |          1 |        413 |         18 |         68 |        499 |
+| app\onboarding\role                                                                                   |          1 |         51 |          3 |         17 |         71 |
+| app\platform                                                                                          |          8 |        519 |         64 |        101 |        684 |
+| app\platform (Files)                                                                                  |          1 |         -3 |          1 |        -15 |        -17 |
+| app\platform\client                                                                                   |          1 |         14 |          0 |          3 |         17 |
+| app\platform\partner                                                                                  |          3 |        215 |         31 |         55 |        301 |
+| app\platform\partner (Files)                                                                          |          1 |         27 |          5 |         10 |         42 |
+| app\platform\partner\lots                                                                             |          2 |        188 |         26 |         45 |        259 |
+| app\platform\partner\lots (Files)                                                                     |          1 |         72 |          9 |         17 |         98 |
+| app\platform\partner\lots\[id]                                                                        |          1 |        116 |         17 |         28 |        161 |
+| app\platform\producer                                                                                 |          3 |        293 |         32 |         58 |        383 |
+| app\platform\producer (Files)                                                                         |          1 |          6 |          0 |          3 |          9 |
+| app\platform\producer\lots                                                                            |          2 |        287 |         32 |         55 |        374 |
+| app\platform\producer\lots (Files)                                                                    |          1 |        110 |         13 |         23 |        146 |
+| app\platform\producer\lots\new                                                                        |          1 |        177 |         19 |         32 |        228 |
+| app\sign                                                                                              |          1 |        -19 |         -6 |        -23 |        -48 |
+| app\sign\[token]                                                                                      |          1 |        -19 |         -6 |        -23 |        -48 |
+| prisma                                                                                                |          5 |         73 |         35 |         17 |        125 |
+| prisma\migrations                                                                                     |          5 |         73 |         35 |         17 |        125 |
+| prisma\migrations\20260325135619_contract_status_upgrade                                              |          1 |          9 |          7 |          1 |         17 |
+| prisma\migrations\20260325233803_add_pricing_engine                                                   |          1 |         33 |         13 |          9 |         55 |
+| prisma\migrations\20260326025020_add_business_fields                                                  |          1 |          2 |          1 |          1 |          4 |
+| prisma\migrations\20260328182314_                                                                     |          1 |         12 |         12 |          3 |         27 |
+| prisma\migrations\20260329152000_fix_enums_clean                                                      |          1 |         17 |          2 |          3 |         22 |
+| src                                                                                                   |         37 |        866 |        298 |        297 |      1,461 |
+| src\clientLayer                                                                                       |          1 |         35 |         18 |         19 |         72 |
+| src\clientLayer\layer                                                                                 |          1 |         35 |         18 |         19 |         72 |
+| src\components                                                                                        |          5 |        193 |         18 |         45 |        256 |
+| src\components\platform                                                                               |          5 |        193 |         18 |         45 |        256 |
+| src\engine                                                                                            |         29 |        582 |        235 |        204 |      1,021 |
+| src\engine (Files)                                                                                    |          6 |     -1,864 |       -953 |       -978 |     -3,795 |
+| src\engine\core                                                                                       |          6 |      1,864 |        953 |        978 |      3,795 |
+| src\engine\pricing                                                                                    |         17 |        582 |        235 |        204 |      1,021 |
+| src\engine\pricing\client                                                                             |          2 |        128 |         72 |         53 |        253 |
+| src\engine\pricing\costs                                                                              |          4 |        118 |         52 |         38 |        208 |
+| src\engine\pricing\modifiers                                                                          |          8 |        167 |         69 |         68 |        304 |
+| src\engine\pricing\modifiers (Files)                                                                  |          2 |         85 |         33 |         33 |        151 |
+| src\engine\pricing\modifiers\producer                                                                 |          6 |         82 |         36 |         35 |        153 |
+| src\engine\pricing\producer                                                                           |          2 |        122 |         18 |         26 |        166 |
+| src\engine\pricing\roasted                                                                            |          1 |         47 |         24 |         19 |         90 |
+| src\lib                                                                                               |          1 |          6 |          0 |          2 |          8 |
+| src\services                                                                                          |          1 |         50 |         27 |         27 |        104 |
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                              | language       | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| c:\Users\BG420\coffee-platform\app\api\auth\login\route.ts                                            | TypeScript     |          7 |          9 |          5 |         21 |
+| c:\Users\BG420\coffee-platform\app\api\auth\verify\route.ts                                           | TypeScript     |         10 |          0 |          4 |         14 |
+| c:\Users\BG420\coffee-platform\app\api\company\me\route.ts                                            | TypeScript     |         11 |          2 |          3 |         16 |
+| c:\Users\BG420\coffee-platform\app\api\company\update\route.ts                                        | TypeScript     |          4 |          2 |          3 |          9 |
+| c:\Users\BG420\coffee-platform\app\api\contracts\create-payment-session\route.ts                      | TypeScript     |         57 |          7 |         14 |         78 |
+| c:\Users\BG420\coffee-platform\app\api\contracts\create\route.ts                                      | TypeScript     |         12 |         -9 |         -4 |         -1 |
+| c:\Users\BG420\coffee-platform\app\api\contracts\route.ts                                             | TypeScript     |          0 |          0 |          3 |          3 |
+| c:\Users\BG420\coffee-platform\app\api\contracts\send-otp\route.ts                                    | TypeScript     |         74 |         25 |         26 |        125 |
+| c:\Users\BG420\coffee-platform\app\api\contracts\verify-otp\route.ts                                  | TypeScript     |         94 |         30 |         31 |        155 |
+| c:\Users\BG420\coffee-platform\app\api\partner\lots\[id]\route.ts                                     | TypeScript     |         18 |          0 |          5 |         23 |
+| c:\Users\BG420\coffee-platform\app\api\partner\lots\[id]\verify\route.ts                              | TypeScript     |         82 |         39 |         27 |        148 |
+| c:\Users\BG420\coffee-platform\app\api\partner\lots\route.ts                                          | TypeScript     |         26 |          7 |          8 |         41 |
+| c:\Users\BG420\coffee-platform\app\api\place-details\route.ts                                         | TypeScript     |         59 |         12 |         24 |         95 |
+| c:\Users\BG420\coffee-platform\app\api\places\route.ts                                                | TypeScript     |         29 |          0 |          4 |         33 |
+| c:\Users\BG420\coffee-platform\app\api\pricing\client\preview\route.ts                                | TypeScript     |         37 |          1 |          5 |         43 |
+| c:\Users\BG420\coffee-platform\app\api\pricing\producer\preview\route.ts                              | TypeScript     |         67 |         18 |         17 |        102 |
+| c:\Users\BG420\coffee-platform\app\api\producer\lot-draft\[id]\send-to-lab\route.ts                   | TypeScript     |         18 |          2 |          2 |         22 |
+| c:\Users\BG420\coffee-platform\app\api\producer\lot-draft\route.ts                                    | TypeScript     |         46 |          3 |         10 |         59 |
+| c:\Users\BG420\coffee-platform\app\api\signature-legacy\sign\route.ts                                 | TypeScript     |          7 |          1 |          5 |         13 |
+| c:\Users\BG420\coffee-platform\app\api\stripe\webhook\route.ts                                        | TypeScript     |        106 |         22 |         34 |        162 |
+| c:\Users\BG420\coffee-platform\app\api\user\set-role\route.ts                                         | TypeScript     |         46 |          9 |         15 |         70 |
+| c:\Users\BG420\coffee-platform\app\contract\create\ContractCreateContent.tsx                          | TypeScript JSX |          1 |          0 |          1 |          2 |
+| c:\Users\BG420\coffee-platform\app\contract\create\step2Supply.tsx                                    | TypeScript JSX |         31 |         -8 |        -16 |          7 |
+| c:\Users\BG420\coffee-platform\app\contract\create\step3Preview.tsx                                   | TypeScript JSX |         20 |         14 |         13 |         47 |
+| c:\Users\BG420\coffee-platform\app\contract\payment\PaymentClient.tsx                                 | TypeScript JSX |         66 |          3 |         17 |         86 |
+| c:\Users\BG420\coffee-platform\app\contract\payment\page.tsx                                          | TypeScript JSX |         17 |          0 |          4 |         21 |
+| c:\Users\BG420\coffee-platform\app\contract\verify-otp\VerifyOtpClient.tsx                            | TypeScript JSX |        149 |         40 |         46 |        235 |
+| c:\Users\BG420\coffee-platform\app\contract\verify-otp\page.tsx                                       | TypeScript JSX |         13 |          3 |         11 |         27 |
+| c:\Users\BG420\coffee-platform\app\globals.css                                                        | PostCSS        |         18 |          6 |          7 |         31 |
+| c:\Users\BG420\coffee-platform\app\layout.tsx                                                         | TypeScript JSX |          5 |          0 |          0 |          5 |
+| c:\Users\BG420\coffee-platform\app\onboarding\profile\page.tsx                                        | TypeScript JSX |        413 |         18 |         68 |        499 |
+| c:\Users\BG420\coffee-platform\app\onboarding\role\page.tsx                                           | TypeScript JSX |         51 |          3 |         17 |         71 |
+| c:\Users\BG420\coffee-platform\app\platform\client\page.tsx                                           | TypeScript JSX |         14 |          0 |          3 |         17 |
+| c:\Users\BG420\coffee-platform\app\platform\page.tsx                                                  | TypeScript JSX |         -3 |          1 |        -15 |        -17 |
+| c:\Users\BG420\coffee-platform\app\platform\partner\lots\[id]\page.tsx                                | TypeScript JSX |        116 |         17 |         28 |        161 |
+| c:\Users\BG420\coffee-platform\app\platform\partner\lots\page.tsx                                     | TypeScript JSX |         72 |          9 |         17 |         98 |
+| c:\Users\BG420\coffee-platform\app\platform\partner\page.tsx                                          | TypeScript JSX |         27 |          5 |         10 |         42 |
+| c:\Users\BG420\coffee-platform\app\platform\producer\lots\new\page.tsx                                | TypeScript JSX |        177 |         19 |         32 |        228 |
+| c:\Users\BG420\coffee-platform\app\platform\producer\lots\page.tsx                                    | TypeScript JSX |        110 |         13 |         23 |        146 |
+| c:\Users\BG420\coffee-platform\app\platform\producer\page.tsx                                         | TypeScript JSX |          6 |          0 |          3 |          9 |
+| c:\Users\BG420\coffee-platform\app\sign\[token]\page.tsx                                              | TypeScript JSX |        -19 |         -6 |        -23 |        -48 |
+| c:\Users\BG420\coffee-platform\package-lock.json                                                      | JSON           |        545 |          0 |          0 |        545 |
+| c:\Users\BG420\coffee-platform\package.json                                                           | JSON           |          4 |          0 |          0 |          4 |
+| c:\Users\BG420\coffee-platform\prisma\migrations\20260325135619_contract_status_upgrade\migration.sql | MS SQL         |          9 |          7 |          1 |         17 |
+| c:\Users\BG420\coffee-platform\prisma\migrations\20260325233803_add_pricing_engine\migration.sql      | MS SQL         |         33 |         13 |          9 |         55 |
+| c:\Users\BG420\coffee-platform\prisma\migrations\20260326025020_add_business_fields\migration.sql     | MS SQL         |          2 |          1 |          1 |          4 |
+| c:\Users\BG420\coffee-platform\prisma\migrations\20260328182314_\migration.sql                        | MS SQL         |         12 |         12 |          3 |         27 |
+| c:\Users\BG420\coffee-platform\prisma\migrations\20260329152000_fix_enums_clean\migration.sql         | MS SQL         |         17 |          2 |          3 |         22 |
+| c:\Users\BG420\coffee-platform\src\clientLayer\layer\contractPricing.ts                               | TypeScript     |         35 |         18 |         19 |         72 |
+| c:\Users\BG420\coffee-platform\src\components\platform\ClientContractsPanel.tsx                       | TypeScript JSX |          2 |          2 |          0 |          4 |
+| c:\Users\BG420\coffee-platform\src\components\platform\ClientOverviewPanel.tsx                        | TypeScript JSX |         65 |          9 |         16 |         90 |
+| c:\Users\BG420\coffee-platform\src\components\platform\Dashboard.tsx                                  | TypeScript JSX |       -169 |         -8 |        -19 |       -196 |
+| c:\Users\BG420\coffee-platform\src\components\platform\PlatformHeader.tsx                             | TypeScript JSX |        209 |         10 |         18 |        237 |
+| c:\Users\BG420\coffee-platform\src\components\platform\ProducerDashboard.tsx                          | TypeScript JSX |         86 |          5 |         30 |        121 |
+| c:\Users\BG420\coffee-platform\src\engine\adaptiveStress.ts                                           | TypeScript     |        -27 |        -10 |        -10 |        -47 |
+| c:\Users\BG420\coffee-platform\src\engine\core\adaptiveStress.ts                                      | TypeScript     |         27 |         10 |         10 |         47 |
+| c:\Users\BG420\coffee-platform\src\engine\core\engineOperational.ts                                   | TypeScript     |         77 |         41 |         60 |        178 |
+| c:\Users\BG420\coffee-platform\src\engine\core\modelPhysics.ts                                        | TypeScript     |         78 |         67 |         43 |        188 |
+| c:\Users\BG420\coffee-platform\src\engine\core\runtime.ts                                             | TypeScript     |        829 |        510 |        505 |      1,844 |
+| c:\Users\BG420\coffee-platform\src\engine\core\simulationReal.ts                                      | TypeScript     |        764 |        319 |        340 |      1,423 |
+| c:\Users\BG420\coffee-platform\src\engine\core\useEngineBridge.ts                                     | TypeScript     |         89 |          6 |         20 |        115 |
+| c:\Users\BG420\coffee-platform\src\engine\engineOperational.ts                                        | TypeScript     |        -77 |        -41 |        -60 |       -178 |
+| c:\Users\BG420\coffee-platform\src\engine\modelPhysics.ts                                             | TypeScript     |        -78 |        -67 |        -43 |       -188 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\client\calculatePricing.ts                          | TypeScript     |         91 |         69 |         51 |        211 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\client\pricingTable.ts                              | TypeScript     |         37 |          3 |          2 |         42 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\costs\calculateCosts.ts                             | TypeScript     |         49 |         18 |         15 |         82 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\costs\costTable.ts                                  | TypeScript     |         22 |         27 |         16 |         65 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\costs\destinationCosts.ts                           | TypeScript     |         32 |          3 |          4 |         39 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\costs\originCosts.ts                                | TypeScript     |         15 |          4 |          3 |         22 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\engine.ts                                 | TypeScript     |         66 |         30 |         25 |        121 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\altitudeModifier.ts              | TypeScript     |         13 |          3 |          5 |         21 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\commodityModifier.ts             | TypeScript     |         11 |          9 |          8 |         28 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\countryModifier.ts               | TypeScript     |         16 |          6 |          6 |         28 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\demandModifier.ts                | TypeScript     |          9 |          6 |          5 |         20 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\index.ts                         | TypeScript     |         12 |          3 |          2 |         17 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\producer\varietyModifier.ts               | TypeScript     |         21 |          9 |          9 |         39 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\modifiers\types.ts                                  | TypeScript     |         19 |          3 |          8 |         30 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\producer\calculatePricing.ts                        | TypeScript     |         82 |         18 |         23 |        123 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\producer\pricingTable.ts                            | TypeScript     |         40 |          0 |          3 |         43 |
+| c:\Users\BG420\coffee-platform\src\engine\pricing\roasted\applyRoastedPricing.ts                      | TypeScript     |         47 |         24 |         19 |         90 |
+| c:\Users\BG420\coffee-platform\src\engine\runtime.ts                                                  | TypeScript     |       -829 |       -510 |       -505 |     -1,844 |
+| c:\Users\BG420\coffee-platform\src\engine\simulationReal.ts                                           | TypeScript     |       -764 |       -319 |       -340 |     -1,423 |
+| c:\Users\BG420\coffee-platform\src\engine\useEngineBridge.ts                                          | TypeScript     |        -89 |         -6 |        -20 |       -115 |
+| c:\Users\BG420\coffee-platform\src\lib\twilio.ts                                                      | TypeScript     |          6 |          0 |          2 |          8 |
+| c:\Users\BG420\coffee-platform\src\services\roasting.service.ts                                       | TypeScript     |         50 |         27 |         27 |        104 |
+| Total                                                                                                 |                |      3,582 |        650 |        801 |      5,033 |
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

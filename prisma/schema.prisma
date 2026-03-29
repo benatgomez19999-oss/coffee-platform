@@ -35,6 +35,12 @@ model ProducerLotDraft {
   farmId     String
 
   //////////////////////////////////////////////////////
+  // 🔢 TRACEABILITY (CRÍTICO)
+  //////////////////////////////////////////////////////
+
+  lotNumber String @unique
+
+  //////////////////////////////////////////////////////
   // 🌱 INPUT DEL PRODUCTOR
   //////////////////////////////////////////////////////
 
@@ -47,15 +53,15 @@ model ProducerLotDraft {
   // 📦 VOLUME (PERGAMINO → GREEN ESTIMATION)
   //////////////////////////////////////////////////////
 
-  parchmentKg Float   // lo que introduce el productor
+  parchmentKg Float
 
-  estimatedGreenKg Float  // calculado por sistema
+  estimatedGreenKg Float
 
   //////////////////////////////////////////////////////
   // 📊 CONVERSION TRACKING (MUY IMPORTANTE)
   //////////////////////////////////////////////////////
 
-  conversionRate Float @default(0.8) // ajustable
+  conversionRate Float @default(0.8)
 
   //////////////////////////////////////////////////////
   // 📦 STATUS
@@ -76,6 +82,7 @@ model ProducerLotDraft {
   createdAt DateTime @default(now())
 }
 
+
 //////////////////////////////////////////////////////
 // 🌱 GREEN LOT (MARKETPLACE READY)
 //////////////////////////////////////////////////////
@@ -85,7 +92,13 @@ model GreenLot {
   farmId       String
 
   // =====================================================
-  // PRODUCT INFO (VISIBLE EN MARKETPLACE)
+  // 🔢 TRACEABILITY
+  // =====================================================
+
+  lotNumber    String       @unique
+
+  // =====================================================
+  // PRODUCT INFO
   // =====================================================
 
   name         String?
@@ -96,26 +109,25 @@ model GreenLot {
   process      ProcessType
   harvestYear  Int
 
-  // 📊 CALIDAD (para pricing engine)
   scaScore     Float?
-  altitude     Int? // override farm altitude si hace falta
+  altitude     Int?
 
   // =====================================================
-  // VOLUME (CRÍTICO PARA CONTRATOS)
+  // VOLUME
   // =====================================================
 
   totalKg      Float
   availableKg  Float
 
   // =====================================================
-  // PRICING (AUTO CALCULATED)
+  // PRICING
   // =====================================================
 
   pricePerKg   Float
   currency     String       @default("EUR")
 
   // =====================================================
-  // STATUS (MARKETPLACE FLOW)
+  // STATUS
   // =====================================================
 
   status       LotStatus    @default(DRAFT)

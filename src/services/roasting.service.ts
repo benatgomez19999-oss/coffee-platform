@@ -3,12 +3,13 @@
 //////////////////////////////////////////////////////
 
 import { PrismaClient } from "@prisma/client"
-
+import { generateLotNumber } from "@/lib/generateLotNumber";
 import { eventBus } from "../events/eventBus"
 import { EVENTS } from "../events/eventTypes"
 import { ProcessType } from "@prisma/client";
 
 const prisma = new PrismaClient()
+const lotNumber = await generateLotNumber();
 
 //////////////////////////////////////////////////////
 // 🔔 EVENT LISTENERS
@@ -75,6 +76,7 @@ export async function createLotDraft(input: {
 
   const draft = await prisma.producerLotDraft.create({
     data: {
+      lotNumber,
       producerId: input.producerId,
       farmId: input.farmId,
       name: input.name,

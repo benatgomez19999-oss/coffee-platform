@@ -156,6 +156,14 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
         </div>
 
       </div>
+      <a
+  href={`/platform/partner/lots/${params.id}/label`}
+  target="_blank"
+  className="bg-black text-white px-4 py-2 rounded"
+>
+  Print Label
+</a>
+<body className="print:bg-white"></body>
     </div>
   );
 }

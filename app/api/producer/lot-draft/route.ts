@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
+import { generateLotNumber } from "@/lib/generateLotNumber";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,8 +21,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const lotNumber = await generateLotNumber();
+
 //////////////////////////////////////////////////////
-// ✅ POST (ESTO ES LO QUE TE FALTABA)
+// ✅ POST 
 //////////////////////////////////////////////////////
 
 export async function POST(req: NextRequest) {
@@ -33,7 +36,8 @@ export async function POST(req: NextRequest) {
 
     const draft = await prisma.producerLotDraft.create({
       data: {
-        producerId: "temp-producer", // ⚠️ luego lo conectamos con auth
+        lotNumber,
+        producerId: "temp-producer", 
         farmId: body.farmId,
         name: body.name,
         variety: body.variety,
