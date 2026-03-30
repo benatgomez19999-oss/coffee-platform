@@ -160,6 +160,7 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
         </div>
 
       </div>
+      
       {lot.status === "VERIFIED" && (
   <a
     href={`/platform/partner/lots/${params.id}/label`}
@@ -170,7 +171,6 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
   </a>
 )}
 
-<body className="print:bg-white"></body>
     </div>
   );
 }

@@ -1,20 +1,24 @@
-import { PrismaClient } from "@prisma/client"
+// =====================================================
+// INVENTORY SERVICE
+//
+// Gestión de stock físico:
+// =====================================================
 
-import { eventBus } from "../events/eventBus"
-import { EVENTS } from "../events/eventTypes"
+import { prisma } from "@/database/prisma"
 
-eventBus.on(EVENTS.ROAST_BATCH_COMPLETED, (payload) => {
-
-  console.log("Roast batch completed → inventory update", payload)
-
-})
-
-const prisma = new PrismaClient()
+// =====================================================
+// RESERVE ROASTED BAGS
+// =====================================================
 
 export async function reserveBags(
   roastedBatchId: string,
   bagsRequested: number
 ) {
+
+  //////////////////////////////////////////////////////
+  // FETCH BATCH
+  //////////////////////////////////////////////////////
+
   const batch = await prisma.roastedBatch.findUnique({
     where: { id: roastedBatchId },
   })
@@ -23,9 +27,17 @@ export async function reserveBags(
     throw new Error("Roasted batch not found")
   }
 
+  //////////////////////////////////////////////////////
+  // VALIDATION
+  //////////////////////////////////////////////////////
+
   if (batch.bagCount < bagsRequested) {
     throw new Error("Not enough bags available")
   }
+
+  //////////////////////////////////////////////////////
+  // UPDATE
+  //////////////////////////////////////////////////////
 
   return prisma.roastedBatch.update({
     where: { id: roastedBatchId },

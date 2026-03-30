@@ -17,6 +17,7 @@ import { usePathname } from "next/navigation"
 
 
 
+
 // ENGINE
 import { stepSimulationReal } from "@/engine/core/simulationReal";
 import {
@@ -42,6 +43,7 @@ export default function Dashboard({ user }: { user: any }) {
 const router = useRouter()
 const [contracts, setContracts] = useState<any[]>([])
 const pathname = usePathname()
+const [realSupply, setRealSupply] = useState(0)
 
 
 
@@ -91,6 +93,25 @@ useEffect(() => {
 
   loadContracts()
 
+}, [])
+
+useEffect(() => {
+  const loadSupply = async () => {
+    try {
+      const res = await fetch("/api/supply")
+
+      if (!res.ok) return
+
+      const data = await res.json()
+
+      setRealSupply(data.totalKg)
+
+    } catch (err) {
+      console.error("Error loading supply", err)
+    }
+  }
+
+  loadSupply()
 }, [])
 
 useEffect(() => {
@@ -357,16 +378,7 @@ const unifiedPressure =
 // DERIVED — TOTAL AVAILABLE CAPACITY
 // ======================================================
 
-const totalAvailable = useMemo(() => {
-
-  if (!safeEngineState.regions?.length) return 0;
-
-  return safeEngineState.regions.reduce(
-    (sum, r) => sum + r.availableKg,
-    0
-  );
-
-}, [safeEngineState.regions]);
+const totalAvailable = realSupply
 
 
 // ======================================================

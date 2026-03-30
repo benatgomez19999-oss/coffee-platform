@@ -1,107 +1,84 @@
-// =====================================================
-// IMPORTS
-// =====================================================
-
-import { PrismaClient } from "@prisma/client"
-import { eventBus } from "../events/eventBus"
-import { EVENTS } from "../events/eventTypes"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/database/prisma"
+import { eventBus } from "@/events/core/eventBus"
+import { EVENTS } from "@/events/core/eventTypes"
 
 // =====================================================
-// CREATE ROAST BATCH
-// =====================================================
-// Registra un tueste de café verde y genera el batch tostado
-// También calcula automáticamente:
-// - yield del tueste
-// - pérdida de peso
-// - número de bolsas de 20kg
+// CONTRACT SERVICE
+//
+// Fuente única de verdad para:
+// — creación de contratos
+// — (futuro) modificaciones
+//
+// Filosofía:
+// — determinista
+// — sin lógica de transporte (no HTTP)
+// — emite eventos
 // =====================================================
 
-export async function createRoastBatch(data: {
-  greenLotId: string
-  roastProfileId?: string
-  inputKg: number
-  outputKg: number
-  roastedAt: Date
+// =====================================================
+// CREATE CONTRACT
+// =====================================================
+
+export async function createContractService(input: {
+
+  companyId: string
+  monthlyVolumeKg: number
+  durationMonths: number
+
 }) {
 
-  const { greenLotId, roastProfileId, inputKg, outputKg, roastedAt } = data
+  //////////////////////////////////////////////////////
+  // 🧠 CALCULATIONS
+  //////////////////////////////////////////////////////
 
-  // =====================================================
-  // CONSTANTS
-  // =====================================================
+  const pricePerBag = 10
+  const bagSizeKg = 20
 
-  const BAG_SIZE = 20
+  const bagsPerDelivery =
+    Math.round(input.monthlyVolumeKg / bagSizeKg)
 
-  // =====================================================
-  // CALCULATE BAG COUNT
-  // =====================================================
+  const monthlyPrice =
+    bagsPerDelivery * pricePerBag
 
-  const bagCount = Math.floor(outputKg / BAG_SIZE)
+  //////////////////////////////////////////////////////
+  // 💾 CREATE CONTRACT
+  //////////////////////////////////////////////////////
 
-  // =====================================================
-  // CALCULATE YIELD
-  // =====================================================
-  // ejemplo:
-  // 120kg green → 102kg roasted
-  // yield = 85%
-  // loss = 15%
-  // =====================================================
-
-  const yieldPercent = (outputKg / inputKg) * 100
-  const lossPercent = 100 - yieldPercent
-
-  // =====================================================
-  // CREATE ROAST BATCH
-  // =====================================================
-
-  const roastBatch = await prisma.roastBatch.create({
+  const contract = await prisma.contract.create({
     data: {
-      greenLotId,
-      roastProfileId,
-      inputKg,
-      outputKg,
-      yieldPercent,
-      lossPercent,
-      roastedAt,
-    },
+
+      companyId: input.companyId,
+
+      monthlyVolumeKg: input.monthlyVolumeKg,
+      durationMonths: input.durationMonths,
+      remainingMonths: input.durationMonths,
+
+      pricePerBag,
+      bagSizeKg,
+      bagsPerDelivery,
+      monthlyPrice,
+
+      startDate: new Date(),
+
+      status: "AWAITING_SIGNATURE",
+
+    }
   })
 
-  // =====================================================
-  // CREATE ROASTED BATCH (INVENTORY)
-  // =====================================================
+  //////////////////////////////////////////////////////
+  // 📡 EVENT EMISSION
+  //////////////////////////////////////////////////////
 
-  const roastedBatch = await prisma.roastedBatch.create({
-    data: {
-      roastBatchId: roastBatch.id,
-      quantityKg: outputKg,
-      bagSizeKg: BAG_SIZE,
-      bagCount,
-    },
+  eventBus.emit(EVENTS.CONTRACT_CREATED, {
+
+    contractId: contract.id,
+    companyId: input.companyId,
+
   })
 
-  // =====================================================
-  // EMIT EVENT
-  // =====================================================
-  // Esto permitirá que otros servicios reaccionen:
-  // - inventory
-  // - analytics
-  // - websocket dashboards
-  // =====================================================
+  //////////////////////////////////////////////////////
+  // OUTPUT
+  //////////////////////////////////////////////////////
 
-  eventBus.emit("roast_batch.completed", {
-    roastBatchId: roastBatch.id,
-    roastedBatchId: roastedBatch.id,
-    bagCount,
-  })
-
-  // =====================================================
-  // RETURN RESULT
-  // =====================================================
-
-  return {
-    roastBatch,
-    roastedBatch,
-  }
+  return contract
 }

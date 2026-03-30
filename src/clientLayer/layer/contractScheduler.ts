@@ -8,8 +8,8 @@ import { submitOperationalRequest } from "@/engine/core/runtime"
 // IMPORT EVENTS 
 // =====================================================
 
-import { eventBus } from "@/events/eventBus"
-import { EVENTS } from "@/events/eventTypes"
+import { eventBus } from "@/events/core/eventBus"
+import { EVENTS } from "@/events/core/eventTypes"
 
 // =====================================================
 // DEMO TIME SCALE

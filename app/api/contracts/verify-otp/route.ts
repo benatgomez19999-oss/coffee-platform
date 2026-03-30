@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import { ContractStatus } from "@prisma/client"
+import { eventBus } from "@/events/core/eventBus"
+import { EVENTS } from "@/events/core/eventTypes"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -133,6 +135,15 @@ export async function POST(req: Request) {
       }
 
     })
+
+//////////////////////////////////////////////////////
+// 📡 EVENT — CONTRACT SIGNED
+// Momento real de activación del contrato
+//////////////////////////////////////////////////////
+
+eventBus.emit(EVENTS.CONTRACT_SIGNED, {
+  contractId
+})
 
     // =====================================================
     // SUCCESS

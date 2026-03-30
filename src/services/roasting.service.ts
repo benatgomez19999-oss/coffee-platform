@@ -4,8 +4,8 @@
 
 import { PrismaClient } from "@prisma/client"
 import { generateLotNumber } from "@/lib/generateLotNumber";
-import { eventBus } from "../events/eventBus"
-import { EVENTS } from "../events/eventTypes"
+import { eventBus } from "../events/core/eventBus"
+import { EVENTS } from "../events/core/eventTypes"
 import { ProcessType } from "@prisma/client";
 
 const prisma = new PrismaClient()

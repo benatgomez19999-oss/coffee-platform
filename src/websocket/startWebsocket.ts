@@ -2,7 +2,7 @@
 // START WEBSOCKET
 // =====================================================
 
-import "@/events/contractEventBridge"
+import "@/events/bridges/contractEventBridge"
 
 import { initWebsocketServer }
 from "./websocketServer"

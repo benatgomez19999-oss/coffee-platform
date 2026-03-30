@@ -2,10 +2,10 @@ import { getContracts, saveContracts }
 from "./contractStore"
 
 import { eventBus }
-from "@/events/eventBus"
+from "@/events/core/eventBus"
 
 import { EVENTS }
-from "@/events/eventTypes"
+from "@/events/core/eventTypes"
 
 
 // =====================================================

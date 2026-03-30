@@ -5,10 +5,10 @@
 import { WebSocketServer } from "ws"
 
 import { eventBus }
-from "@/events/eventBus"
+from "@/events/core/eventBus"
 
 import { EVENTS }
-from "@/events/eventTypes"
+from "@/events/core/eventTypes"
 
 
 // =====================================================
