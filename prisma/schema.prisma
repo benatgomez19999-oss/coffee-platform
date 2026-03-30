@@ -73,7 +73,8 @@ model ProducerLotDraft {
   // 🔗 RELATION (cuando se valida)
   //////////////////////////////////////////////////////
 
-  greenLotId String?
+    greenLot   GreenLot? @relation(fields: [greenLotId], references: [id])
+    greenLotId String? @unique
 
   //////////////////////////////////////////////////////
   // 🕓 META
@@ -141,6 +142,8 @@ model GreenLot {
   farm         Farm         @relation(fields: [farmId], references: [id])
   purchases    Purchase[]
   roastBatches RoastBatch[]
+
+  producerDraft ProducerLotDraft?
 
   // 💰 PRICING SNAPSHOT (1:1)
   pricingSnapshot PricingSnapshot?
