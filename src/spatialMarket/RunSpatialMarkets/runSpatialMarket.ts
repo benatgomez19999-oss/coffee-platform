@@ -23,7 +23,7 @@
 import type { EngineState } from "@/engine/core/runtime"
 
 import { buildRegionalMarkets }
-from "@/spatialMarket/registries/regionRegistry"
+from "@/spatialMarket/regions/regionMarketBuilder"
 
 import { buildLogisticsNetwork }
 from "@/spatialMarket/logistics/logisticsNetwork"
