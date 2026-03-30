@@ -1,0 +1,1 @@
+export const HEMISPHERE_REGISTRY = {}

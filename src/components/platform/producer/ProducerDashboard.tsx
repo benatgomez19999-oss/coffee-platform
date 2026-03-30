@@ -1,5 +1,5 @@
 "use client"
-import PlatformHeader from "@/components/platform/PlatformHeader"
+import PlatformHeader from "@/components/shared/PlatformHeader"
 import { useRouter } from "next/navigation"
 
 export default function ProducerDashboard({ user }: { user: any }) {

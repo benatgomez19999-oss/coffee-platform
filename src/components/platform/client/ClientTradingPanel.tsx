@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import type { EngineState } from "@/engine/core/runtime"
 import { submitOperationalRequest } from "@/engine/core/runtime"
 import { acceptSuggestedVolume } from "@/engine/core/runtime"
-
-
+import RegionsSupplyChart from "@/components/shared/RegionsSupplyChart"
 
 import {
   evaluateContractSuggestion
@@ -15,10 +14,6 @@ import { selectContract, getSelectedContract }
 from "@/clientLayer/layer/contractController"
 
 
-
-
-
-
 type Props = {
   engineState: EngineState
   updateContext: (partial: any) => void
@@ -26,17 +21,43 @@ type Props = {
 
 export default function LeftPanel({ engineState, updateContext }: Props) {
 
-  const { liveDecision, regions } = engineState
+  const { liveDecision } = engineState
 
   // =====================================================
-  // TOTAL AVAILABLE
+  // REAL SUPPLY (BACKEND SOURCE OF TRUTH)
   // =====================================================
 
-  const totalAvailable =
-    regions?.reduce((sum, r) => sum + r.availableKg, 0) ?? 0
+  const [realSupply, setRealSupply] = useState(0)
+
+  useEffect(() => {
+
+    const loadSupply = async () => {
+      try {
+        const res = await fetch("/api/supply")
+
+        if (!res.ok) return
+
+        const data = await res.json()
+
+        setRealSupply(data.totalKg ?? 0)
+
+      } catch (err) {
+        console.error("Supply error", err)
+      }
+    }
+
+    loadSupply()
+
+  }, [])
 
   // =====================================================
-  // DECISION ZONES
+  // TOTAL AVAILABLE (REAL, NO SIMULATION)
+  // =====================================================
+
+  const totalAvailable = realSupply
+
+  // =====================================================
+  // DECISION ZONES (ENGINE DRIVEN BUT REAL SCALE)
   // =====================================================
 
   const zones = liveDecision?.decisionZones
@@ -52,10 +73,12 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
       : totalAvailable * 0.9
 
   const scaleMax =
-    zones?.maxLimit ?? totalAvailable
+    zones?.maxLimit && zones.maxLimit > 0
+      ? zones.maxLimit
+      : totalAvailable
 
   // =====================================================
-  // CLAMPED ZONES
+  // CLAMPED ZONES (SAFETY BOUNDS)
   // =====================================================
 
   const g = Math.max(0, Math.min(greenLimit, scaleMax))
@@ -81,7 +104,7 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
   }, [scaleMax])
 
   // =====================================================
-  // ENGINE SIGNAL
+  // ENGINE SIGNAL (REQUESTED VOLUME → ENGINE)
   // =====================================================
 
   useEffect(() => {
@@ -95,10 +118,12 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
   // =====================================================
 
   useEffect(() => {
-  const selected = getSelectedContract()
-  const s = evaluateContractSuggestion(volume, selected)
-  setSuggestion(s)
-}, [volume])
+
+    const selected = getSelectedContract()
+    const s = evaluateContractSuggestion(volume, selected)
+    setSuggestion(s)
+
+  }, [volume])
 
   // =====================================================
   // UI COLORS
@@ -134,17 +159,17 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
 
   function handleConfirm() {
 
-  // =====================================================
-  // OPERATIONAL REQUEST
-  // El sistema decide GREEN / YELLOW / RED
-  // =====================================================
+    // =====================================================
+    // OPERATIONAL REQUEST
+    // El sistema decide GREEN / YELLOW / RED
+    // =====================================================
 
-  submitOperationalRequest(
-    Math.round(volume),
-    "manual"
-  )
+    submitOperationalRequest(
+      Math.round(volume),
+      "manual"
+    )
 
-}
+  }
 
     
 
@@ -509,49 +534,7 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
         }}>
           Network Capacity Overview
         </div>
-
-        {regions?.map((r, i) => {
-
-          const ratio = r.availableKg / r.capacityKg
-
-          const color =
-            ratio > 0.5
-              ? "#4ade80"
-              : ratio > 0.25
-              ? "#facc15"
-              : "#f87171"
-
-          return (
-            <div key={i} style={{ marginBottom: 18 }}>
-
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 6
-              }}>
-                <span>{r.name}</span>
-                <span style={{ color }}>
-                  {Math.round(r.availableKg)} kg
-                </span>
-              </div>
-
-              <div style={{
-                height: 6,
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.08)"
-              }}>
-                <div style={{
-                  width: `${ratio * 100}%`,
-                  height: "100%",
-                  background: color
-                }}/>
-              </div>
-
-            </div>
-          )
-
-        })}
-
+<RegionsSupplyChart engineState={engineState} />
       </div>
 
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-import ContractTimelineModal from "@/components/platform/ContractTimelineModal"
+import ContractTimelineModal from "@/components/platform/client/ContractTimelineModal"
 
 import {
   selectContract,

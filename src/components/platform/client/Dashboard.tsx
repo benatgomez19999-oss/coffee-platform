@@ -2,14 +2,14 @@
 
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import ClientTradingPanel from "@/components/platform/ClientTradingPanel"
-import ClientContractsPanel from "@/components/platform/ClientContractsPanel"
-import ClientOverviewPanel from "@/components/platform/ClientOverviewPanel"
+import ClientTradingPanel from "@/components/platform/client/ClientTradingPanel"
+import ClientContractsPanel from "@/components/platform/client/ClientContractsPanel"
+import ClientOverviewPanel from "@/components/platform/client/ClientOverviewPanel"
 import { startEngineRuntime } from "@/engine/core/runtime"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/websocket/websocketClient"
-import OnboardingWizard from "@/components/platform/OnboardingWizard"
+import OnboardingWizard from "@/components/shared/OnboardingWizard"
 import { getUserFromRequest } from "@/lib/auth"
 import Image from "next/image"
 import { usePathname } from "next/navigation"

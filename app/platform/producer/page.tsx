@@ -1,4 +1,4 @@
-import ProducerDashboard from "@/components/platform/ProducerDashboard"
+import ProducerDashboard from "@/components/platform/producer/ProducerDashboard"
 import { getUserFromRequest } from "@/lib/getUserFromRequest"
 
 export default async function ProducerPage() {

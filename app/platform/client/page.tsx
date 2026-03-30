@@ -1,4 +1,4 @@
-import Dashboard from "@/components/platform/Dashboard"
+import Dashboard from "@/components/platform/client/Dashboard"
 import { getUserFromRequest } from "@/lib/getUserFromRequest"
 
 export default async function ClientPage() {

@@ -1,0 +1,1 @@
+export const COMMODITY_REGISTRY = {}

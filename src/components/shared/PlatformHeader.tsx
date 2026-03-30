@@ -1,7 +1,7 @@
 "use client"
 import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
-import OnboardingWizard from "@/components/platform/OnboardingWizard"
+import OnboardingWizard from "@/components/shared/OnboardingWizard"
 
 export default function PlatformHeader({ user }: { user: any }) {
   const router = useRouter()
