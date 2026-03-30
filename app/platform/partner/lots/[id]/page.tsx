@@ -9,6 +9,7 @@ type LotDraft = {
   process: string;
   harvestYear: number;
   parchmentKg: number;
+  status: string; // 
 };
 
 export default function PartnerLotDetail({ params }: { params: { id: string } }) {
@@ -46,26 +47,29 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
   //////////////////////////////////////////////////////
 
   const handleVerify = async () => {
-    try {
-      await fetch(`/api/partner/lots/${params.id}/verify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sca: Number(sca),
-          aroma,
-          flavor,
-          conversion: Number(conversion),
-        }),
-      });
+  try {
+    await fetch(`/api/partner/lots/${params.id}/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        scaScore: Number(sca),
+        aroma,
+        flavor,
+        conversionRate: Number(conversion),
+      }),
+    });
 
-      alert("Lot verified (mock)");
+    alert("Lot verified ✅");
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    window.location.reload(); // 🔥 CLAVE
+
+  } catch (err) {
+    console.error(err);
+    alert("Error verifying lot");
+  }
+};
 
   //////////////////////////////////////////////////////
   // RENDER
@@ -156,13 +160,16 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
         </div>
 
       </div>
-      <a
-  href={`/platform/partner/lots/${params.id}/label`}
-  target="_blank"
-  className="bg-black text-white px-4 py-2 rounded"
->
-  Print Label
-</a>
+      {lot.status === "VERIFIED" && (
+  <a
+    href={`/platform/partner/lots/${params.id}/label`}
+    target="_blank"
+    className="bg-black text-white px-4 py-2 rounded"
+  >
+    Print Label
+  </a>
+)}
+
 <body className="print:bg-white"></body>
     </div>
   );
