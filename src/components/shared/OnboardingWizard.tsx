@@ -7,8 +7,8 @@ import { useState } from "react"
 // =====================================================
 
 type Props = {
-  user: any
   onComplete: () => void
+  role: "BUYER" | "PRODUCER"
 }
 
 type FormState = {
@@ -23,7 +23,7 @@ type FormState = {
 // COMPONENT
 // =====================================================
 
-export default function OnboardingWizard({ onComplete }: Props) {
+export default function OnboardingWizard({ onComplete, role }: Props) {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -69,38 +69,66 @@ export default function OnboardingWizard({ onComplete }: Props) {
     setStep(1)
   }
 
-  // =====================================================
-  // SUBMIT
-  // =====================================================
+//////////////////////////////////////////////////////
+// SUBMIT
+//////////////////////////////////////////////////////
 
-  const handleSubmit = async () => {
-    setLoading(true)
-    setError("")
+const handleSubmit = async () => {
+  setLoading(true)
+  setError("")
 
-    try {
-        console.log("FORM SUBMIT:", form)
-      const res = await fetch("/api/company/update", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  credentials: "include", // 🔥 CLAVE
-  body: JSON.stringify(form)
-})
+  try {
+    console.log("FORM SUBMIT:", form)
 
-      if (!res.ok) {
-        setError("Failed to save data")
-        return
-      }
+    //////////////////////////////////////////////////////
+    // 🧠 SELECT ENDPOINT SEGÚN ROLE
+    //////////////////////////////////////////////////////
 
-      onComplete()
+    const endpoint =
+      role === "PRODUCER"
+        ? "/api/onboarding/producer"
+        : "/api/company/update"
 
-    } catch {
-      setError("Network error")
-    } finally {
-      setLoading(false)
+    //////////////////////////////////////////////////////
+    // 🚀 REQUEST
+    //////////////////////////////////////////////////////
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify(form)
+    })
+
+    //////////////////////////////////////////////////////
+    // ❌ ERROR HANDLING
+    //////////////////////////////////////////////////////
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      console.error("❌ SUBMIT ERROR:", data)
+
+      setError(data?.error || "Failed to save data")
+      return
     }
+
+    //////////////////////////////////////////////////////
+    // ✅ SUCCESS
+    //////////////////////////////////////////////////////
+
+    console.log("✅ SUCCESS")
+
+    onComplete() // 🔥 CLAVE
+
+  } catch (err) {
+    console.error("❌ NETWORK ERROR:", err)
+    setError("Network error")
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">

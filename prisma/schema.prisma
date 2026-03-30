@@ -13,10 +13,21 @@ datasource db {
 
 model Producer {
   id        String   @id @default(uuid())
+
+  //////////////////////////////////////////////////////
+  // 🔥 RELACIÓN CON USER (CLAVE DEL SISTEMA)
+  //////////////////////////////////////////////////////
+  userId    String   @unique
+
   name      String
   country   String
   createdAt DateTime @default(now())
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
   farms     Farm[]
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Farm {
@@ -396,7 +407,6 @@ model User {
 
   twoFactorEnabled Boolean @default(false)
 
-  // 🔥 NUEVO
   onboardingCompleted Boolean @default(false)
 
   companyId    String?
@@ -408,6 +418,13 @@ model User {
   otpCodes OTPCode[]
 
   @@index([companyId])
+
+  //////////////////////////////////////////////////////
+  //  RELACIÓN CON PRODUCER
+  //////////////////////////////////////////////////////
+
+  producer Producer?
+  
 }
 
 //////////////////////////////////////////////////////
