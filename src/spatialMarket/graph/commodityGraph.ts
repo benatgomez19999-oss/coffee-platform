@@ -13,7 +13,8 @@
 // - propagación de shocks
 // =====================================================
 
-import type { RegionMarket } from "../registries/regionRegistry"
+import type { RegionMarket }
+from "@/spatialMarket/regions/regionTypes"
 import type { CommodityFlow } from "../flows/commodityFlowEngine"
 
 

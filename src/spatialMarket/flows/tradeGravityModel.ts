@@ -14,7 +14,7 @@
 // =====================================================
 
 import type { RegionMarket }
-from "../regions/regionTypes"
+from "@/spatialMarket/regions/regionTypes"
 
 
 

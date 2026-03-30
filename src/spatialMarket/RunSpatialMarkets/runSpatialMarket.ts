@@ -3,17 +3,6 @@
 //
 // Convierte el estado físico del engine en
 // un mercado global.
-//
-// Pipeline:
-//
-// 1. Regional markets
-// 2. Logistics network
-// 3. Spatial price surface
-// 4. Commodity flows
-// 5. Export opportunities
-//
-// No modifica la física del motor.
-// Solo construye la capa económica.
 // =====================================================
 
 // =====================================================

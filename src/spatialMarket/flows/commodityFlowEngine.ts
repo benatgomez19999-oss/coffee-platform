@@ -15,7 +15,8 @@
 // CommodityFlow[]
 // =====================================================
 
-import type { RegionMarket } from "../registries/regionRegistry"
+import type { RegionMarket }
+from "@/spatialMarket/regions/regionTypes"
 import type { SpatialPriceSurface } from "../pricing/spatialPriceEngine"
 
 

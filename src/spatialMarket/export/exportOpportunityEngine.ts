@@ -14,7 +14,8 @@
 // ExportOpportunity[]
 // =====================================================
 
-import type { RegionMarket } from "../registries/regionRegistry"
+import type { RegionMarket }
+from "@/spatialMarket/regions/regionTypes"
 import type { SpatialPriceSurface } from "../pricing/spatialPriceEngine"
 import type { CommodityFlow } from "../flows/commodityFlowEngine"
 
