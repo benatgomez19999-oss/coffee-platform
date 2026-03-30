@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
 import { generateLotNumber } from "@/lib/generateLotNumber";
 
+//////////////////////////////////////////////////////
+// 📥 GET LOT DRAFTS
+//////////////////////////////////////////////////////
+
 export async function GET(req: NextRequest) {
   try {
     const drafts = await prisma.producerLotDraft.findMany({
@@ -21,31 +25,87 @@ export async function GET(req: NextRequest) {
   }
 }
 
-const lotNumber = await generateLotNumber();
-
 //////////////////////////////////////////////////////
-// ✅ POST 
+// 📤 POST CREATE LOT DRAFT
 //////////////////////////////////////////////////////
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
+    //////////////////////////////////////////////////////
+    // 🧠 GENERATE LOT NUMBER (INSIDE HANDLER)
+    //////////////////////////////////////////////////////
+
+    const lotNumber = await generateLotNumber();
+
+    //////////////////////////////////////////////////////
+    // 🧠 BASIC CALCULATION
+    //////////////////////////////////////////////////////
+
     const conversionRate = 0.8;
-    const estimatedGreenKg = body.parchmentKg * conversionRate;
+    const estimatedGreenKg =
+      body.parchmentKg * conversionRate;
+
+    //////////////////////////////////////////////////////
+    // 🧠 ENSURE FARM EXISTS (CRITICAL FIX)
+    //////////////////////////////////////////////////////
+
+    // ⚠️ TEMP: hasta que conectemos auth real
+    const producerId = "temp-producer";
+
+    let farm = await prisma.farm.findFirst({
+      where: {
+        producerId,
+      },
+    });
+
+    //////////////////////////////////////////////////////
+    // 👉 CREATE DEFAULT FARM IF NONE EXISTS
+    //////////////////////////////////////////////////////
+
+    if (!farm) {
+      farm = await prisma.farm.create({
+        data: {
+          name: "Default Farm",
+          altitude: 1800, // requerido para pricing
+          producerId,
+        },
+      });
+    }
+
+    //////////////////////////////////////////////////////
+    // 🧠 CREATE DRAFT (SOURCE OF TRUTH)
+    //////////////////////////////////////////////////////
 
     const draft = await prisma.producerLotDraft.create({
       data: {
         lotNumber,
-        producerId: "temp-producer", 
-        farmId: body.farmId,
+
+        //////////////////////////////////////////////////////
+        // 🔗 RELATIONS
+        //////////////////////////////////////////////////////
+        producerId,
+        farmId: farm.id, // ✅ SIEMPRE válido
+
+        //////////////////////////////////////////////////////
+        // 🌱 PRODUCT DATA
+        //////////////////////////////////////////////////////
         name: body.name,
         variety: body.variety,
         process: body.process,
         harvestYear: body.harvestYear,
+
+        //////////////////////////////////////////////////////
+        // 📦 VOLUME
+        //////////////////////////////////////////////////////
         parchmentKg: body.parchmentKg,
         estimatedGreenKg,
         conversionRate,
+
+        //////////////////////////////////////////////////////
+        // 📊 STATUS
+        //////////////////////////////////////////////////////
         status: "PENDING",
       },
     });
