@@ -7,15 +7,15 @@ export default async function LabelPage({ params }: any) {
   //////////////////////////////////////////////////////
 
   const draft = await prisma.producerLotDraft.findUnique({
-    where: { id: params.id },
-    include: {
-      greenLot: {
-        include: {
-          farm: true,
-        },
+  where: { id: params.id },
+  include: {
+    greenLot: {
+      include: {
+        farm: true,
       },
     },
-  });
+  },
+});
 
   const lot = draft?.greenLot;
 
@@ -23,9 +23,13 @@ export default async function LabelPage({ params }: any) {
   // 2. SAFETY
   //////////////////////////////////////////////////////
 
-  if (!lot) {
-    return <div className="p-10">Lot not verified yet</div>;
-  }
+  if (!draft) {
+  return <div className="p-10">Draft not found</div>;
+}
+
+if (!lot) {
+  return <div className="p-10">Lot not verified yet</div>;
+}
 
   //////////////////////////////////////////////////////
   // 3. RENDER LABEL

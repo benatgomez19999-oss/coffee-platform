@@ -126,84 +126,85 @@ const countries = data.countries.length > 0
 
     <div style={{ marginTop: 40 }}>
 
-      {/* TITLE */}
+     {/* TITLE */}
 
-      <div style={{
-        fontSize: 12,
-        opacity: 0.6,
-        marginBottom: 20
-      }}>
-        Global Supply Distribution
-      </div>
+<div style={{
+  fontSize: 12,
+  opacity: 0.6,
+  marginBottom: 20
+}}>
+  Global Supply Distribution
+</div>
 
-      {/* COUNTRIES */}
+{/* EMPTY STATE (REAL DATA ONLY) */}
 
-      {countries.map((country) => {
-
-        const countryRatio = country.totalKg / maxCountry
-
-        return (
-
-          <div key={country.name} style={{ marginBottom: 28 }}>
-
-            {/* COUNTRY HEADER */}
-
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 6
-            }}>
-              <span>{country.name}</span>
-              <span style={{ color }}>
-                {Math.round(country.totalKg)} kg
-              </span>
-            </div>
-
-            {/* COUNTRY BAR */}
-
-            <div style={{
-              height: 8,
-              borderRadius: 999,
-              background: "rgba(255,255,255,0.08)",
-              marginBottom: 10
-            }}>
-              <div style={{
-                width: `${countryRatio * 100}%`,
-                height: "100%",
-                background: color,
-                transition: "width 0.3s ease"
-              }}/>
-            </div>
-
-            {/* HEMISPHERES */}
-
-            {data.countries.length === 0 && (
-
+{data.countries.length === 0 && (
   <div style={{
     padding: 20,
     borderRadius: 12,
     background: "rgba(255,255,255,0.02)",
     border: "1px solid rgba(255,255,255,0.08)",
-    opacity: 0.7
+    opacity: 0.7,
+    marginBottom: 20
   }}>
     No supply data yet
   </div>
-
 )}
 
-            {country.hemispheres.map((h) => {
+{/* COUNTRIES */}
 
-              const key = `${country.name}-${h.name}`
-              const isOpen = expanded[key]
+{countries.map((country) => {
 
-              const maxHemi =
-                Math.max(...country.hemispheres.map(x => x.totalKg), 1)
+  const countryRatio = country.totalKg / maxCountry
 
-              const hemiRatio = h.totalKg / maxHemi
+  return (
 
-              return (
+    <div key={country.name} style={{ marginBottom: 28 }}>
 
-                <div key={key} style={{ marginLeft: 12, marginBottom: 10 }}>
+      {/* COUNTRY HEADER */}
+
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        marginBottom: 6
+      }}>
+        <span>{country.name}</span>
+        <span style={{ color }}>
+          {Math.round(country.totalKg)} kg
+        </span>
+      </div>
+
+      {/* COUNTRY BAR */}
+
+      <div style={{
+        height: 8,
+        borderRadius: 999,
+        background: "rgba(255,255,255,0.08)",
+        marginBottom: 10
+      }}>
+        <div style={{
+          width: `${countryRatio * 100}%`,
+          height: "100%",
+          background: color,
+          transition: "width 0.3s ease"
+        }}/>
+      </div>
+
+      {/* HEMISPHERES */}
+
+      {country.hemispheres.map((h) => {
+
+        const key = `${country.name}-${h.name}`
+        const isOpen = expanded[key]
+
+        const maxHemi =
+          Math.max(...country.hemispheres.map(x => x.totalKg), 1)
+
+        const hemiRatio = h.totalKg / maxHemi
+
+        return (
+
+          <div key={key} style={{ marginLeft: 12, marginBottom: 10 }}>
 
                   {/* HEMI HEADER */}
 
