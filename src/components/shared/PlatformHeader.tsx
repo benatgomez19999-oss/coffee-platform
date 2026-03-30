@@ -36,9 +36,9 @@ export default function PlatformHeader({ user }: { user: any }) {
       {/* ONBOARDING */}
       {!user.onboardingCompleted && (
         <OnboardingWizard 
-          user={user}
-          onComplete={() => window.location.reload()}
-        />
+  role={user.role}
+  onComplete={() => window.location.reload()}
+/>
       )}
 
       {/* HEADER */}
