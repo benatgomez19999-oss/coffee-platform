@@ -534,7 +534,7 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
         }}>
           Network Capacity Overview
         </div>
-<RegionsSupplyChart engineState={engineState} />
+    <RegionsSupplyChart engineState={engineState} />
       </div>
 
     </div>

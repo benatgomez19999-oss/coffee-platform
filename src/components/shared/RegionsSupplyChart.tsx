@@ -56,7 +56,45 @@ export default function RegionsSupplyChart({ engineState }: Props) {
 
   }, [])
 
-  if (!data) return null
+  if (!data) {
+  return (
+    <div style={{ opacity: 0.5 }}>
+      Loading supply...
+    </div>
+  )
+}
+
+// =====================================================
+// DEV FALLBACK (STRUCTURE ONLY)
+// Para visualizar gráfico aunque no haya datos
+// =====================================================
+
+const countries = data.countries.length > 0
+  ? data.countries
+  : [
+      {
+        name: "COLOMBIA",
+        totalKg: 0,
+        hemispheres: [
+          {
+            name: "NORTH",
+            totalKg: 0,
+            regions: [
+              { name: "Antioquia", availableKg: 0 }
+            ]
+          },
+          {
+            name: "SOUTH",
+            totalKg: 0,
+            regions: [
+              { name: "Huila", availableKg: 0 },
+              { name: "Tolima", availableKg: 0 },
+              { name: "Nariño", availableKg: 0 }
+            ]
+          }
+        ]
+      }
+    ]
 
   // =====================================================
   // ENGINE COLOR (GLOBAL SIGNAL)
@@ -78,7 +116,7 @@ export default function RegionsSupplyChart({ engineState }: Props) {
   // =====================================================
 
   const maxCountry =
-    Math.max(...data.countries.map(c => c.totalKg), 1)
+  Math.max(...countries.map(c => c.totalKg), 1)
 
   // =====================================================
   // RENDER
@@ -100,7 +138,7 @@ export default function RegionsSupplyChart({ engineState }: Props) {
 
       {/* COUNTRIES */}
 
-      {data.countries.map((country) => {
+      {countries.map((country) => {
 
         const countryRatio = country.totalKg / maxCountry
 
@@ -138,6 +176,20 @@ export default function RegionsSupplyChart({ engineState }: Props) {
             </div>
 
             {/* HEMISPHERES */}
+
+            {data.countries.length === 0 && (
+
+  <div style={{
+    padding: 20,
+    borderRadius: 12,
+    background: "rgba(255,255,255,0.02)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    opacity: 0.7
+  }}>
+    No supply data yet
+  </div>
+
+)}
 
             {country.hemispheres.map((h) => {
 
