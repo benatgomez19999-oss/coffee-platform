@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { getUserFromRequest } from "@/lib/getUserFromRequest"
 
+export const dynamic = "force-dynamic";
 export default async function PlatformPage() {
 
   const user = await getUserFromRequest()
