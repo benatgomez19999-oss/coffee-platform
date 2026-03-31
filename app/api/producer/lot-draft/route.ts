@@ -29,53 +29,75 @@ export async function GET(req: NextRequest) {
 // 📤 POST CREATE LOT DRAFT
 //////////////////////////////////////////////////////
 
+import { getUserFromRequest } from "@/lib/getUserFromRequest";
+
 export async function POST(req: NextRequest) {
   try {
+    //////////////////////////////////////////////////////
+    // 🔐 AUTH
+    //////////////////////////////////////////////////////
+
+    const user = await getUserFromRequest();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (user.role !== "PRODUCER") {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    //////////////////////////////////////////////////////
+    // 🧠 GET PRODUCER
+    //////////////////////////////////////////////////////
+
+    const producer = await prisma.producer.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!producer) {
+      return NextResponse.json(
+        { error: "Producer not found. Complete onboarding." },
+        { status: 400 }
+      );
+    }
+
+    //////////////////////////////////////////////////////
+    // 🧠 GET FARM
+    //////////////////////////////////////////////////////
+
+    const farm = await prisma.farm.findFirst({
+      where: { producerId: producer.id },
+    });
+
+    if (!farm) {
+      return NextResponse.json(
+        { error: "Farm not found. Complete onboarding." },
+        { status: 400 }
+      );
+    }
+
+    //////////////////////////////////////////////////////
+    // 🧠 BODY
+    //////////////////////////////////////////////////////
+
     const body = await req.json();
 
     //////////////////////////////////////////////////////
-    // 🧠 GENERATE LOT NUMBER (INSIDE HANDLER)
+    // 🧠 CALCULATIONS
+    //////////////////////////////////////////////////////
+
+    const conversionRate = 0.8;
+    const estimatedGreenKg = body.parchmentKg * conversionRate;
+
+    //////////////////////////////////////////////////////
+    // 🧠 GENERATE LOT NUMBER
     //////////////////////////////////////////////////////
 
     const lotNumber = await generateLotNumber();
 
     //////////////////////////////////////////////////////
-    // 🧠 BASIC CALCULATION
-    //////////////////////////////////////////////////////
-
-    const conversionRate = 0.8;
-    const estimatedGreenKg =
-      body.parchmentKg * conversionRate;
-
-    //////////////////////////////////////////////////////
-    // 🧠 ENSURE FARM EXISTS (CRITICAL FIX)
-    //////////////////////////////////////////////////////
-
-    // ⚠️ TEMP: hasta que conectemos auth real
-    const producerId = "temp-producer";
-
-    let farm = await prisma.farm.findFirst({
-      where: {
-        producerId,
-      },
-    });
-
-    //////////////////////////////////////////////////////
-    // 👉 CREATE DEFAULT FARM IF NONE EXISTS
-    //////////////////////////////////////////////////////
-
-    if (!farm) {
-      farm = await prisma.farm.create({
-        data: {
-          name: "Default Farm",
-          altitude: 1800, // requerido para pricing
-          producerId,
-        },
-      });
-    }
-
-    //////////////////////////////////////////////////////
-    // 🧠 CREATE DRAFT (SOURCE OF TRUTH)
+    // 🧠 CREATE DRAFT
     //////////////////////////////////////////////////////
 
     const draft = await prisma.producerLotDraft.create({
@@ -85,11 +107,11 @@ export async function POST(req: NextRequest) {
         //////////////////////////////////////////////////////
         // 🔗 RELATIONS
         //////////////////////////////////////////////////////
-        producerId,
-        farmId: farm.id, // ✅ SIEMPRE válido
+        producerId: producer.id,
+        farmId: farm.id,
 
         //////////////////////////////////////////////////////
-        // 🌱 PRODUCT DATA
+        // 🌱 PRODUCT
         //////////////////////////////////////////////////////
         name: body.name,
         variety: body.variety,
@@ -113,7 +135,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(draft);
 
   } catch (error) {
-    console.error(error);
+    console.error("❌ LOT DRAFT ERROR:", error);
 
     return NextResponse.json(
       { error: "Failed to create lot draft" },

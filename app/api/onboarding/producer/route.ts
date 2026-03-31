@@ -9,7 +9,11 @@ import { getUserFromRequest } from "@/lib/getUserFromRequest"
 export async function POST(req: NextRequest) {
   try {
 
-    const user = await getUserFromRequest()
+    //////////////////////////////////////////////////////
+    // 🔐 AUTH (FIX 🔥)
+    //////////////////////////////////////////////////////
+
+    const user = await getUserFromRequest(req)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -33,13 +37,13 @@ export async function POST(req: NextRequest) {
     }
 
     //////////////////////////////////////////////////////
-    // 🚀 TRANSACTION (CRITICAL)
+    // 🚀 TRANSACTION
     //////////////////////////////////////////////////////
 
     const result = await prisma.$transaction(async (tx) => {
 
       //////////////////////////////////////////////////////
-      // 1. CREATE OR GET PRODUCER (IDEMPOTENT)
+      // 1. CREATE OR GET PRODUCER
       //////////////////////////////////////////////////////
 
       let producer = await tx.producer.findUnique({
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
       ]
 
       //////////////////////////////////////////////////////
-      // 3. CREATE FARMS
+      // 3. CREATE FARMS (IDEMPOTENT 🔥)
       //////////////////////////////////////////////////////
 
       const createdFarms = []
@@ -77,11 +81,24 @@ export async function POST(req: NextRequest) {
 
         if (!farm.name) continue
 
+        // 🔥 CHECK DUPLICATE
+        const existingFarm = await tx.farm.findFirst({
+          where: {
+            producerId: producer.id,
+            name: farm.name,
+          },
+        })
+
+        if (existingFarm) {
+          createdFarms.push(existingFarm)
+          continue
+        }
+
         const newFarm = await tx.farm.create({
           data: {
             name: farm.name,
             altitude: farm.altitude || 1800,
-            producerId: producer.id, // 🔥 CORRECT FK
+            producerId: producer.id,
           },
         })
 

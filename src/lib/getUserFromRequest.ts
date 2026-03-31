@@ -1,35 +1,51 @@
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/database/prisma";
+import { NextRequest } from "next/server";
 
-export async function getUserFromRequest() {
+export async function getUserFromRequest(req?: NextRequest) {
+  try {
+    //////////////////////////////////////////////////////
+    // 🍪 GET TOKEN (DUAL MODE 🔥)
+    //////////////////////////////////////////////////////
 
-  // =====================================================
-  // 🍪 GET TOKEN FROM COOKIES (SAFE - NEXT API)
-  // =====================================================
+    let token: string | undefined;
 
-  const token = cookies().get("auth_token")?.value;
+    // 👉 modo API (con req)
+    if (req) {
+      token = req.cookies.get("auth_token")?.value;
+    }
 
-  if (!token) return null;
+    // 👉 fallback modo server (cookies())
+    if (!token) {
+      token = cookies().get("auth_token")?.value;
+    }
 
-  // =====================================================
-  // 🔐 VERIFY TOKEN
-  // =====================================================
+    if (!token) return null;
 
-  const payload = verifyToken(token);
+    //////////////////////////////////////////////////////
+    // 🔐 VERIFY TOKEN
+    //////////////////////////////////////////////////////
 
-  if (!payload) return null;
+    const payload = verifyToken(token);
 
-  // =====================================================
-  // 👤 FETCH USER
-  // =====================================================
+    if (!payload?.userId) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
-    include: {
-      company: true,
-    },
-  });
+    //////////////////////////////////////////////////////
+    // 👤 FETCH USER
+    //////////////////////////////////////////////////////
 
-  return user;
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      include: {
+        company: true,
+      },
+    });
+
+    return user;
+
+  } catch (error) {
+    console.error("getUserFromRequest error:", error);
+    return null;
+  }
 }
