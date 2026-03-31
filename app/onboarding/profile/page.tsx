@@ -166,24 +166,80 @@ const handleAddressChange = (e: any) => {
 }
 
 const handleSubmit = async () => {
-  setIsFinishing(true) // 🔥 show loader
+  setIsFinishing(true)
 
   try {
-    const res = await fetch("/api/company/update", {
+    //////////////////////////////////////////////////////
+    // 🔥 GET ROLE REAL (BULLETPROOF)
+    //////////////////////////////////////////////////////
+
+    let currentRole = role
+
+    if (!currentRole) {
+      const resUser = await fetch("/api/auth/me", {
+        credentials: "include"
+      })
+
+      const dataUser = await resUser.json()
+      currentRole = dataUser.user?.role
+    }
+
+    console.log("🔥 FINAL ROLE:", currentRole)
+
+    //////////////////////////////////////////////////////
+    // 🔥 SELECT ENDPOINT
+    //////////////////////////////////////////////////////
+
+    const endpoint =
+      currentRole === "PRODUCER"
+        ? "/api/onboarding/producer"
+        : "/api/company/update"
+
+    console.log("🚀 ENDPOINT:", endpoint)
+
+    //////////////////////////////////////////////////////
+    // 🚀 REQUEST
+    //////////////////////////////////////////////////////
+
+    const res = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
       body: JSON.stringify(form)
     })
 
-    if (!res.ok) throw new Error()
+    //////////////////////////////////////////////////////
+    // ❌ ERROR HANDLING
+    //////////////////////////////////////////////////////
 
-    // 🔥 pequeño delay para efecto pro
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      console.error("❌ ERROR:", data)
+
+      alert(data?.error || "Failed to save data")
+      setIsFinishing(false)
+      return
+    }
+
+    //////////////////////////////////////////////////////
+    // ✅ SUCCESS
+    //////////////////////////////////////////////////////
+
+    console.log("✅ ONBOARDING SUCCESS")
+
     setTimeout(() => {
-      router.push(config.redirect)
+      router.push(
+        currentRole === "PRODUCER"
+          ? "/platform/producer"
+          : "/platform"
+      )
     }, 1200)
 
   } catch (err) {
-    alert("Error saving profile")
+    console.error("❌ NETWORK ERROR:", err)
+    alert("Network error")
     setIsFinishing(false)
   }
 }
