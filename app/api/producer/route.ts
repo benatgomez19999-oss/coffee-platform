@@ -3,10 +3,11 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
 import { getUserFromRequest } from "@/lib/getUserFromRequest"
+import { NextRequest } from "next/server"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getUserFromRequest()
+    const user = await getUserFromRequest(req)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
