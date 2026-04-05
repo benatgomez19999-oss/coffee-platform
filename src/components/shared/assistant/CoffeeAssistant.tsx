@@ -102,7 +102,11 @@ export default function CoffeeAssistant({
   // 🔧 HELPERS (pure helpers / utilidades)
   //////////////////////////////////////////////////////
 
-    const buildLotSummary = () => {
+  const appendMessages = (...msgs: AssistantMessage[]) => {
+    setMessages((prev) => [...prev, ...msgs]);
+  };
+
+  const buildLotSummary = () => {
     if (!form) return "";
 
     const farmDisplay = selectedFarmName?.trim()
@@ -207,67 +211,59 @@ export default function CoffeeAssistant({
     return `${farmLabel} Lot 1`;
   };
 
-  const pushLotNameEntryMessage = () => {
-    setMessages((prev) => [
-      ...prev,
-      createMessage(
-        "assistant",
-        "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process.",
-      ),
-    ]);
-  };
+  const getLotNameEntryMessages = (): AssistantMessage[] => [
+    createMessage(
+      "assistant",
+      "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process.",
+    ),
+  ];
 
-  const pushLotNameInvalidOptionMessage = () => {
-    setMessages((prev) => [
-      ...prev,
-      createMessage(
-        "assistant",
-        "Please choose one of the available options below, or type your own lot name.",
-      ),
-    ]);
-  };
-  const pushLotNameSuggestionMessage = (suggestion: string) => {
-    setMessages((prev) => [
-      ...prev,
-      createMessage("assistant", `I suggest: ${suggestion}`),
-      createMessage(
-        "assistant",
-        "You can use this name, ask for another option, write your own, or skip.",
-      ),
-    ]);
-  };
+  const getLotNameInvalidOptionMessages = (): AssistantMessage[] => [
+    createMessage(
+      "assistant",
+      "Please choose one of the available options below, or type your own lot name.",
+    ),
+  ];
+
+  const getLotNameSuggestionMessages = (
+    suggestion: string,
+  ): AssistantMessage[] => [
+    createMessage("assistant", `I suggest: ${suggestion}`),
+    createMessage(
+      "assistant",
+      "You can use this name, ask for another option, write your own, or skip.",
+    ),
+  ];
 
   const goToNextLotStep = (nextStep: number) => {
     const isLastStep = nextStep >= lotDraftSteps.length;
 
     if (isLastStep) {
-      setMessages((prev) => [
-        ...prev,
+      setStep(nextStep);
+      appendMessages(
         createMessage(
           "assistant",
           "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
         ),
-      ]);
-      setStep(nextStep);
-      return;
-    }
-
-    if (lotDraftSteps[nextStep]?.key === "name") {
-      setStep(nextStep);
-      setLotNameFlowState("idle");
-      setLotNameSuggestion("");
-      pushLotNameEntryMessage();
+      );
       return;
     }
 
     setStep(nextStep);
-    setMessages((prev) => [
-      ...prev,
+
+    if (lotDraftSteps[nextStep]?.key === "name") {
+      setLotNameFlowState("idle");
+      setLotNameSuggestion("");
+      appendMessages(...getLotNameEntryMessages());
+      return;
+    }
+
+    appendMessages(
       createMessage("assistant", lotDraftSteps[nextStep].question),
-    ]);
+    );
   };
 
-    const resetToNormalMode = () => {
+  const resetToNormalMode = () => {
     setMode("normal");
     setStep(0);
     setInput("");
@@ -323,14 +319,13 @@ export default function CoffeeAssistant({
       //////////////////////////////////////////////////////
 
       if (farms.length === 0) {
-        setMessages((prev) => [
-          ...prev,
+        appendMessages(
           createMessage(
             "assistant",
             "Let's start with the Farm ID. This identifies your farm inside the platform.",
           ),
           createMessage("assistant", lotDraftSteps[0].question),
-        ]);
+        );
         return;
       }
 
@@ -346,16 +341,14 @@ export default function CoffeeAssistant({
         }
 
         setSelectedFarmName(farm.name);
-
-        setMessages((prev) => [
-          ...prev,
-          createMessage("assistant", `Using "${farm.name}".`),
-        ]);
-
         setStep(1);
         setLotNameFlowState("idle");
         setLotNameSuggestion("");
-        pushLotNameEntryMessage();
+
+        appendMessages(
+          createMessage("assistant", `Using "${farm.name}".`),
+          ...getLotNameEntryMessages(),
+        );
         return;
       }
 
@@ -367,14 +360,13 @@ export default function CoffeeAssistant({
     } catch (err) {
       console.error("Autofill farm error:", err);
 
-      setMessages((prev) => [
-        ...prev,
+      appendMessages(
         createMessage(
           "assistant",
           "I could not load your farms right now. Let's continue manually.",
         ),
         createMessage("assistant", lotDraftSteps[0].question),
-      ]);
+      );
     } finally {
       setHasCheckedFarms(true);
     }
@@ -424,13 +416,38 @@ export default function CoffeeAssistant({
         setLotNameFlowState("idle");
         setInput("");
 
-        setMessages((prev) => [
-          ...prev,
+        const nextStep = step + 1;
+        const isLastStep = nextStep >= lotDraftSteps.length;
+
+        if (isLastStep) {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", "Lot Name skipped."),
+            createMessage(
+              "assistant",
+              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+            ),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        if (lotDraftSteps[nextStep]?.key === "name") {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", "Lot Name skipped."),
+            ...getLotNameEntryMessages(),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        appendMessages(
           userMessage,
           createMessage("assistant", "Lot Name skipped."),
-        ]);
-
-        goToNextLotStep(step + 1);
+          createMessage("assistant", lotDraftSteps[nextStep].question),
+        );
+        setStep(nextStep);
         return;
       }
 
@@ -443,16 +460,47 @@ export default function CoffeeAssistant({
           setLotNameFlowState("idle");
           setInput("");
 
-          setMessages((prev) => [
-            ...prev,
+          const nextStep = step + 1;
+          const isLastStep = nextStep >= lotDraftSteps.length;
+
+          if (isLastStep) {
+            appendMessages(
+              userMessage,
+              createMessage(
+                "assistant",
+                `Lot Name updated: ${lotNameSuggestion}`,
+              ),
+              createMessage(
+                "assistant",
+                "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+              ),
+            );
+            setStep(nextStep);
+            return;
+          }
+
+          if (lotDraftSteps[nextStep]?.key === "name") {
+            appendMessages(
+              userMessage,
+              createMessage(
+                "assistant",
+                `Lot Name updated: ${lotNameSuggestion}`,
+              ),
+              ...getLotNameEntryMessages(),
+            );
+            setStep(nextStep);
+            return;
+          }
+
+          appendMessages(
             userMessage,
             createMessage(
               "assistant",
               `Lot Name updated: ${lotNameSuggestion}`,
             ),
-          ]);
-
-          goToNextLotStep(step + 1);
+            createMessage("assistant", lotDraftSteps[nextStep].question),
+          );
+          setStep(nextStep);
           return;
         }
 
@@ -466,8 +514,10 @@ export default function CoffeeAssistant({
           setLotNameSuggestion(retrySuggestion);
           setInput("");
 
-          setMessages((prev) => [...prev, userMessage]);
-          pushLotNameSuggestionMessage(retrySuggestion);
+          appendMessages(
+            userMessage,
+            ...getLotNameSuggestionMessages(retrySuggestion),
+          );
           return;
         }
 
@@ -475,20 +525,21 @@ export default function CoffeeAssistant({
           setLotNameFlowState("manual");
           setInput("");
 
-          setMessages((prev) => [
-            ...prev,
+          appendMessages(
             userMessage,
             createMessage(
               "assistant",
               "Perfect — type the lot name you want to use.",
             ),
-          ]);
+          );
           return;
         }
 
-        setMessages((prev) => [...prev, userMessage]);
-        pushLotNameInvalidOptionMessage();
         setInput("");
+        appendMessages(
+          userMessage,
+          ...getLotNameInvalidOptionMessages(),
+        );
         return;
       }
 
@@ -500,8 +551,10 @@ export default function CoffeeAssistant({
           setLotNameFlowState("suggested");
           setInput("");
 
-          setMessages((prev) => [...prev, userMessage]);
-          pushLotNameSuggestionMessage(suggestion);
+          appendMessages(
+            userMessage,
+            ...getLotNameSuggestionMessages(suggestion),
+          );
           return;
         }
 
@@ -509,21 +562,22 @@ export default function CoffeeAssistant({
           setLotNameFlowState("manual");
           setInput("");
 
-          setMessages((prev) => [
-            ...prev,
+          appendMessages(
             userMessage,
             createMessage(
               "assistant",
               "Go ahead — type the lot name you want to use.",
             ),
-          ]);
+          );
           return;
         }
 
         if (cleanInput.length < 2) {
-          setMessages((prev) => [...prev, userMessage]);
-          pushLotNameInvalidOptionMessage();
           setInput("");
+          appendMessages(
+            userMessage,
+            ...getLotNameInvalidOptionMessages(),
+          );
           return;
         }
 
@@ -535,21 +589,48 @@ export default function CoffeeAssistant({
         setLotNameSuggestion("");
         setInput("");
 
-        setMessages((prev) => [
-          ...prev,
+        const nextStep = step + 1;
+        const isLastStep = nextStep >= lotDraftSteps.length;
+
+        if (isLastStep) {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", `Lot Name updated: ${cleanInput}`),
+            createMessage(
+              "assistant",
+              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+            ),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        if (lotDraftSteps[nextStep]?.key === "name") {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", `Lot Name updated: ${cleanInput}`),
+            ...getLotNameEntryMessages(),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        appendMessages(
           userMessage,
           createMessage("assistant", `Lot Name updated: ${cleanInput}`),
-        ]);
-
-        goToNextLotStep(step + 1);
+          createMessage("assistant", lotDraftSteps[nextStep].question),
+        );
+        setStep(nextStep);
         return;
       }
 
       if (lotNameFlowState === "manual") {
         if (cleanInput.length < 2) {
-          setMessages((prev) => [...prev, userMessage]);
-          pushLotNameInvalidOptionMessage();
           setInput("");
+          appendMessages(
+            userMessage,
+            ...getLotNameInvalidOptionMessages(),
+          );
           return;
         }
 
@@ -561,18 +642,43 @@ export default function CoffeeAssistant({
         setLotNameSuggestion("");
         setInput("");
 
-        setMessages((prev) => [
-          ...prev,
+        const nextStep = step + 1;
+        const isLastStep = nextStep >= lotDraftSteps.length;
+
+        if (isLastStep) {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", `Lot Name updated: ${cleanInput}`),
+            createMessage(
+              "assistant",
+              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+            ),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        if (lotDraftSteps[nextStep]?.key === "name") {
+          appendMessages(
+            userMessage,
+            createMessage("assistant", `Lot Name updated: ${cleanInput}`),
+            ...getLotNameEntryMessages(),
+          );
+          setStep(nextStep);
+          return;
+        }
+
+        appendMessages(
           userMessage,
           createMessage("assistant", `Lot Name updated: ${cleanInput}`),
-        ]);
-
-        goToNextLotStep(step + 1);
+          createMessage("assistant", lotDraftSteps[nextStep].question),
+        );
+        setStep(nextStep);
         return;
       }
     }
 
-    //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
     // 🌿 STANDARD LOT STEPS (validación + avance)
     //////////////////////////////////////////////////////
 
@@ -580,14 +686,13 @@ export default function CoffeeAssistant({
     const validationError = validateLotValue(currentStep.key, normalizedValue);
 
     if (validationError) {
-      setMessages((prev) => [
-        ...prev,
+      appendMessages(
         userMessage,
         createMessage(
           "assistant",
           `${validationError} ${currentStep.helper ? currentStep.helper : ""}`.trim(),
         ),
-      ]);
+      );
       setInput("");
       return;
     }
@@ -599,48 +704,47 @@ export default function CoffeeAssistant({
     const nextStep = step + 1;
     const isLastStep = nextStep >= lotDraftSteps.length;
 
+    const confirmationMessage =
+      normalizedValue === ""
+        ? `${getFieldLabel(currentStep.key)} skipped.`
+        : `${getFieldLabel(currentStep.key)} updated.`;
+
     if (isLastStep) {
-      setMessages((prev) => [
-        ...prev,
+      appendMessages(
         userMessage,
+        createMessage("assistant", confirmationMessage),
         createMessage(
           "assistant",
           "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
         ),
-      ]);
+      );
 
       setStep(nextStep);
       setInput("");
       return;
     }
 
-    const confirmationMessage =
-      normalizedValue === ""
-        ? `${getFieldLabel(currentStep.key)} skipped.`
-        : `${getFieldLabel(currentStep.key)} updated.`;
-
-    setMessages((prev) => [
-      ...prev,
-      userMessage,
-      createMessage("assistant", confirmationMessage),
-    ]);
-
-    setInput("");
-
     if (lotDraftSteps[nextStep]?.key === "name") {
-      setStep(nextStep);
       setLotNameFlowState("idle");
       setLotNameSuggestion("");
-      pushLotNameEntryMessage();
+      appendMessages(
+        userMessage,
+        createMessage("assistant", confirmationMessage),
+        ...getLotNameEntryMessages(),
+      );
+      setStep(nextStep);
+      setInput("");
       return;
     }
 
-    setStep(nextStep);
-
-    setMessages((prev) => [
-      ...prev,
+    appendMessages(
+      userMessage,
+      createMessage("assistant", confirmationMessage),
       createMessage("assistant", lotDraftSteps[nextStep].question),
-    ]);
+    );
+
+    setStep(nextStep);
+    setInput("");
   };
 
   //////////////////////////////////////////////////////
@@ -653,7 +757,7 @@ export default function CoffeeAssistant({
     const cleanInput = input.trim();
     const userMessage = createMessage("user", cleanInput);
 
-    setMessages((prev) => [...prev, userMessage]);
+    appendMessages(userMessage);
     setInput("");
     setIsLoading(true);
 
@@ -672,24 +776,22 @@ export default function CoffeeAssistant({
 
       const data = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
+      appendMessages(
         createMessage(
           "assistant",
           data.reply ||
             "I could not generate a response right now. Please try again.",
         ),
-      ]);
+      );
     } catch (error) {
       console.error("Assistant chat error:", error);
 
-      setMessages((prev) => [
-        ...prev,
+      appendMessages(
         createMessage(
           "assistant",
           "There was an error connecting with the assistant. Please try again.",
         ),
-      ]);
+      );
     } finally {
       setIsLoading(false);
     }
@@ -733,7 +835,6 @@ export default function CoffeeAssistant({
   const renderMessageBubble = (msg: AssistantMessage) => {
     return (
       <div
-        key={msg.id}
         style={{
           alignSelf: msg.role === "assistant" ? "flex-start" : "flex-end",
           background:
@@ -759,6 +860,7 @@ export default function CoffeeAssistant({
       </div>
     );
   };
+
   //////////////////////////////////////////////////////
   // 🎨 UI / layout
   //////////////////////////////////////////////////////
@@ -946,7 +1048,7 @@ export default function CoffeeAssistant({
             </div>
           </div>
 
-          {/* ================= LOT STATUS BAR ================= */}
+                   {/* ================= LOT STATUS BAR ================= */}
           {mode === "lot" && (
             <div
               style={{
@@ -1081,18 +1183,15 @@ export default function CoffeeAssistant({
                       }
 
                       setSelectedFarmName(selected.name);
-
                       setFarmOptions([]);
-
-                      setMessages((prev) => [
-                        ...prev,
-                        createMessage("assistant", `Using "${selected.name}".`),
-                      ]);
-
                       setStep(1);
                       setLotNameFlowState("idle");
                       setLotNameSuggestion("");
-                      pushLotNameEntryMessage();
+
+                      appendMessages(
+                        createMessage("assistant", `Using "${selected.name}".`),
+                        ...getLotNameEntryMessages(),
+                      );
                     }}
                     defaultValue=""
                     style={{
@@ -1168,7 +1267,12 @@ export default function CoffeeAssistant({
                       }}
                     >
                       {[
-                        ["Farm", selectedFarmName?.trim() ? `${selectedFarmName}` : form.farmId || "—"],
+                        [
+                          "Farm",
+                          selectedFarmName?.trim()
+                            ? `${selectedFarmName}`
+                            : form.farmId || "—",
+                        ],
                         ["Lot Name", form.name || "—"],
                         ["Variety", form.variety || "—"],
                         ["Process", form.process || "—"],
@@ -1219,7 +1323,11 @@ export default function CoffeeAssistant({
                 )}
 
                 {/* Chat messages */}
-                {messages.map((msg) => renderMessageBubble(msg))}
+                {messages.map((msg, index) => (
+                  <div key={msg.id || `lot-msg-${index}`}>
+                    {renderMessageBubble(msg)}
+                  </div>
+                ))}
 
                 {/* Lot name quick actions */}
                 {currentLotStep?.key === "name" && (
@@ -1239,7 +1347,9 @@ export default function CoffeeAssistant({
                             const suggestion = buildSuggestedLotName();
                             setLotNameSuggestion(suggestion);
                             setLotNameFlowState("suggested");
-                            pushLotNameSuggestionMessage(suggestion);
+                            appendMessages(
+                              ...getLotNameSuggestionMessages(suggestion),
+                            );
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1258,13 +1368,12 @@ export default function CoffeeAssistant({
                           type="button"
                           onClick={() => {
                             setLotNameFlowState("manual");
-                            setMessages((prev) => [
-                              ...prev,
+                            appendMessages(
                               createMessage(
                                 "assistant",
                                 "Go ahead — type the lot name you want to use.",
                               ),
-                            ]);
+                            );
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1286,15 +1395,41 @@ export default function CoffeeAssistant({
                               updateField("name", "");
                             }
 
+                            const nextStep = step + 1;
+                            const isLastStep = nextStep >= lotDraftSteps.length;
+
                             setLotNameSuggestion("");
                             setLotNameFlowState("idle");
 
-                            setMessages((prev) => [
-                              ...prev,
-                              createMessage("assistant", "Lot Name skipped."),
-                            ]);
+                            if (isLastStep) {
+                              appendMessages(
+                                createMessage("assistant", "Lot Name skipped."),
+                                createMessage(
+                                  "assistant",
+                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                ),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
 
-                            goToNextLotStep(step + 1);
+                            if (lotDraftSteps[nextStep]?.key === "name") {
+                              appendMessages(
+                                createMessage("assistant", "Lot Name skipped."),
+                                ...getLotNameEntryMessages(),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
+
+                            appendMessages(
+                              createMessage("assistant", "Lot Name skipped."),
+                              createMessage(
+                                "assistant",
+                                lotDraftSteps[nextStep].question,
+                              ),
+                            );
+                            setStep(nextStep);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1320,16 +1455,49 @@ export default function CoffeeAssistant({
                               updateField("name", lotNameSuggestion);
                             }
 
+                            const nextStep = step + 1;
+                            const isLastStep = nextStep >= lotDraftSteps.length;
+
                             setLotNameFlowState("idle");
-                            setMessages((prev) => [
-                              ...prev,
+
+                            if (isLastStep) {
+                              appendMessages(
+                                createMessage(
+                                  "assistant",
+                                  `Lot Name updated: ${lotNameSuggestion}`,
+                                ),
+                                createMessage(
+                                  "assistant",
+                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                ),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
+
+                            if (lotDraftSteps[nextStep]?.key === "name") {
+                              appendMessages(
+                                createMessage(
+                                  "assistant",
+                                  `Lot Name updated: ${lotNameSuggestion}`,
+                                ),
+                                ...getLotNameEntryMessages(),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
+
+                            appendMessages(
                               createMessage(
                                 "assistant",
                                 `Lot Name updated: ${lotNameSuggestion}`,
                               ),
-                            ]);
-
-                            goToNextLotStep(step + 1);
+                              createMessage(
+                                "assistant",
+                                lotDraftSteps[nextStep].question,
+                              ),
+                            );
+                            setStep(nextStep);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1354,7 +1522,9 @@ export default function CoffeeAssistant({
                                 : suggestion;
 
                             setLotNameSuggestion(retrySuggestion);
-                            pushLotNameSuggestionMessage(retrySuggestion);
+                            appendMessages(
+                              ...getLotNameSuggestionMessages(retrySuggestion),
+                            );
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1373,13 +1543,12 @@ export default function CoffeeAssistant({
                           type="button"
                           onClick={() => {
                             setLotNameFlowState("manual");
-                            setMessages((prev) => [
-                              ...prev,
+                            appendMessages(
                               createMessage(
                                 "assistant",
                                 "Perfect — type the lot name you want to use.",
                               ),
-                            ]);
+                            );
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1401,15 +1570,41 @@ export default function CoffeeAssistant({
                               updateField("name", "");
                             }
 
+                            const nextStep = step + 1;
+                            const isLastStep = nextStep >= lotDraftSteps.length;
+
                             setLotNameSuggestion("");
                             setLotNameFlowState("idle");
 
-                            setMessages((prev) => [
-                              ...prev,
-                              createMessage("assistant", "Lot Name skipped."),
-                            ]);
+                            if (isLastStep) {
+                              appendMessages(
+                                createMessage("assistant", "Lot Name skipped."),
+                                createMessage(
+                                  "assistant",
+                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                ),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
 
-                            goToNextLotStep(step + 1);
+                            if (lotDraftSteps[nextStep]?.key === "name") {
+                              appendMessages(
+                                createMessage("assistant", "Lot Name skipped."),
+                                ...getLotNameEntryMessages(),
+                              );
+                              setStep(nextStep);
+                              return;
+                            }
+
+                            appendMessages(
+                              createMessage("assistant", "Lot Name skipped."),
+                              createMessage(
+                                "assistant",
+                                lotDraftSteps[nextStep].question,
+                              ),
+                            );
+                            setStep(nextStep);
                           }}
                           style={{
                             padding: "7px 11px",
