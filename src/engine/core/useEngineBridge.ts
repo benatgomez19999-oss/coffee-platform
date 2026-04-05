@@ -37,7 +37,6 @@ export function useEngineBridge(
   inputs: BridgeInputs,
   outputs?: BridgeOutputs
 ) {
-
   const [engineState, setEngineState] =
     useState<EngineState>(getInitialEngineState());
 
@@ -45,10 +44,9 @@ export function useEngineBridge(
 
   // =====================================================
   // CONTEXT BRIDGE — React → Runtime
+  // Empuja señales externas al contexto del engine.
   // =====================================================
-
   useEffect(() => {
-
     updateEngineContext({
       adaptiveResilience: inputs.adaptiveResilience,
       structuralDrift: inputs.structuralDrift,
@@ -67,7 +65,6 @@ export function useEngineBridge(
       spatialClusteringIndex: inputs.spatialClusteringIndex,
       ewsScore: inputs.ewsScore
     });
-
   }, [
     inputs.adaptiveResilience,
     inputs.structuralDrift,
@@ -89,27 +86,21 @@ export function useEngineBridge(
 
   // =====================================================
   // RUNTIME → REACT SUBSCRIPTION
+  // Sincroniza snapshots del runtime con estado React.
   // =====================================================
-
   useEffect(() => {
+    const unsubscribe = subscribeEngine((snapshot) => {
+      setEngineState((prev) => {
+        if (prev.engineTime === snapshot.engineTime) {
+          return prev;
+        }
 
-  const unsubscribe = subscribeEngine((snapshot) => {
-
-    setEngineState(prev => {
-
-      if (prev.engineTime === snapshot.engineTime) {
-        return prev;
-      }
-
-      return snapshot;
-
+        return snapshot;
+      });
     });
 
-  });
-
-  return () => {
-    unsubscribe();
-  };
-
-}, []);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 }

@@ -13,7 +13,6 @@ import { allocateFromRegion } from "@/src/engine/core/runtime"
 export function stepOperationalLayer(
   state: EngineState
 ) {
-
   if (!state.pending?.requests?.length) return
 
   const now = state.engineTime
@@ -21,18 +20,15 @@ export function stepOperationalLayer(
   // =====================================================
   // LOOP SOBRE SOLICITUDES ACTIVAS
   // =====================================================
-
-  state.pending.requests = state.pending.requests.filter(request => {
-
+  state.pending.requests = state.pending.requests.filter((request) => {
     const {
       remainingVolume,
       autoExecute
     } = request
 
     // =====================================================
-    // 1. CIERRE DE OFERTA EXPIRADA
+    // 1) CIERRE DE OFERTA EXPIRADA
     // =====================================================
-
     if (
       request.offerOpen &&
       request.offerExpiry &&
@@ -43,9 +39,8 @@ export function stepOperationalLayer(
     }
 
     // =====================================================
-    // 2. EVALUACIÓN DE VIABILIDAD MULTI-REGIÓN
+    // 2) EVALUACIÓN DE VIABILIDAD MULTI-REGIÓN
     // =====================================================
-
     const totalAvailable = state.regions.reduce(
       (sum, r) => sum + r.availableKg,
       0
@@ -59,120 +54,89 @@ export function stepOperationalLayer(
       totalAvailable < remainingVolume
 
     // =====================================================
-// 3. AUTOEXECUTE
-// SOLO PERMITIDO PARA CONTRATOS
-// =====================================================
-
-if (
-  autoExecute &&
-  isFullyViable &&
-  request.source === "contract"
-) {
-
-  allocateFromRegion(remainingVolume)
-
-  return false
-}
-
-
-// =====================================================
-// 4. TOTALMENTE VIABLE
-// =====================================================
-
-if (isFullyViable) {
-
-  const zones = state.liveDecision?.decisionZones
-
-  const greenLimit =
-    zones?.greenLimit ?? remainingVolume
-
-  const yellowLimit =
-    zones?.yellowLimit ?? remainingVolume
-
-
-  // ---------------------------------------------------
-  // GREEN ZONE
-  // ---------------------------------------------------
-
-  if (remainingVolume <= greenLimit) {
-
-    // SOLO CONTRATOS EJECUTAN AUTOMÁTICAMENTE
-
-    if (request.source === "contract") {
-
+    // 3) AUTOEXECUTE
+    // SOLO PERMITIDO PARA CONTRATOS
+    // =====================================================
+    if (
+      autoExecute &&
+      isFullyViable &&
+      request.source === "contract"
+    ) {
       allocateFromRegion(remainingVolume)
-
       return false
-
     }
 
-    // requests manuales esperan wizard
+    // =====================================================
+    // 4) TOTALMENTE VIABLE
+    // =====================================================
+    if (isFullyViable) {
+      const zones = state.liveDecision?.decisionZones
 
-    return true
+      const greenLimit =
+        zones?.greenLimit ?? remainingVolume
 
-    }
-  
+      const yellowLimit =
+        zones?.yellowLimit ?? remainingVolume
+
+      // ---------------------------------------------------
+      // GREEN ZONE
+      // ---------------------------------------------------
+      if (remainingVolume <= greenLimit) {
+        // SOLO contratos ejecutan automáticamente
+        if (request.source === "contract") {
+          allocateFromRegion(remainingVolume)
+          return false
+        }
+
+        // requests manuales esperan wizard
+        return true
+      }
 
       // ---------------------------------------------------
       // YELLOW ZONE → contraoferta
       // ---------------------------------------------------
-
       if (remainingVolume <= yellowLimit) {
-
         request.suggestedVolume = greenLimit
 
         if (!request.offerOpen) {
-
           request.offerOpen = true
           request.offerExpiry = now + 15000
-
         }
 
         return true
       }
 
       // ---------------------------------------------------
-      // RED ZONE → rechazo pero contraoferta segura
+      // RED ZONE → rechazo + contraoferta segura
       // ---------------------------------------------------
-
       request.suggestedVolume = greenLimit
 
       if (!request.offerOpen) {
-
         request.offerOpen = true
         request.offerExpiry = now + 15000
-
       }
 
       return true
     }
 
     // =====================================================
-    // 5. PARCIALMENTE VIABLE
+    // 5) PARCIALMENTE VIABLE
     // =====================================================
-
     if (isPartiallyViable) {
-
       request.suggestedVolume = totalAvailable
 
       if (!request.offerOpen) {
-
         request.offerOpen = true
         request.offerExpiry = now + 15000
-
       }
 
       return true
     }
 
     // =====================================================
-    // 6. NO VIABLE
+    // 6) NO VIABLE
     // =====================================================
-
     request.suggestedVolume = undefined
-
     return true
-
   })
-
 }

@@ -9,24 +9,23 @@ export function computeASI(
   state: EngineState,
   unifiedPressure: number
 ) {
-
-  // presión inmediata
+  // presión inmediata (componente rápido)
   const pressureComponent =
     unifiedPressure * 0.35
 
-  // desgaste acumulado
+  // desgaste acumulado (componente lento)
   const fatigueComponent =
     state.systemFatigue * 0.25
 
-  // shocks activos
+  // shocks activos en curso
   const shockComponent =
     state.shockLevel * 0.15
 
-  // tendencia estructural
+  // tendencia estructural del régimen
   const driftComponent =
     state.regimeDriftSignal * 0.15
 
-  // contexto de régimen
+  // contexto de régimen (bias discreto)
   const regimeComponent =
     state.systemRegime === "Structural stress"
       ? 0.1
@@ -39,7 +38,7 @@ export function computeASI(
     driftComponent +
     regimeComponent
 
-  // saturación suave
+  // saturación suave (bounded non-linear response)
   const asi =
     Math.tanh(raw * 1.5)
 
