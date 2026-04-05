@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ProcessType } from "@prisma/client"
 import { useRouter } from "next/navigation"
-import CoffeeAssistant from "@/src/components/shared/CoffeeAssistant"
+import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
 
 export default function NewLotPage() {
   //////////////////////////////////////////////////////
@@ -112,7 +112,12 @@ export default function NewLotPage() {
 
               {/* 🌿 REAL ASSISTANT */}
               <div className="flex items-center">
-                <CoffeeAssistant iconSize={64} />
+               <CoffeeAssistant
+  iconSize={64}
+  form={form}
+  updateField={updateField}
+  context="lot-wizard"
+/>
               </div>
             </div>
 

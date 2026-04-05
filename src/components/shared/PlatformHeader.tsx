@@ -4,7 +4,7 @@ import Image from "next/image"
 import OnboardingWizard from "@/src/components/shared/OnboardingWizard"
 import { useEffect } from "react"
 import "@/styles/themes/producer.css"
-import CoffeeAssistant from "@/src/components/shared/CoffeeAssistant"
+import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
 
 export default function PlatformHeader({ user }: { user: any }) {
   const router = useRouter()
