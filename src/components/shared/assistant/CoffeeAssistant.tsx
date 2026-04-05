@@ -20,6 +20,7 @@ type CoffeeAssistantProps = {
 }
 
 type AssistantMessage = {
+  id: string
   role: "assistant" | "user"
   content: string
 }
@@ -32,6 +33,16 @@ export default function CoffeeAssistant({
   updateField,
   context = "dashboard",
 }: CoffeeAssistantProps) {
+
+
+const createMessage = (
+  role: "assistant" | "user",
+  content: string
+): AssistantMessage => ({
+  id: crypto.randomUUID(),
+  role,
+  content,
+})
 
   //////////////////////////////////////////////////////
   // 🧠 STATE
@@ -180,53 +191,45 @@ export default function CoffeeAssistant({
   }
 
   const pushLotNameEntryMessage = () => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content:
-          "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process.",
-      },
-    ])
-  }
+  setMessages((prev) => [
+    ...prev,
+    createMessage(
+      "assistant",
+      "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process."
+    ),
+  ])
+}
 
   const pushLotNameInvalidOptionMessage = () => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content:
-          "Please choose one of the available options below, or type your own lot name.",
-      },
-    ])
-  }
+  setMessages((prev) => [
+    ...prev,
+    createMessage(
+      "assistant",
+      "Please choose one of the available options below, or type your own lot name."
+    ),
+  ])
+}
+ const pushLotNameSuggestionMessage = (suggestion: string) => {
+  setMessages((prev) => [
+    ...prev,
+    createMessage("assistant", `I suggest: ${suggestion}`),
+    createMessage(
+      "assistant",
+      "You can use this name, ask for another option, write your own, or skip."
+    ),
+  ])
+}
 
-  const pushLotNameSuggestionMessage = (suggestion: string) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: `I suggest: ${suggestion}`,
-      },
-      {
-        role: "assistant",
-        content:
-          "You can use this name, ask for another option, write your own, or skip.",
-      },
-    ])
-  }
-
-  const goToNextLotStep = (nextStep: number) => {
+   const goToNextLotStep = (nextStep: number) => {
     const isLastStep = nextStep >= lotDraftSteps.length
 
     if (isLastStep) {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
-        },
+        createMessage(
+          "assistant",
+          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready."
+        ),
       ])
       setStep(nextStep)
       return
@@ -243,10 +246,7 @@ export default function CoffeeAssistant({
     setStep(nextStep)
     setMessages((prev) => [
       ...prev,
-      {
-        role: "assistant",
-        content: lotDraftSteps[nextStep].question,
-      },
+      createMessage("assistant", lotDraftSteps[nextStep].question),
     ])
   }
 
@@ -271,11 +271,10 @@ export default function CoffeeAssistant({
     setMode("lot")
     setStep(0)
     setMessages([
-      {
-        role: "assistant",
-        content:
-          "Great — I can help you complete this lot draft step by step.",
-      },
+      createMessage(
+        "assistant",
+        "Great — I can help you complete this lot draft step by step."
+      ),
     ])
     setInput("")
 
@@ -287,6 +286,7 @@ export default function CoffeeAssistant({
       loadFarmContext()
     }, 200)
   }
+
   //////////////////////////////////////////////////////
   // 🤖 AUTOLOAD FARM CONTEXT
   //////////////////////////////////////////////////////
@@ -307,15 +307,11 @@ export default function CoffeeAssistant({
       if (farms.length === 0) {
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content:
-              "Let's start with the Farm ID. This identifies your farm inside the platform.",
-          },
-          {
-            role: "assistant",
-            content: lotDraftSteps[0].question,
-          },
+          createMessage(
+            "assistant",
+            "Let's start with the Farm ID. This identifies your farm inside the platform."
+          ),
+          createMessage("assistant", lotDraftSteps[0].question),
         ])
         return
       }
@@ -335,10 +331,7 @@ export default function CoffeeAssistant({
 
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content: `Using "${farm.name}".`,
-          },
+          createMessage("assistant", `Using "${farm.name}".`),
         ])
 
         setStep(1)
@@ -358,15 +351,11 @@ export default function CoffeeAssistant({
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "I could not load your farms right now. Let's continue manually.",
-        },
-        {
-          role: "assistant",
-          content: lotDraftSteps[0].question,
-        },
+        createMessage(
+          "assistant",
+          "I could not load your farms right now. Let's continue manually."
+        ),
+        createMessage("assistant", lotDraftSteps[0].question),
       ])
     } finally {
       setHasCheckedFarms(true)
@@ -393,7 +382,7 @@ export default function CoffeeAssistant({
   // ✉️ LOT MODE
   //////////////////////////////////////////////////////
 
-   const handleLotSend = () => {
+  const handleLotSend = () => {
     if (!input.trim()) return
 
     const cleanInput = input.trim()
@@ -401,18 +390,13 @@ export default function CoffeeAssistant({
 
     if (!currentStep) return
 
-    const userMessage: AssistantMessage = {
-      role: "user",
-      content: cleanInput,
-    }
+    const userMessage = createMessage("user", cleanInput)
 
     //////////////////////////////////////////////////////
     // 🏷️ LOT NAME SPECIAL SUBFLOW
     //////////////////////////////////////////////////////
 
     if (currentStep.key === "name") {
-      setMessages((prev) => [...prev, userMessage])
-
       if (isSkipCommand(cleanInput)) {
         if (updateField) {
           updateField("name", "")
@@ -424,10 +408,8 @@ export default function CoffeeAssistant({
 
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content: "Lot Name skipped.",
-          },
+          userMessage,
+          createMessage("assistant", "Lot Name skipped."),
         ])
 
         goToNextLotStep(step + 1)
@@ -445,10 +427,8 @@ export default function CoffeeAssistant({
 
           setMessages((prev) => [
             ...prev,
-            {
-              role: "assistant",
-              content: `Lot Name updated: ${lotNameSuggestion}`,
-            },
+            userMessage,
+            createMessage("assistant", `Lot Name updated: ${lotNameSuggestion}`),
           ])
 
           goToNextLotStep(step + 1)
@@ -462,6 +442,8 @@ export default function CoffeeAssistant({
 
           setLotNameSuggestion(retrySuggestion)
           setInput("")
+
+          setMessages((prev) => [...prev, userMessage])
           pushLotNameSuggestionMessage(retrySuggestion)
           return
         }
@@ -472,14 +454,16 @@ export default function CoffeeAssistant({
 
           setMessages((prev) => [
             ...prev,
-            {
-              role: "assistant",
-              content: "Perfect — type the lot name you want to use.",
-            },
+            userMessage,
+            createMessage(
+              "assistant",
+              "Perfect — type the lot name you want to use."
+            ),
           ])
           return
         }
 
+        setMessages((prev) => [...prev, userMessage])
         pushLotNameInvalidOptionMessage()
         setInput("")
         return
@@ -492,6 +476,8 @@ export default function CoffeeAssistant({
           setLotNameSuggestion(suggestion)
           setLotNameFlowState("suggested")
           setInput("")
+
+          setMessages((prev) => [...prev, userMessage])
           pushLotNameSuggestionMessage(suggestion)
           return
         }
@@ -502,15 +488,17 @@ export default function CoffeeAssistant({
 
           setMessages((prev) => [
             ...prev,
-            {
-              role: "assistant",
-              content: "Go ahead — type the lot name you want to use.",
-            },
+            userMessage,
+            createMessage(
+              "assistant",
+              "Go ahead — type the lot name you want to use."
+            ),
           ])
           return
         }
 
         if (cleanInput.length < 2) {
+          setMessages((prev) => [...prev, userMessage])
           pushLotNameInvalidOptionMessage()
           setInput("")
           return
@@ -526,10 +514,8 @@ export default function CoffeeAssistant({
 
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content: `Lot Name updated: ${cleanInput}`,
-          },
+          userMessage,
+          createMessage("assistant", `Lot Name updated: ${cleanInput}`),
         ])
 
         goToNextLotStep(step + 1)
@@ -538,6 +524,7 @@ export default function CoffeeAssistant({
 
       if (lotNameFlowState === "manual") {
         if (cleanInput.length < 2) {
+          setMessages((prev) => [...prev, userMessage])
           pushLotNameInvalidOptionMessage()
           setInput("")
           return
@@ -553,10 +540,8 @@ export default function CoffeeAssistant({
 
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content: `Lot Name updated: ${cleanInput}`,
-          },
+          userMessage,
+          createMessage("assistant", `Lot Name updated: ${cleanInput}`),
         ])
 
         goToNextLotStep(step + 1)
@@ -575,12 +560,10 @@ export default function CoffeeAssistant({
       setMessages((prev) => [
         ...prev,
         userMessage,
-        {
-          role: "assistant",
-          content: `${validationError} ${
-            currentStep.helper ? currentStep.helper : ""
-          }`.trim(),
-        },
+        createMessage(
+          "assistant",
+          `${validationError} ${currentStep.helper ? currentStep.helper : ""}`.trim()
+        ),
       ])
       setInput("")
       return
@@ -597,11 +580,10 @@ export default function CoffeeAssistant({
       setMessages((prev) => [
         ...prev,
         userMessage,
-        {
-          role: "assistant",
-          content:
-            "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
-        },
+        createMessage(
+          "assistant",
+          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready."
+        ),
       ])
 
       setStep(nextStep)
@@ -617,10 +599,7 @@ export default function CoffeeAssistant({
     setMessages((prev) => [
       ...prev,
       userMessage,
-      {
-        role: "assistant",
-        content: confirmationMessage,
-      },
+      createMessage("assistant", confirmationMessage),
     ])
 
     setInput("")
@@ -637,10 +616,7 @@ export default function CoffeeAssistant({
 
     setMessages((prev) => [
       ...prev,
-      {
-        role: "assistant",
-        content: lotDraftSteps[nextStep].question,
-      },
+      createMessage("assistant", lotDraftSteps[nextStep].question),
     ])
   }
 
@@ -652,11 +628,7 @@ export default function CoffeeAssistant({
     if (!input.trim()) return
 
     const cleanInput = input.trim()
-
-    const userMessage: AssistantMessage = {
-      role: "user",
-      content: cleanInput,
-    }
+    const userMessage = createMessage("user", cleanInput)
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
@@ -679,23 +651,21 @@ export default function CoffeeAssistant({
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            data.reply ||
-            "I could not generate a response right now. Please try again.",
-        },
+        createMessage(
+          "assistant",
+          data.reply ||
+            "I could not generate a response right now. Please try again."
+        ),
       ])
     } catch (error) {
       console.error("Assistant chat error:", error)
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "There was an error connecting with the assistant. Please try again.",
-        },
+        createMessage(
+          "assistant",
+          "There was an error connecting with the assistant. Please try again."
+        ),
       ])
     } finally {
       setIsLoading(false)
@@ -737,36 +707,35 @@ export default function CoffeeAssistant({
   // 🎨 UI HELPERS
   //////////////////////////////////////////////////////
 
-  const renderMessageBubble = (msg: AssistantMessage, index: number) => {
-    return (
-      <div
-        key={index}
+  const renderMessageBubble = (msg: AssistantMessage) => {
+  return (
+    <div
+      key={msg.id}
+      style={{
+        alignSelf: msg.role === "assistant" ? "flex-start" : "flex-end",
+        background:
+          msg.role === "assistant"
+            ? "rgba(212,175,55,0.08)"
+            : "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(212,175,55,0.15)",
+        padding: "10px 14px",
+        borderRadius: "12px",
+        maxWidth: "80%",
+        whiteSpace: "pre-line",
+      }}
+    >
+      <span
         style={{
-          alignSelf: msg.role === "assistant" ? "flex-start" : "flex-end",
-          background:
-            msg.role === "assistant"
-              ? "rgba(212,175,55,0.08)"
-              : "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(212,175,55,0.15)",
-          padding: "10px 14px",
-          borderRadius: "12px",
-          maxWidth: "80%",
-          whiteSpace: "pre-line",
+          fontSize: "13px",
+          color: "#e7d9c4",
+          lineHeight: "1.5",
         }}
       >
-        <span
-          style={{
-            fontSize: "13px",
-            color: "#e7d9c4",
-            lineHeight: "1.5",
-          }}
-        >
-          {msg.content}
-        </span>
-      </div>
-    )
-  }
-
+        {msg.content}
+      </span>
+    </div>
+  )
+}
   //////////////////////////////////////////////////////
   // 🎨 UI
   //////////////////////////////////////////////////////
@@ -1089,12 +1058,9 @@ export default function CoffeeAssistant({
   setFarmOptions([])
 
   setMessages((prev) => [
-    ...prev,
-    {
-      role: "assistant",
-      content: `Using "${selected.name}".`,
-    },
-  ])
+  ...prev,
+  createMessage("assistant", `Using "${selected.name}".`),
+])
 
   setStep(1)
   setLotNameFlowState("idle")
@@ -1227,7 +1193,7 @@ export default function CoffeeAssistant({
                 )}
 
                 {/* CHAT MESSAGES */}
-                {messages.map((msg, i) => renderMessageBubble(msg, i))}
+                {messages.map((msg) => renderMessageBubble(msg))}
 
                                 {/* LOT NAME ACTIONS */}
                 {currentLotStep?.key === "name" && (
@@ -1262,16 +1228,16 @@ export default function CoffeeAssistant({
                           Suggest a lot name
                         </button>
 
-                        <button
+                                             <button
                           type="button"
                           onClick={() => {
                             setLotNameFlowState("manual")
                             setMessages((prev) => [
                               ...prev,
-                              {
-                                role: "assistant",
-                                content: "Go ahead — type the lot name you want to use.",
-                              },
+                              createMessage(
+                                "assistant",
+                                "Go ahead — type the lot name you want to use."
+                              ),
                             ])
                           }}
                           style={{
@@ -1299,10 +1265,7 @@ export default function CoffeeAssistant({
 
                             setMessages((prev) => [
                               ...prev,
-                              {
-                                role: "assistant",
-                                content: "Lot Name skipped.",
-                              },
+                              createMessage("assistant", "Lot Name skipped."),
                             ])
 
                             goToNextLotStep(step + 1)
@@ -1334,10 +1297,10 @@ export default function CoffeeAssistant({
                             setLotNameFlowState("idle")
                             setMessages((prev) => [
                               ...prev,
-                              {
-                                role: "assistant",
-                                content: `Lot Name updated: ${lotNameSuggestion}`,
-                              },
+                              createMessage(
+                                "assistant",
+                                `Lot Name updated: ${lotNameSuggestion}`
+                              ),
                             ])
 
                             goToNextLotStep(step + 1)
@@ -1386,10 +1349,10 @@ export default function CoffeeAssistant({
                             setLotNameFlowState("manual")
                             setMessages((prev) => [
                               ...prev,
-                              {
-                                role: "assistant",
-                                content: "Perfect — type the lot name you want to use.",
-                              },
+                              createMessage(
+                                "assistant",
+                                "Perfect — type the lot name you want to use."
+                              ),
                             ])
                           }}
                           style={{
@@ -1417,10 +1380,7 @@ export default function CoffeeAssistant({
 
                             setMessages((prev) => [
                               ...prev,
-                              {
-                                role: "assistant",
-                                content: "Lot Name skipped.",
-                              },
+                              createMessage("assistant", "Lot Name skipped."),
                             ])
 
                             goToNextLotStep(step + 1)
@@ -1569,7 +1529,7 @@ export default function CoffeeAssistant({
                 )}
 
                 {/* NORMAL CHAT MESSAGES */}
-                {messages.map((msg, i) => renderMessageBubble(msg, i))}
+                {messages.map((msg) => renderMessageBubble(msg))}
 
                 {/* LOADING */}
                 {isLoading && (
