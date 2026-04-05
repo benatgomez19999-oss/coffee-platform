@@ -249,6 +249,38 @@ export default function CoffeeAssistant({
   );
 
   //////////////////////////////////////////////////////
+// 📜 FORM AUTO SCROLL (sync assistant → form)
+//////////////////////////////////////////////////////
+
+const scrollFormToStep = (stepIndex: number) => {
+  try {
+    const sections = document.querySelectorAll("section");
+
+    if (!sections || sections.length === 0) return;
+
+    //////////////////////////////////////////////////////
+    // 🧠 STEP → SECTION MAPPING
+    //////////////////////////////////////////////////////
+    let sectionIndex = 0;
+
+    if (stepIndex <= 1) sectionIndex = 0;
+    else if (stepIndex <= 3) sectionIndex = 1;
+    else sectionIndex = 2;
+
+    const target = sections[sectionIndex] as HTMLElement;
+
+    if (!target) return;
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  } catch (err) {
+    console.warn("Scroll form error:", err);
+  }
+};
+
+  //////////////////////////////////////////////////////
   // 🧠 AUTO CLOSE ONLY ON FINAL STEP
   //////////////////////////////////////////////////////
 
@@ -398,6 +430,7 @@ export default function CoffeeAssistant({
       window.removeEventListener("startLotFlow", lotHandler);
     };
   }, []);
+
 
   //////////////////////////////////////////////////////
   // ✉️ LOT MODE (guided draft flow)
@@ -870,6 +903,38 @@ export default function CoffeeAssistant({
         </span>
       </div>
     );
+  };
+
+    //////////////////////////////////////////////////////
+  // 📜 FORM AUTO SCROLL (sync assistant → form)
+  //////////////////////////////////////////////////////
+
+  const scrollFormToStep = (stepIndex: number) => {
+    try {
+      const sections = document.querySelectorAll("section");
+
+      if (!sections || sections.length === 0) return;
+
+      //////////////////////////////////////////////////////
+      // 🧠 STEP → SECTION MAPPING
+      //////////////////////////////////////////////////////
+      let sectionIndex = 0;
+
+      if (stepIndex <= 1) sectionIndex = 0;
+      else if (stepIndex <= 3) sectionIndex = 1;
+      else sectionIndex = 2;
+
+      const target = sections[sectionIndex] as HTMLElement;
+
+      if (!target) return;
+
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    } catch (err) {
+      console.warn("Scroll form error:", err);
+    }
   };
 
   //////////////////////////////////////////////////////
