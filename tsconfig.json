@@ -15,24 +15,20 @@
     "incremental": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
-
     "paths": {
-      "@/*": ["*"],
-
-      "@src/*": ["src/*"],
-      "@styles/*": ["styles/*"],
-      "@app/*": ["app/*"],
-      "@lib/*": ["src/lib/*"],
-      
+      "@/*": ["./*", "./src/*"],
+      "@/src/*": ["./src/*"],
+      "@src/*": ["./src/*"],
+      "@styles/*": ["./styles/*"],
+      "@app/*": ["./app/*"],
+      "@lib/*": ["./src/lib/*", "./lib/*"]
     },
-
     "plugins": [
       {
         "name": "next"
       }
     ]
   },
-
   "include": [
     "next-env.d.ts",
     "**/*.ts",
@@ -41,6 +37,5 @@
     ".next/dev/types/**/*.ts",
     "next.config.js"
   ],
-
   "exclude": ["node_modules"]
 }
