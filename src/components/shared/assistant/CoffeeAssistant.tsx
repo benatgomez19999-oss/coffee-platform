@@ -238,16 +238,27 @@ export default function CoffeeAssistant({
   const goToNextLotStep = (nextStep: number) => {
     const isLastStep = nextStep >= lotDraftSteps.length;
 
-    if (isLastStep) {
-      setStep(nextStep);
-      appendMessages(
-        createMessage(
-          "assistant",
-          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
-        ),
-      );
-      return;
-    }
+   if (isLastStep) {
+  setStep(nextStep);
+
+  appendMessages(
+    createMessage(
+      "assistant",
+      "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
+    ),
+  );
+
+  //////////////////////////////////////////////////////
+  // 🧠 AUTO CLOSE ONLY ON FINAL STEP
+  //////////////////////////////////////////////////////
+
+  setTimeout(() => {
+    setAssistantOpen(false);
+    resetToNormalMode();
+  }, 3200);
+
+  return;
+}
 
     setStep(nextStep);
 
@@ -425,7 +436,7 @@ export default function CoffeeAssistant({
             createMessage("assistant", "Lot Name skipped."),
             createMessage(
               "assistant",
-              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+              "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
             ),
           );
           setStep(nextStep);
@@ -472,7 +483,7 @@ export default function CoffeeAssistant({
               ),
               createMessage(
                 "assistant",
-                "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
               ),
             );
             setStep(nextStep);
@@ -598,7 +609,7 @@ export default function CoffeeAssistant({
             createMessage("assistant", `Lot Name updated: ${cleanInput}`),
             createMessage(
               "assistant",
-              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+              "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
             ),
           );
           setStep(nextStep);
@@ -651,7 +662,7 @@ export default function CoffeeAssistant({
             createMessage("assistant", `Lot Name updated: ${cleanInput}`),
             createMessage(
               "assistant",
-              "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+              "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
             ),
           );
           setStep(nextStep);
@@ -715,7 +726,7 @@ export default function CoffeeAssistant({
         createMessage("assistant", confirmationMessage),
         createMessage(
           "assistant",
-          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+          "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
         ),
       );
 
@@ -1406,7 +1417,7 @@ export default function CoffeeAssistant({
                                 createMessage("assistant", "Lot Name skipped."),
                                 createMessage(
                                   "assistant",
-                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                  "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
                                 ),
                               );
                               setStep(nextStep);
@@ -1468,7 +1479,7 @@ export default function CoffeeAssistant({
                                 ),
                                 createMessage(
                                   "assistant",
-                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                  "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
                                 ),
                               );
                               setStep(nextStep);
@@ -1581,7 +1592,7 @@ export default function CoffeeAssistant({
                                 createMessage("assistant", "Lot Name skipped."),
                                 createMessage(
                                   "assistant",
-                                  "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+                                  "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
                                 ),
                               );
                               setStep(nextStep);
