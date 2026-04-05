@@ -10,7 +10,7 @@ export default function PlatformHeader({ user }: { user: any }) {
   const pathname = usePathname()
   const isProducer = user?.role === "PRODUCER"
   const [assistantOpen, setAssistantOpen] = useState(false)
-  const [hasNotification, setHasNotification] = useState(true) // luego lo conectamos real
+  const [hasNotification, setHasNotification] = useState(true) 
   const [mode, setMode] = useState<"normal" | "story">("normal")
   const [step, setStep] = useState(0)
   const [messages, setMessages] = useState<any[]>([])

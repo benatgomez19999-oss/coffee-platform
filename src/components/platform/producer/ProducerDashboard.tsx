@@ -88,6 +88,18 @@ useEffect(() => {
   if (savedStory) {
     setStory(savedStory)
     setStoryReady(true)
+    return
+  }
+
+  const enableStoryPreview = true
+
+  if (enableStoryPreview) {
+    setStory(`Nestled in the highlands, our farm is dedicated to cultivating coffee with care, patience, and respect for origin.
+
+Each lot reflects the altitude, climate, and craft of our team. From harvest to drying, every decision is made to preserve clarity, sweetness, and character in the cup.
+
+This story preview is only temporary so we can validate the parchment effect in production.`)
+    setStoryReady(true)
   }
 }, [])
 
