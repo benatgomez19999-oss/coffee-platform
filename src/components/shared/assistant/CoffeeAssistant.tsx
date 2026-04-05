@@ -46,6 +46,16 @@ export default function CoffeeAssistant({
   const [isLoading, setIsLoading] = useState(false)
 
   //////////////////////////////////////////////////////
+  // 🏷️ LOT NAME SUBFLOW
+  //////////////////////////////////////////////////////
+
+  const [lotNameSuggestion, setLotNameSuggestion] = useState("")
+  const [lotNameFlowState, setLotNameFlowState] = useState<
+    "idle" | "suggested" | "manual"
+  >("idle")
+  const [selectedFarmName, setSelectedFarmName] = useState("")
+
+  //////////////////////////////////////////////////////
   // 🌿 FARM CONTEXT (SMART AUTOFILL)
   //////////////////////////////////////////////////////
 
@@ -97,6 +107,149 @@ export default function CoffeeAssistant({
     return summaryLines.join("\n")
   }
 
+    const normalizeCommand = (value: string) => {
+    return value.trim().toLowerCase()
+  }
+
+  const isAffirmativeCommand = (value: string) => {
+    const clean = normalizeCommand(value)
+
+    return ["yes", "si", "sí", "use it", "use this", "usar", "usar este"].includes(clean)
+  }
+
+  const isSuggestCommand = (value: string) => {
+    const clean = normalizeCommand(value)
+
+    return ["suggest", "sugiere", "suggest one", "name suggestion"].includes(clean)
+  }
+
+  const isAnotherCommand = (value: string) => {
+    const clean = normalizeCommand(value)
+
+    return ["another", "otro", "otra", "different"].includes(clean)
+  }
+
+  const isManualCommand = (value: string) => {
+    const clean = normalizeCommand(value)
+
+    return ["manual", "write my own", "i'll write it myself", "yo escribo"].includes(clean)
+  }
+
+  const isSkipCommand = (value: string) => {
+    const clean = normalizeCommand(value)
+
+    return ["skip", "omitir", "omit"].includes(clean)
+  }
+
+  const buildSuggestedLotName = () => {
+    const farmLabel =
+      selectedFarmName?.trim() ||
+      (form?.farmId ? "Farm" : "Coffee")
+
+    const processLabel =
+      form?.process
+        ?.toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase()) || ""
+
+    const varietyLabel =
+      form?.variety
+        ?.toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase()) || ""
+
+    const harvestLabel = form?.harvestYear?.trim() || ""
+
+    if (farmLabel && processLabel && varietyLabel) {
+      return `${farmLabel} ${processLabel} ${varietyLabel} Lot`
+    }
+
+    if (farmLabel && processLabel) {
+      return `${farmLabel} ${processLabel} Lot`
+    }
+
+    if (farmLabel && varietyLabel) {
+      return `${farmLabel} ${varietyLabel} Lot`
+    }
+
+    if (farmLabel && harvestLabel) {
+      return `${farmLabel} Harvest ${harvestLabel} Lot`
+    }
+
+    return `${farmLabel} Lot 1`
+  }
+
+  const pushLotNameEntryMessage = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content:
+          "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process.",
+      },
+    ])
+  }
+
+  const pushLotNameInvalidOptionMessage = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content:
+          "Please choose one of the available options below, or type your own lot name.",
+      },
+    ])
+  }
+
+  const pushLotNameSuggestionMessage = (suggestion: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: `I suggest: ${suggestion}`,
+      },
+      {
+        role: "assistant",
+        content:
+          "You can use this name, ask for another option, write your own, or skip.",
+      },
+    ])
+  }
+
+  const goToNextLotStep = (nextStep: number) => {
+    const isLastStep = nextStep >= lotDraftSteps.length
+
+    if (isLastStep) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
+        },
+      ])
+      setStep(nextStep)
+      return
+    }
+
+    if (lotDraftSteps[nextStep]?.key === "name") {
+      setStep(nextStep)
+      setLotNameFlowState("idle")
+      setLotNameSuggestion("")
+      pushLotNameEntryMessage()
+      return
+    }
+
+    setStep(nextStep)
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: lotDraftSteps[nextStep].question,
+      },
+    ])
+  }
+
   const resetToNormalMode = () => {
     setMode("normal")
     setStep(0)
@@ -105,6 +258,8 @@ export default function CoffeeAssistant({
     setIsLoading(false)
     setFarmOptions([])
     setHasCheckedFarms(false)
+    setLotNameSuggestion("")
+    setLotNameFlowState("idle")
   }
 
   //////////////////////////////////////////////////////
@@ -176,19 +331,20 @@ export default function CoffeeAssistant({
           updateField("farmId", farm.id)
         }
 
+        setSelectedFarmName(farm.name)
+
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: `I found your farm "${farm.name}" and linked it automatically.`,
-          },
-          {
-            role: "assistant",
-            content: lotDraftSteps[1].question,
+            content: `Using "${farm.name}".`,
           },
         ])
 
         setStep(1)
+        setLotNameFlowState("idle")
+        setLotNameSuggestion("")
+        pushLotNameEntryMessage()
         return
       }
 
@@ -216,7 +372,6 @@ export default function CoffeeAssistant({
       setHasCheckedFarms(true)
     }
   }
-    
 
   //////////////////////////////////////////////////////
   // 🎧 EVENTS
@@ -238,7 +393,7 @@ export default function CoffeeAssistant({
   // ✉️ LOT MODE
   //////////////////////////////////////////////////////
 
-  const handleLotSend = () => {
+   const handleLotSend = () => {
     if (!input.trim()) return
 
     const cleanInput = input.trim()
@@ -250,6 +405,168 @@ export default function CoffeeAssistant({
       role: "user",
       content: cleanInput,
     }
+
+    //////////////////////////////////////////////////////
+    // 🏷️ LOT NAME SPECIAL SUBFLOW
+    //////////////////////////////////////////////////////
+
+    if (currentStep.key === "name") {
+      setMessages((prev) => [...prev, userMessage])
+
+      if (isSkipCommand(cleanInput)) {
+        if (updateField) {
+          updateField("name", "")
+        }
+
+        setLotNameSuggestion("")
+        setLotNameFlowState("idle")
+        setInput("")
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Lot Name skipped.",
+          },
+        ])
+
+        goToNextLotStep(step + 1)
+        return
+      }
+
+      if (lotNameFlowState === "suggested") {
+        if (isAffirmativeCommand(cleanInput)) {
+          if (updateField) {
+            updateField("name", lotNameSuggestion)
+          }
+
+          setLotNameFlowState("idle")
+          setInput("")
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `Lot Name updated: ${lotNameSuggestion}`,
+            },
+          ])
+
+          goToNextLotStep(step + 1)
+          return
+        }
+
+        if (isAnotherCommand(cleanInput) || isSuggestCommand(cleanInput)) {
+          const suggestion = buildSuggestedLotName()
+          const retrySuggestion =
+            suggestion === lotNameSuggestion ? `${suggestion} Reserve` : suggestion
+
+          setLotNameSuggestion(retrySuggestion)
+          setInput("")
+          pushLotNameSuggestionMessage(retrySuggestion)
+          return
+        }
+
+        if (isManualCommand(cleanInput)) {
+          setLotNameFlowState("manual")
+          setInput("")
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Perfect — type the lot name you want to use.",
+            },
+          ])
+          return
+        }
+
+        pushLotNameInvalidOptionMessage()
+        setInput("")
+        return
+      }
+
+      if (lotNameFlowState === "idle") {
+        if (isSuggestCommand(cleanInput) || isAffirmativeCommand(cleanInput)) {
+          const suggestion = buildSuggestedLotName()
+
+          setLotNameSuggestion(suggestion)
+          setLotNameFlowState("suggested")
+          setInput("")
+          pushLotNameSuggestionMessage(suggestion)
+          return
+        }
+
+        if (isManualCommand(cleanInput)) {
+          setLotNameFlowState("manual")
+          setInput("")
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Go ahead — type the lot name you want to use.",
+            },
+          ])
+          return
+        }
+
+        if (cleanInput.length < 2) {
+          pushLotNameInvalidOptionMessage()
+          setInput("")
+          return
+        }
+
+        if (updateField) {
+          updateField("name", cleanInput)
+        }
+
+        setLotNameFlowState("idle")
+        setLotNameSuggestion("")
+        setInput("")
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Lot Name updated: ${cleanInput}`,
+          },
+        ])
+
+        goToNextLotStep(step + 1)
+        return
+      }
+
+      if (lotNameFlowState === "manual") {
+        if (cleanInput.length < 2) {
+          pushLotNameInvalidOptionMessage()
+          setInput("")
+          return
+        }
+
+        if (updateField) {
+          updateField("name", cleanInput)
+        }
+
+        setLotNameFlowState("idle")
+        setLotNameSuggestion("")
+        setInput("")
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Lot Name updated: ${cleanInput}`,
+          },
+        ])
+
+        goToNextLotStep(step + 1)
+        return
+      }
+    }
+
+    //////////////////////////////////////////////////////
+    // 🌿 STANDARD LOT STEPS
+    //////////////////////////////////////////////////////
 
     const normalizedValue = normalizeLotValue(currentStep.key, cleanInput)
     const validationError = validateLotValue(currentStep.key, normalizedValue)
@@ -304,14 +621,27 @@ export default function CoffeeAssistant({
         role: "assistant",
         content: confirmationMessage,
       },
+    ])
+
+    setInput("")
+
+    if (lotDraftSteps[nextStep]?.key === "name") {
+      setStep(nextStep)
+      setLotNameFlowState("idle")
+      setLotNameSuggestion("")
+      pushLotNameEntryMessage()
+      return
+    }
+
+    setStep(nextStep)
+
+    setMessages((prev) => [
+      ...prev,
       {
         role: "assistant",
         content: lotDraftSteps[nextStep].question,
       },
     ])
-
-    setStep(nextStep)
-    setInput("")
   }
 
   //////////////////////////////////////////////////////
@@ -744,32 +1074,33 @@ export default function CoffeeAssistant({
 
                   <select
                     onChange={(e) => {
-                      const selected = farmOptions.find(
-                        (farm) => farm.id === e.target.value
-                      )
+  const selected = farmOptions.find(
+    (farm) => farm.id === e.target.value
+  )
 
-                      if (!selected) return
+  if (!selected) return
 
-                      if (updateField) {
-                        updateField("farmId", selected.id)
-                      }
+  if (updateField) {
+    updateField("farmId", selected.id)
+  }
 
-                      setFarmOptions([])
+  setSelectedFarmName(selected.name)
 
-                      setMessages((prev) => [
-                        ...prev,
-                        {
-                          role: "assistant",
-                          content: `Using "${selected.name}".`,
-                        },
-                        {
-                          role: "assistant",
-                          content: lotDraftSteps[1].question,
-                        },
-                      ])
+  setFarmOptions([])
 
-                      setStep(1)
-                    }}
+  setMessages((prev) => [
+    ...prev,
+    {
+      role: "assistant",
+      content: `Using "${selected.name}".`,
+    },
+  ])
+
+  setStep(1)
+  setLotNameFlowState("idle")
+  setLotNameSuggestion("")
+  pushLotNameEntryMessage()
+}}
                     defaultValue=""
                     style={{
                       width: "100%",
@@ -897,6 +1228,231 @@ export default function CoffeeAssistant({
 
                 {/* CHAT MESSAGES */}
                 {messages.map((msg, i) => renderMessageBubble(msg, i))}
+
+                                {/* LOT NAME ACTIONS */}
+                {currentLotStep?.key === "name" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      marginTop: "2px",
+                    }}
+                  >
+                    {lotNameFlowState === "idle" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const suggestion = buildSuggestedLotName()
+                            setLotNameSuggestion(suggestion)
+                            setLotNameFlowState("suggested")
+                            pushLotNameSuggestionMessage(suggestion)
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "rgba(212,175,55,0.08)",
+                            fontSize: "12px",
+                            color: "#d9c39c",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Suggest a lot name
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLotNameFlowState("manual")
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                role: "assistant",
+                                content: "Go ahead — type the lot name you want to use.",
+                              },
+                            ])
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: "#cbb892",
+                            cursor: "pointer",
+                          }}
+                        >
+                          I’ll write it myself
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (updateField) {
+                              updateField("name", "")
+                            }
+
+                            setLotNameSuggestion("")
+                            setLotNameFlowState("idle")
+
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                role: "assistant",
+                                content: "Lot Name skipped.",
+                              },
+                            ])
+
+                            goToNextLotStep(step + 1)
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: "#cbb892",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Skip
+                        </button>
+                      </>
+                    )}
+
+                    {lotNameFlowState === "suggested" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (updateField) {
+                              updateField("name", lotNameSuggestion)
+                            }
+
+                            setLotNameFlowState("idle")
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                role: "assistant",
+                                content: `Lot Name updated: ${lotNameSuggestion}`,
+                              },
+                            ])
+
+                            goToNextLotStep(step + 1)
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "rgba(212,175,55,0.08)",
+                            fontSize: "12px",
+                            color: "#d9c39c",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Use this name
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const suggestion = buildSuggestedLotName()
+                            const retrySuggestion =
+                              suggestion === lotNameSuggestion
+                                ? `${suggestion} Reserve`
+                                : suggestion
+
+                            setLotNameSuggestion(retrySuggestion)
+                            pushLotNameSuggestionMessage(retrySuggestion)
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: "#cbb892",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Suggest another
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLotNameFlowState("manual")
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                role: "assistant",
+                                content: "Perfect — type the lot name you want to use.",
+                              },
+                            ])
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: "#cbb892",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Write my own
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (updateField) {
+                              updateField("name", "")
+                            }
+
+                            setLotNameSuggestion("")
+                            setLotNameFlowState("idle")
+
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                role: "assistant",
+                                content: "Lot Name skipped.",
+                              },
+                            ])
+
+                            goToNextLotStep(step + 1)
+                          }}
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(212,175,55,0.2)",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: "#cbb892",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Skip
+                        </button>
+                      </>
+                    )}
+
+                    {lotNameFlowState === "manual" && (
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#bda884",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        Type your preferred lot name in the input below.
+                      </div>
+                    )}
+                  </div>
+                )}
 
                
                 <div ref={messagesEndRef} />
@@ -1068,13 +1624,18 @@ export default function CoffeeAssistant({
                     handleSend()
                   }
                 }}
-                placeholder={
+                   placeholder={
                   mode === "lot"
-                    ? currentLotStep
-                      ? `Reply for ${getFieldLabel(currentLotStep.key)}...`
-                      : "Type your answer..."
+                    ? currentLotStep?.key === "name"
+                      ? lotNameFlowState === "suggested"
+                        ? "Use the buttons below, or type a valid option..."
+                        : "Type your preferred lot name..."
+                      : currentLotStep
+                        ? `Reply for ${getFieldLabel(currentLotStep.key)}...`
+                        : "Type your answer..."
                     : "Ask something about your coffee..."
                 }
+
                 style={{
                   width: "100%",
                   background: "rgba(255,255,255,0.03)",
