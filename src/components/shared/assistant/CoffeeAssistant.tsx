@@ -250,14 +250,7 @@ export default function CoffeeAssistant({
 
 
 
-  //////////////////////////////////////////////////////
-  // 🧠 AUTO CLOSE ONLY ON FINAL STEP
-  //////////////////////////////////////////////////////
 
-  setTimeout(() => {
-    setAssistantOpen(false);
-    resetToNormalMode();
-  }, 3200);
 
   return;
 }
@@ -287,6 +280,38 @@ export default function CoffeeAssistant({
     setLotNameSuggestion("");
     setLotNameFlowState("idle");
     setSelectedFarmName("");
+  };
+
+    //////////////////////////////////////////////////////
+  // 📜 FORM AUTO SCROLL (sync assistant → form)
+  //////////////////////////////////////////////////////
+
+  const scrollFormToStep = (stepIndex: number) => {
+    try {
+      const sections = document.querySelectorAll("section");
+
+      if (!sections || sections.length === 0) return;
+
+      //////////////////////////////////////////////////////
+      // 🧠 STEP → SECTION MAPPING
+      //////////////////////////////////////////////////////
+      let sectionIndex = 0;
+
+      if (stepIndex <= 1) sectionIndex = 0;
+      else if (stepIndex <= 3) sectionIndex = 1;
+      else sectionIndex = 2;
+
+      const target = sections[sectionIndex] as HTMLElement;
+
+      if (!target) return;
+
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    } catch (err) {
+      console.warn("Scroll form error:", err);
+    }
   };
 
   //////////////////////////////////////////////////////
@@ -401,22 +426,23 @@ export default function CoffeeAssistant({
     };
   }, []);
 
-    //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
   // 📜 AUTO SYNC SCROLL WITH STEP
   //////////////////////////////////////////////////////
 
   useEffect(() => {
     if (mode !== "lot") return;
+    if (!assistantOpen) return;
 
     //////////////////////////////////////////////////////
     // 🧠 delay pequeño para evitar conflictos de render
     //////////////////////////////////////////////////////
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       scrollFormToStep(step);
-    }, 250);
+    }, 220);
 
-    return () => clearTimeout(timeout);
-  }, [step, mode]);
+    return () => window.clearTimeout(timeout);
+  }, [step, mode, assistantOpen]);
 
 
   //////////////////////////////////////////////////////
@@ -892,37 +918,7 @@ export default function CoffeeAssistant({
     );
   };
 
-    //////////////////////////////////////////////////////
-  // 📜 FORM AUTO SCROLL (sync assistant → form)
-  //////////////////////////////////////////////////////
-
-  const scrollFormToStep = (stepIndex: number) => {
-    try {
-      const sections = document.querySelectorAll("section");
-
-      if (!sections || sections.length === 0) return;
-
-      //////////////////////////////////////////////////////
-      // 🧠 STEP → SECTION MAPPING
-      //////////////////////////////////////////////////////
-      let sectionIndex = 0;
-
-      if (stepIndex <= 1) sectionIndex = 0;
-      else if (stepIndex <= 3) sectionIndex = 1;
-      else sectionIndex = 2;
-
-      const target = sections[sectionIndex] as HTMLElement;
-
-      if (!target) return;
-
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    } catch (err) {
-      console.warn("Scroll form error:", err);
-    }
-  };
+  
 
   //////////////////////////////////////////////////////
   // 🎨 UI / layout
