@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { useEffect, useMemo, useRef, useState } from "react"
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getFieldLabel,
   lotDraftSteps,
@@ -9,23 +9,22 @@ import {
   normalizeLotValue,
   requiredLotFields,
   validateLotValue,
-} from "@/src/components/shared/assistant/flows/lotDraftFlow"
-
+} from "@/src/components/shared/assistant/flows/lotDraftFlow";
 
 type CoffeeAssistantProps = {
-  iconSize?: number
-  form?: LotDraftForm
-  updateField?: (key: keyof LotDraftForm, value: string) => void
-  context?: "lot-wizard" | "dashboard"
-}
+  iconSize?: number;
+  form?: LotDraftForm;
+  updateField?: (key: keyof LotDraftForm, value: string) => void;
+  context?: "lot-wizard" | "dashboard";
+};
 
 type AssistantMessage = {
-  id: string
-  role: "assistant" | "user"
-  content: string
-}
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+};
 
-type AssistantMode = "normal" | "lot"
+type AssistantMode = "normal" | "lot";
 
 export default function CoffeeAssistant({
   iconSize = 54,
@@ -33,272 +32,291 @@ export default function CoffeeAssistant({
   updateField,
   context = "dashboard",
 }: CoffeeAssistantProps) {
-
-
-const createMessage = (
-  role: "assistant" | "user",
-  content: string
-): AssistantMessage => ({
-  id: crypto.randomUUID(),
-  role,
-  content,
-})
+  const createMessage = (
+    role: "assistant" | "user",
+    content: string,
+  ): AssistantMessage => ({
+    id: crypto.randomUUID(),
+    role,
+    content,
+  });
 
   //////////////////////////////////////////////////////
-  // 🧠 STATE
+  // 🧠 STATE / ESTADO
   //////////////////////////////////////////////////////
 
-  const [assistantOpen, setAssistantOpen] = useState(false)
-  const [hasNotification] = useState(true)
-  const [mode, setMode] = useState<AssistantMode>("normal")
-  const [step, setStep] = useState(0)
-  const [messages, setMessages] = useState<AssistantMessage[]>([])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [hasNotification] = useState(true);
+  const [mode, setMode] = useState<AssistantMode>("normal");
+  const [step, setStep] = useState(0);
+  const [messages, setMessages] = useState<AssistantMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   //////////////////////////////////////////////////////
-  // 🏷️ LOT NAME SUBFLOW
+  // 🏷️ LOT NAME SUBFLOW (mini flujo guiado)
   //////////////////////////////////////////////////////
 
-  const [lotNameSuggestion, setLotNameSuggestion] = useState("")
+  const [lotNameSuggestion, setLotNameSuggestion] = useState("");
   const [lotNameFlowState, setLotNameFlowState] = useState<
     "idle" | "suggested" | "manual"
-  >("idle")
-  const [selectedFarmName, setSelectedFarmName] = useState("")
+  >("idle");
+  const [selectedFarmName, setSelectedFarmName] = useState("");
 
   //////////////////////////////////////////////////////
-  // 🌿 FARM CONTEXT (SMART AUTOFILL)
+  // 🌿 FARM CONTEXT (smart autofill)
   //////////////////////////////////////////////////////
 
   const [farmOptions, setFarmOptions] = useState<
     { id: string; name: string }[]
-  >([])
-  const [hasCheckedFarms, setHasCheckedFarms] = useState(false)
+  >([]);
+  const [hasCheckedFarms, setHasCheckedFarms] = useState(false);
 
   //////////////////////////////////////////////////////
-  // 🧠 REFS
+  // 🧠 REFS (DOM anchors)
   //////////////////////////////////////////////////////
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   //////////////////////////////////////////////////////
-  // 🧠 FLAGS
+  // 🧠 FLAGS / feature switches
   //////////////////////////////////////////////////////
 
-  const hasLotIntegration = Boolean(form && updateField)
-  const isLotWizard = context === "lot-wizard"
+  const hasLotIntegration = Boolean(form && updateField);
+  const isLotWizard = context === "lot-wizard";
 
   //////////////////////////////////////////////////////
-  // 🧠 DERIVED STATE
+  // 🧠 DERIVED STATE / estado derivado
   //////////////////////////////////////////////////////
 
   const missingRequiredFields = useMemo(() => {
-    if (!form) return requiredLotFields
+    if (!form) return requiredLotFields;
 
-    return requiredLotFields.filter((field) => !String(form[field] || "").trim())
-  }, [form])
+    return requiredLotFields.filter(
+      (field) => !String(form[field] || "").trim(),
+    );
+  }, [form]);
 
   //////////////////////////////////////////////////////
-  // 🔧 HELPERS
+  // 🔧 HELPERS (pure helpers / utilidades)
   //////////////////////////////////////////////////////
 
-  const buildLotSummary = () => {
-    if (!form) return ""
+    const buildLotSummary = () => {
+    if (!form) return "";
+
+    const farmDisplay = selectedFarmName?.trim()
+      ? `${selectedFarmName} (${form.farmId || "—"})`
+      : form.farmId || "—";
 
     const summaryLines = [
-      `• Farm ID: ${form.farmId || "—"}`,
+      `• Farm: ${farmDisplay}`,
       `• Lot Name: ${form.name || "—"}`,
       `• Variety: ${form.variety || "—"}`,
       `• Process: ${form.process || "—"}`,
       `• Harvest Year: ${form.harvestYear || "—"}`,
       `• Parchment Kg: ${form.parchmentKg || "—"}`,
-    ]
+    ];
 
-    return summaryLines.join("\n")
-  }
+    return summaryLines.join("\n");
+  };
 
-    const normalizeCommand = (value: string) => {
-    return value.trim().toLowerCase()
-  }
+  const normalizeCommand = (value: string) => {
+    return value.trim().toLowerCase();
+  };
 
   const isAffirmativeCommand = (value: string) => {
-    const clean = normalizeCommand(value)
+    const clean = normalizeCommand(value);
 
-    return ["yes", "si", "sí", "use it", "use this", "usar", "usar este"].includes(clean)
-  }
+    return [
+      "yes",
+      "si",
+      "sí",
+      "use it",
+      "use this",
+      "usar",
+      "usar este",
+    ].includes(clean);
+  };
 
   const isSuggestCommand = (value: string) => {
-    const clean = normalizeCommand(value)
+    const clean = normalizeCommand(value);
 
-    return ["suggest", "sugiere", "suggest one", "name suggestion"].includes(clean)
-  }
+    return ["suggest", "sugiere", "suggest one", "name suggestion"].includes(
+      clean,
+    );
+  };
 
   const isAnotherCommand = (value: string) => {
-    const clean = normalizeCommand(value)
+    const clean = normalizeCommand(value);
 
-    return ["another", "otro", "otra", "different"].includes(clean)
-  }
+    return ["another", "otro", "otra", "different"].includes(clean);
+  };
 
   const isManualCommand = (value: string) => {
-    const clean = normalizeCommand(value)
+    const clean = normalizeCommand(value);
 
-    return ["manual", "write my own", "i'll write it myself", "yo escribo"].includes(clean)
-  }
+    return [
+      "manual",
+      "write my own",
+      "i'll write it myself",
+      "yo escribo",
+    ].includes(clean);
+  };
 
   const isSkipCommand = (value: string) => {
-    const clean = normalizeCommand(value)
+    const clean = normalizeCommand(value);
 
-    return ["skip", "omitir", "omit"].includes(clean)
-  }
+    return ["skip", "omitir", "omit"].includes(clean);
+  };
 
   const buildSuggestedLotName = () => {
     const farmLabel =
-      selectedFarmName?.trim() ||
-      (form?.farmId ? "Farm" : "Coffee")
+      selectedFarmName?.trim() || (form?.farmId ? "Farm" : "Coffee");
 
     const processLabel =
       form?.process
         ?.toLowerCase()
         .replace(/_/g, " ")
-        .replace(/\b\w/g, (char) => char.toUpperCase()) || ""
+        .replace(/\b\w/g, (char) => char.toUpperCase()) || "";
 
     const varietyLabel =
       form?.variety
         ?.toLowerCase()
         .replace(/_/g, " ")
-        .replace(/\b\w/g, (char) => char.toUpperCase()) || ""
+        .replace(/\b\w/g, (char) => char.toUpperCase()) || "";
 
-    const harvestLabel = form?.harvestYear?.trim() || ""
+    const harvestLabel = form?.harvestYear?.trim() || "";
 
     if (farmLabel && processLabel && varietyLabel) {
-      return `${farmLabel} ${processLabel} ${varietyLabel} Lot`
+      return `${farmLabel} ${processLabel} ${varietyLabel} Lot`;
     }
 
     if (farmLabel && processLabel) {
-      return `${farmLabel} ${processLabel} Lot`
+      return `${farmLabel} ${processLabel} Lot`;
     }
 
     if (farmLabel && varietyLabel) {
-      return `${farmLabel} ${varietyLabel} Lot`
+      return `${farmLabel} ${varietyLabel} Lot`;
     }
 
     if (farmLabel && harvestLabel) {
-      return `${farmLabel} Harvest ${harvestLabel} Lot`
+      return `${farmLabel} Harvest ${harvestLabel} Lot`;
     }
 
-    return `${farmLabel} Lot 1`
-  }
+    return `${farmLabel} Lot 1`;
+  };
 
   const pushLotNameEntryMessage = () => {
-  setMessages((prev) => [
-    ...prev,
-    createMessage(
-      "assistant",
-      "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process."
-    ),
-  ])
-}
+    setMessages((prev) => [
+      ...prev,
+      createMessage(
+        "assistant",
+        "What name would you like to use for this lot? You can write your own name, skip it, or I can suggest one based on your farm and process.",
+      ),
+    ]);
+  };
 
   const pushLotNameInvalidOptionMessage = () => {
-  setMessages((prev) => [
-    ...prev,
-    createMessage(
-      "assistant",
-      "Please choose one of the available options below, or type your own lot name."
-    ),
-  ])
-}
- const pushLotNameSuggestionMessage = (suggestion: string) => {
-  setMessages((prev) => [
-    ...prev,
-    createMessage("assistant", `I suggest: ${suggestion}`),
-    createMessage(
-      "assistant",
-      "You can use this name, ask for another option, write your own, or skip."
-    ),
-  ])
-}
+    setMessages((prev) => [
+      ...prev,
+      createMessage(
+        "assistant",
+        "Please choose one of the available options below, or type your own lot name.",
+      ),
+    ]);
+  };
+  const pushLotNameSuggestionMessage = (suggestion: string) => {
+    setMessages((prev) => [
+      ...prev,
+      createMessage("assistant", `I suggest: ${suggestion}`),
+      createMessage(
+        "assistant",
+        "You can use this name, ask for another option, write your own, or skip.",
+      ),
+    ]);
+  };
 
-   const goToNextLotStep = (nextStep: number) => {
-    const isLastStep = nextStep >= lotDraftSteps.length
+  const goToNextLotStep = (nextStep: number) => {
+    const isLastStep = nextStep >= lotDraftSteps.length;
 
     if (isLastStep) {
       setMessages((prev) => [
         ...prev,
         createMessage(
           "assistant",
-          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready."
+          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
         ),
-      ])
-      setStep(nextStep)
-      return
+      ]);
+      setStep(nextStep);
+      return;
     }
 
     if (lotDraftSteps[nextStep]?.key === "name") {
-      setStep(nextStep)
-      setLotNameFlowState("idle")
-      setLotNameSuggestion("")
-      pushLotNameEntryMessage()
-      return
+      setStep(nextStep);
+      setLotNameFlowState("idle");
+      setLotNameSuggestion("");
+      pushLotNameEntryMessage();
+      return;
     }
 
-    setStep(nextStep)
+    setStep(nextStep);
     setMessages((prev) => [
       ...prev,
       createMessage("assistant", lotDraftSteps[nextStep].question),
-    ])
-  }
+    ]);
+  };
 
-  const resetToNormalMode = () => {
-    setMode("normal")
-    setStep(0)
-    setInput("")
-    setMessages([])
-    setIsLoading(false)
-    setFarmOptions([])
-    setHasCheckedFarms(false)
-    setLotNameSuggestion("")
-    setLotNameFlowState("idle")
-  }
+    const resetToNormalMode = () => {
+    setMode("normal");
+    setStep(0);
+    setInput("");
+    setMessages([]);
+    setIsLoading(false);
+    setFarmOptions([]);
+    setHasCheckedFarms(false);
+    setLotNameSuggestion("");
+    setLotNameFlowState("idle");
+    setSelectedFarmName("");
+  };
 
   //////////////////////////////////////////////////////
-  // 🚀 START LOT FLOW
+  // 🚀 START LOT FLOW (entry point)
   //////////////////////////////////////////////////////
 
   const startLotFlow = () => {
-    setAssistantOpen(true)
-    setMode("lot")
-    setStep(0)
+    setAssistantOpen(true);
+    setMode("lot");
+    setStep(0);
     setMessages([
       createMessage(
         "assistant",
-        "Great — I can help you complete this lot draft step by step."
+        "Great — I can help you complete this lot draft step by step.",
       ),
-    ])
-    setInput("")
+    ]);
+    setInput("");
 
     //////////////////////////////////////////////////////
     // 🔥 SMART AUTOFILL TRIGGER
     //////////////////////////////////////////////////////
 
     setTimeout(() => {
-      loadFarmContext()
-    }, 200)
-  }
+      loadFarmContext();
+    }, 200);
+  };
 
   //////////////////////////////////////////////////////
-  // 🤖 AUTOLOAD FARM CONTEXT
+  // 🤖 AUTOLOAD FARM CONTEXT (autofill bootstrap)
   //////////////////////////////////////////////////////
 
   const loadFarmContext = async () => {
     try {
-      const res = await fetch("/api/assistant/farm-context")
-      const data = await res.json()
+      const res = await fetch("/api/assistant/farm-context");
+      const data = await res.json();
 
-      if (!res.ok) return
+      if (!res.ok) return;
 
-      const farms = data.farms || []
+      const farms = data.farms || [];
 
       //////////////////////////////////////////////////////
       // 🧠 CASE 1: NO FARMS
@@ -309,11 +327,11 @@ const createMessage = (
           ...prev,
           createMessage(
             "assistant",
-            "Let's start with the Farm ID. This identifies your farm inside the platform."
+            "Let's start with the Farm ID. This identifies your farm inside the platform.",
           ),
           createMessage("assistant", lotDraftSteps[0].question),
-        ])
-        return
+        ]);
+        return;
       }
 
       //////////////////////////////////////////////////////
@@ -321,76 +339,76 @@ const createMessage = (
       //////////////////////////////////////////////////////
 
       if (farms.length === 1) {
-        const farm = farms[0]
+        const farm = farms[0];
 
         if (updateField) {
-          updateField("farmId", farm.id)
+          updateField("farmId", farm.id);
         }
 
-        setSelectedFarmName(farm.name)
+        setSelectedFarmName(farm.name);
 
         setMessages((prev) => [
           ...prev,
           createMessage("assistant", `Using "${farm.name}".`),
-        ])
+        ]);
 
-        setStep(1)
-        setLotNameFlowState("idle")
-        setLotNameSuggestion("")
-        pushLotNameEntryMessage()
-        return
+        setStep(1);
+        setLotNameFlowState("idle");
+        setLotNameSuggestion("");
+        pushLotNameEntryMessage();
+        return;
       }
 
       //////////////////////////////////////////////////////
       // 🧠 CASE 3: MULTIPLE FARMS
       //////////////////////////////////////////////////////
 
-      setFarmOptions(farms)
+      setFarmOptions(farms);
     } catch (err) {
-      console.error("Autofill farm error:", err)
+      console.error("Autofill farm error:", err);
 
       setMessages((prev) => [
         ...prev,
         createMessage(
           "assistant",
-          "I could not load your farms right now. Let's continue manually."
+          "I could not load your farms right now. Let's continue manually.",
         ),
         createMessage("assistant", lotDraftSteps[0].question),
-      ])
+      ]);
     } finally {
-      setHasCheckedFarms(true)
+      setHasCheckedFarms(true);
     }
-  }
+  };
 
   //////////////////////////////////////////////////////
-  // 🎧 EVENTS
+  // 🎧 EVENTS / lifecycle hooks
   //////////////////////////////////////////////////////
 
   useEffect(() => {
     const lotHandler = () => {
-      startLotFlow()
-    }
+      startLotFlow();
+    };
 
-    window.addEventListener("startLotFlow", lotHandler)
+    window.addEventListener("startLotFlow", lotHandler);
 
     return () => {
-      window.removeEventListener("startLotFlow", lotHandler)
-    }
-  }, [])
+      window.removeEventListener("startLotFlow", lotHandler);
+    };
+  }, []);
 
   //////////////////////////////////////////////////////
-  // ✉️ LOT MODE
+  // ✉️ LOT MODE (guided draft flow)
   //////////////////////////////////////////////////////
 
   const handleLotSend = () => {
-    if (!input.trim()) return
+    if (!input.trim()) return;
 
-    const cleanInput = input.trim()
-    const currentStep = lotDraftSteps[step]
+    const cleanInput = input.trim();
+    const currentStep = lotDraftSteps[step];
 
-    if (!currentStep) return
+    if (!currentStep) return;
 
-    const userMessage = createMessage("user", cleanInput)
+    const userMessage = createMessage("user", cleanInput);
 
     //////////////////////////////////////////////////////
     // 🏷️ LOT NAME SPECIAL SUBFLOW
@@ -399,162 +417,167 @@ const createMessage = (
     if (currentStep.key === "name") {
       if (isSkipCommand(cleanInput)) {
         if (updateField) {
-          updateField("name", "")
+          updateField("name", "");
         }
 
-        setLotNameSuggestion("")
-        setLotNameFlowState("idle")
-        setInput("")
+        setLotNameSuggestion("");
+        setLotNameFlowState("idle");
+        setInput("");
 
         setMessages((prev) => [
           ...prev,
           userMessage,
           createMessage("assistant", "Lot Name skipped."),
-        ])
+        ]);
 
-        goToNextLotStep(step + 1)
-        return
+        goToNextLotStep(step + 1);
+        return;
       }
 
       if (lotNameFlowState === "suggested") {
         if (isAffirmativeCommand(cleanInput)) {
           if (updateField) {
-            updateField("name", lotNameSuggestion)
+            updateField("name", lotNameSuggestion);
           }
 
-          setLotNameFlowState("idle")
-          setInput("")
-
-          setMessages((prev) => [
-            ...prev,
-            userMessage,
-            createMessage("assistant", `Lot Name updated: ${lotNameSuggestion}`),
-          ])
-
-          goToNextLotStep(step + 1)
-          return
-        }
-
-        if (isAnotherCommand(cleanInput) || isSuggestCommand(cleanInput)) {
-          const suggestion = buildSuggestedLotName()
-          const retrySuggestion =
-            suggestion === lotNameSuggestion ? `${suggestion} Reserve` : suggestion
-
-          setLotNameSuggestion(retrySuggestion)
-          setInput("")
-
-          setMessages((prev) => [...prev, userMessage])
-          pushLotNameSuggestionMessage(retrySuggestion)
-          return
-        }
-
-        if (isManualCommand(cleanInput)) {
-          setLotNameFlowState("manual")
-          setInput("")
+          setLotNameFlowState("idle");
+          setInput("");
 
           setMessages((prev) => [
             ...prev,
             userMessage,
             createMessage(
               "assistant",
-              "Perfect — type the lot name you want to use."
+              `Lot Name updated: ${lotNameSuggestion}`,
             ),
-          ])
-          return
+          ]);
+
+          goToNextLotStep(step + 1);
+          return;
         }
 
-        setMessages((prev) => [...prev, userMessage])
-        pushLotNameInvalidOptionMessage()
-        setInput("")
-        return
+        if (isAnotherCommand(cleanInput) || isSuggestCommand(cleanInput)) {
+          const suggestion = buildSuggestedLotName();
+          const retrySuggestion =
+            suggestion === lotNameSuggestion
+              ? `${suggestion} Reserve`
+              : suggestion;
+
+          setLotNameSuggestion(retrySuggestion);
+          setInput("");
+
+          setMessages((prev) => [...prev, userMessage]);
+          pushLotNameSuggestionMessage(retrySuggestion);
+          return;
+        }
+
+        if (isManualCommand(cleanInput)) {
+          setLotNameFlowState("manual");
+          setInput("");
+
+          setMessages((prev) => [
+            ...prev,
+            userMessage,
+            createMessage(
+              "assistant",
+              "Perfect — type the lot name you want to use.",
+            ),
+          ]);
+          return;
+        }
+
+        setMessages((prev) => [...prev, userMessage]);
+        pushLotNameInvalidOptionMessage();
+        setInput("");
+        return;
       }
 
       if (lotNameFlowState === "idle") {
         if (isSuggestCommand(cleanInput) || isAffirmativeCommand(cleanInput)) {
-          const suggestion = buildSuggestedLotName()
+          const suggestion = buildSuggestedLotName();
 
-          setLotNameSuggestion(suggestion)
-          setLotNameFlowState("suggested")
-          setInput("")
+          setLotNameSuggestion(suggestion);
+          setLotNameFlowState("suggested");
+          setInput("");
 
-          setMessages((prev) => [...prev, userMessage])
-          pushLotNameSuggestionMessage(suggestion)
-          return
+          setMessages((prev) => [...prev, userMessage]);
+          pushLotNameSuggestionMessage(suggestion);
+          return;
         }
 
         if (isManualCommand(cleanInput)) {
-          setLotNameFlowState("manual")
-          setInput("")
+          setLotNameFlowState("manual");
+          setInput("");
 
           setMessages((prev) => [
             ...prev,
             userMessage,
             createMessage(
               "assistant",
-              "Go ahead — type the lot name you want to use."
+              "Go ahead — type the lot name you want to use.",
             ),
-          ])
-          return
+          ]);
+          return;
         }
 
         if (cleanInput.length < 2) {
-          setMessages((prev) => [...prev, userMessage])
-          pushLotNameInvalidOptionMessage()
-          setInput("")
-          return
+          setMessages((prev) => [...prev, userMessage]);
+          pushLotNameInvalidOptionMessage();
+          setInput("");
+          return;
         }
 
         if (updateField) {
-          updateField("name", cleanInput)
+          updateField("name", cleanInput);
         }
 
-        setLotNameFlowState("idle")
-        setLotNameSuggestion("")
-        setInput("")
+        setLotNameFlowState("idle");
+        setLotNameSuggestion("");
+        setInput("");
 
         setMessages((prev) => [
           ...prev,
           userMessage,
           createMessage("assistant", `Lot Name updated: ${cleanInput}`),
-        ])
+        ]);
 
-        goToNextLotStep(step + 1)
-        return
+        goToNextLotStep(step + 1);
+        return;
       }
 
       if (lotNameFlowState === "manual") {
         if (cleanInput.length < 2) {
-          setMessages((prev) => [...prev, userMessage])
-          pushLotNameInvalidOptionMessage()
-          setInput("")
-          return
+          setMessages((prev) => [...prev, userMessage]);
+          pushLotNameInvalidOptionMessage();
+          setInput("");
+          return;
         }
 
         if (updateField) {
-          updateField("name", cleanInput)
+          updateField("name", cleanInput);
         }
 
-        setLotNameFlowState("idle")
-        setLotNameSuggestion("")
-        setInput("")
+        setLotNameFlowState("idle");
+        setLotNameSuggestion("");
+        setInput("");
 
         setMessages((prev) => [
           ...prev,
           userMessage,
           createMessage("assistant", `Lot Name updated: ${cleanInput}`),
-        ])
+        ]);
 
-        goToNextLotStep(step + 1)
-        return
+        goToNextLotStep(step + 1);
+        return;
       }
     }
 
     //////////////////////////////////////////////////////
-    // 🌿 STANDARD LOT STEPS
+    // 🌿 STANDARD LOT STEPS (validación + avance)
     //////////////////////////////////////////////////////
 
-    const normalizedValue = normalizeLotValue(currentStep.key, cleanInput)
-    const validationError = validateLotValue(currentStep.key, normalizedValue)
+    const normalizedValue = normalizeLotValue(currentStep.key, cleanInput);
+    const validationError = validateLotValue(currentStep.key, normalizedValue);
 
     if (validationError) {
       setMessages((prev) => [
@@ -562,19 +585,19 @@ const createMessage = (
         userMessage,
         createMessage(
           "assistant",
-          `${validationError} ${currentStep.helper ? currentStep.helper : ""}`.trim()
+          `${validationError} ${currentStep.helper ? currentStep.helper : ""}`.trim(),
         ),
-      ])
-      setInput("")
-      return
+      ]);
+      setInput("");
+      return;
     }
 
     if (updateField) {
-      updateField(currentStep.key, normalizedValue)
+      updateField(currentStep.key, normalizedValue);
     }
 
-    const nextStep = step + 1
-    const isLastStep = nextStep >= lotDraftSteps.length
+    const nextStep = step + 1;
+    const isLastStep = nextStep >= lotDraftSteps.length;
 
     if (isLastStep) {
       setMessages((prev) => [
@@ -582,57 +605,57 @@ const createMessage = (
         userMessage,
         createMessage(
           "assistant",
-          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready."
+          "Perfect — I updated the lot draft. Review the form and click Save Lot for Analysis when you're ready.",
         ),
-      ])
+      ]);
 
-      setStep(nextStep)
-      setInput("")
-      return
+      setStep(nextStep);
+      setInput("");
+      return;
     }
 
     const confirmationMessage =
       normalizedValue === ""
         ? `${getFieldLabel(currentStep.key)} skipped.`
-        : `${getFieldLabel(currentStep.key)} updated.`
+        : `${getFieldLabel(currentStep.key)} updated.`;
 
     setMessages((prev) => [
       ...prev,
       userMessage,
       createMessage("assistant", confirmationMessage),
-    ])
+    ]);
 
-    setInput("")
+    setInput("");
 
     if (lotDraftSteps[nextStep]?.key === "name") {
-      setStep(nextStep)
-      setLotNameFlowState("idle")
-      setLotNameSuggestion("")
-      pushLotNameEntryMessage()
-      return
+      setStep(nextStep);
+      setLotNameFlowState("idle");
+      setLotNameSuggestion("");
+      pushLotNameEntryMessage();
+      return;
     }
 
-    setStep(nextStep)
+    setStep(nextStep);
 
     setMessages((prev) => [
       ...prev,
       createMessage("assistant", lotDraftSteps[nextStep].question),
-    ])
-  }
+    ]);
+  };
 
   //////////////////////////////////////////////////////
-  // 🤖 NORMAL MODE
+  // 🤖 NORMAL MODE (chat general)
   //////////////////////////////////////////////////////
 
   const handleNormalSend = async () => {
-    if (!input.trim()) return
+    if (!input.trim()) return;
 
-    const cleanInput = input.trim()
-    const userMessage = createMessage("user", cleanInput)
+    const cleanInput = input.trim();
+    const userMessage = createMessage("user", cleanInput);
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
 
     try {
       const res = await fetch("/api/assistant/chat", {
@@ -645,112 +668,114 @@ const createMessage = (
           context,
           form,
         }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       setMessages((prev) => [
         ...prev,
         createMessage(
           "assistant",
           data.reply ||
-            "I could not generate a response right now. Please try again."
+            "I could not generate a response right now. Please try again.",
         ),
-      ])
+      ]);
     } catch (error) {
-      console.error("Assistant chat error:", error)
+      console.error("Assistant chat error:", error);
 
       setMessages((prev) => [
         ...prev,
         createMessage(
           "assistant",
-          "There was an error connecting with the assistant. Please try again."
+          "There was an error connecting with the assistant. Please try again.",
         ),
-      ])
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   //////////////////////////////////////////////////////
-  // ✉️ SEND MESSAGE
+  // ✉️ SEND MESSAGE (router)
   //////////////////////////////////////////////////////
 
   const handleSend = async () => {
     if (mode === "lot") {
-      handleLotSend()
-      return
+      handleLotSend();
+      return;
     }
 
-    await handleNormalSend()
-  }
+    await handleNormalSend();
+  };
 
   //////////////////////////////////////////////////////
-  // 🧠 AUTO SCROLL
+  // 🧠 AUTO SCROLL (UX polish)
   //////////////////////////////////////////////////////
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior })
-    })
-  }
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    });
+  };
 
   useEffect(() => {
-    scrollToBottom("smooth")
-  }, [messages])
+    scrollToBottom("smooth");
+  }, [messages]);
 
   useEffect(() => {
-    scrollToBottom("auto")
-  }, [assistantOpen])
+    scrollToBottom("auto");
+  }, [assistantOpen]);
 
   //////////////////////////////////////////////////////
-  // 🎨 UI HELPERS
+  // 🎨 UI / layout HELPERS (presentational only)
   //////////////////////////////////////////////////////
 
   const renderMessageBubble = (msg: AssistantMessage) => {
-  return (
-    <div
-      key={msg.id}
-      style={{
-        alignSelf: msg.role === "assistant" ? "flex-start" : "flex-end",
-        background:
-          msg.role === "assistant"
-            ? "rgba(212,175,55,0.08)"
-            : "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(212,175,55,0.15)",
-        padding: "10px 14px",
-        borderRadius: "12px",
-        maxWidth: "80%",
-        whiteSpace: "pre-line",
-      }}
-    >
-      <span
+    return (
+      <div
+        key={msg.id}
         style={{
-          fontSize: "13px",
-          color: "#e7d9c4",
-          lineHeight: "1.5",
+          alignSelf: msg.role === "assistant" ? "flex-start" : "flex-end",
+          background:
+            msg.role === "assistant"
+              ? "rgba(212,175,55,0.08)"
+              : "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(212,175,55,0.15)",
+          padding: "10px 14px",
+          borderRadius: "12px",
+          maxWidth: "80%",
+          whiteSpace: "pre-line",
         }}
       >
-        {msg.content}
-      </span>
-    </div>
-  )
-}
+        <span
+          style={{
+            fontSize: "13px",
+            color: "#e7d9c4",
+            lineHeight: "1.5",
+          }}
+        >
+          {msg.content}
+        </span>
+      </div>
+    );
+  };
   //////////////////////////////////////////////////////
-  // 🎨 UI
+  // 🎨 UI / layout
   //////////////////////////////////////////////////////
 
-  const totalLotSteps = lotDraftSteps.length
-  const currentLotStep = mode === "lot" ? lotDraftSteps[step] : null
+  const totalLotSteps = lotDraftSteps.length;
+  const currentLotStep = mode === "lot" ? lotDraftSteps[step] : null;
   const currentStepNumber =
-    mode === "lot" ? Math.min(step + 1, totalLotSteps) : 0
+    mode === "lot" ? Math.min(step + 1, totalLotSteps) : 0;
 
   const completedLotSteps = form
     ? lotDraftSteps.filter((item) => String(form[item.key] || "").trim()).length
-    : 0
+    : 0;
 
   const progressPercent =
-    totalLotSteps > 0 ? Math.min((completedLotSteps / totalLotSteps) * 100, 100) : 0
+    totalLotSteps > 0
+      ? Math.min((completedLotSteps / totalLotSteps) * 100, 100)
+      : 0;
 
   return (
     <>
@@ -778,10 +803,10 @@ const createMessage = (
           backdropFilter: "blur(6px)",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = "0 0 20px rgba(212,175,55,0.18)"
+          e.currentTarget.style.boxShadow = "0 0 20px rgba(212,175,55,0.18)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "none"
+          e.currentTarget.style.boxShadow = "none";
         }}
       >
         <Image
@@ -921,7 +946,7 @@ const createMessage = (
             </div>
           </div>
 
-                    {/* ================= LOT STATUS BAR ================= */}
+          {/* ================= LOT STATUS BAR ================= */}
           {mode === "lot" && (
             <div
               style={{
@@ -959,7 +984,9 @@ const createMessage = (
                     }}
                   >
                     Step {currentStepNumber} of {totalLotSteps}
-                    {currentLotStep ? ` · ${getFieldLabel(currentLotStep.key)}` : ""}
+                    {currentLotStep
+                      ? ` · ${getFieldLabel(currentLotStep.key)}`
+                      : ""}
                   </div>
 
                   <div
@@ -1043,30 +1070,30 @@ const createMessage = (
 
                   <select
                     onChange={(e) => {
-  const selected = farmOptions.find(
-    (farm) => farm.id === e.target.value
-  )
+                      const selected = farmOptions.find(
+                        (farm) => farm.id === e.target.value,
+                      );
 
-  if (!selected) return
+                      if (!selected) return;
 
-  if (updateField) {
-    updateField("farmId", selected.id)
-  }
+                      if (updateField) {
+                        updateField("farmId", selected.id);
+                      }
 
-  setSelectedFarmName(selected.name)
+                      setSelectedFarmName(selected.name);
 
-  setFarmOptions([])
+                      setFarmOptions([]);
 
-  setMessages((prev) => [
-  ...prev,
-  createMessage("assistant", `Using "${selected.name}".`),
-])
+                      setMessages((prev) => [
+                        ...prev,
+                        createMessage("assistant", `Using "${selected.name}".`),
+                      ]);
 
-  setStep(1)
-  setLotNameFlowState("idle")
-  setLotNameSuggestion("")
-  pushLotNameEntryMessage()
-}}
+                      setStep(1);
+                      setLotNameFlowState("idle");
+                      setLotNameSuggestion("");
+                      pushLotNameEntryMessage();
+                    }}
                     defaultValue=""
                     style={{
                       width: "100%",
@@ -1094,7 +1121,6 @@ const createMessage = (
             </div>
           )}
 
-
           {/* ================= BODY ================= */}
           <div
             ref={containerRef}
@@ -1111,7 +1137,7 @@ const createMessage = (
           >
             {mode === "lot" ? (
               <>
-                {/* INTRO / STATE CARD */}
+                {/* Intro / estado actual card */}
                 {form && (
                   <div
                     style={{
@@ -1142,7 +1168,7 @@ const createMessage = (
                       }}
                     >
                       {[
-                        ["Farm ID", form.farmId || "—"],
+                        ["Farm", selectedFarmName?.trim() ? `${selectedFarmName}` : form.farmId || "—"],
                         ["Lot Name", form.name || "—"],
                         ["Variety", form.variety || "—"],
                         ["Process", form.process || "—"],
@@ -1192,10 +1218,10 @@ const createMessage = (
                   </div>
                 )}
 
-                {/* CHAT MESSAGES */}
+                {/* Chat messages */}
                 {messages.map((msg) => renderMessageBubble(msg))}
 
-                                {/* LOT NAME ACTIONS */}
+                {/* Lot name quick actions */}
                 {currentLotStep?.key === "name" && (
                   <div
                     style={{
@@ -1210,10 +1236,10 @@ const createMessage = (
                         <button
                           type="button"
                           onClick={() => {
-                            const suggestion = buildSuggestedLotName()
-                            setLotNameSuggestion(suggestion)
-                            setLotNameFlowState("suggested")
-                            pushLotNameSuggestionMessage(suggestion)
+                            const suggestion = buildSuggestedLotName();
+                            setLotNameSuggestion(suggestion);
+                            setLotNameFlowState("suggested");
+                            pushLotNameSuggestionMessage(suggestion);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1228,17 +1254,17 @@ const createMessage = (
                           Suggest a lot name
                         </button>
 
-                                             <button
+                        <button
                           type="button"
                           onClick={() => {
-                            setLotNameFlowState("manual")
+                            setLotNameFlowState("manual");
                             setMessages((prev) => [
                               ...prev,
                               createMessage(
                                 "assistant",
-                                "Go ahead — type the lot name you want to use."
+                                "Go ahead — type the lot name you want to use.",
                               ),
-                            ])
+                            ]);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1257,18 +1283,18 @@ const createMessage = (
                           type="button"
                           onClick={() => {
                             if (updateField) {
-                              updateField("name", "")
+                              updateField("name", "");
                             }
 
-                            setLotNameSuggestion("")
-                            setLotNameFlowState("idle")
+                            setLotNameSuggestion("");
+                            setLotNameFlowState("idle");
 
                             setMessages((prev) => [
                               ...prev,
                               createMessage("assistant", "Lot Name skipped."),
-                            ])
+                            ]);
 
-                            goToNextLotStep(step + 1)
+                            goToNextLotStep(step + 1);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1291,19 +1317,19 @@ const createMessage = (
                           type="button"
                           onClick={() => {
                             if (updateField) {
-                              updateField("name", lotNameSuggestion)
+                              updateField("name", lotNameSuggestion);
                             }
 
-                            setLotNameFlowState("idle")
+                            setLotNameFlowState("idle");
                             setMessages((prev) => [
                               ...prev,
                               createMessage(
                                 "assistant",
-                                `Lot Name updated: ${lotNameSuggestion}`
+                                `Lot Name updated: ${lotNameSuggestion}`,
                               ),
-                            ])
+                            ]);
 
-                            goToNextLotStep(step + 1)
+                            goToNextLotStep(step + 1);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1321,14 +1347,14 @@ const createMessage = (
                         <button
                           type="button"
                           onClick={() => {
-                            const suggestion = buildSuggestedLotName()
+                            const suggestion = buildSuggestedLotName();
                             const retrySuggestion =
                               suggestion === lotNameSuggestion
                                 ? `${suggestion} Reserve`
-                                : suggestion
+                                : suggestion;
 
-                            setLotNameSuggestion(retrySuggestion)
-                            pushLotNameSuggestionMessage(retrySuggestion)
+                            setLotNameSuggestion(retrySuggestion);
+                            pushLotNameSuggestionMessage(retrySuggestion);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1346,14 +1372,14 @@ const createMessage = (
                         <button
                           type="button"
                           onClick={() => {
-                            setLotNameFlowState("manual")
+                            setLotNameFlowState("manual");
                             setMessages((prev) => [
                               ...prev,
                               createMessage(
                                 "assistant",
-                                "Perfect — type the lot name you want to use."
+                                "Perfect — type the lot name you want to use.",
                               ),
-                            ])
+                            ]);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1372,18 +1398,18 @@ const createMessage = (
                           type="button"
                           onClick={() => {
                             if (updateField) {
-                              updateField("name", "")
+                              updateField("name", "");
                             }
 
-                            setLotNameSuggestion("")
-                            setLotNameFlowState("idle")
+                            setLotNameSuggestion("");
+                            setLotNameFlowState("idle");
 
                             setMessages((prev) => [
                               ...prev,
                               createMessage("assistant", "Lot Name skipped."),
-                            ])
+                            ]);
 
-                            goToNextLotStep(step + 1)
+                            goToNextLotStep(step + 1);
                           }}
                           style={{
                             padding: "7px 11px",
@@ -1414,12 +1440,11 @@ const createMessage = (
                   </div>
                 )}
 
-               
                 <div ref={messagesEndRef} />
               </>
             ) : (
               <>
-                {/* DEFAULT INTRO MESSAGE */}
+                {/* Default intro message */}
                 <div
                   style={{
                     alignSelf: "flex-start",
@@ -1444,7 +1469,7 @@ const createMessage = (
                   </span>
                 </div>
 
-                {/* QUICK ACTIONS */}
+                {/* Quick actions */}
                 <div
                   style={{
                     display: "flex",
@@ -1462,11 +1487,11 @@ const createMessage = (
                       key={item}
                       onClick={() => {
                         if (item === "Complete this lot") {
-                          startLotFlow()
-                          return
+                          startLotFlow();
+                          return;
                         }
 
-                        setInput(item)
+                        setInput(item);
                       }}
                       style={{
                         padding: "7px 11px",
@@ -1480,10 +1505,10 @@ const createMessage = (
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background =
-                          "rgba(212,175,55,0.1)"
+                          "rgba(212,175,55,0.1)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent"
+                        e.currentTarget.style.background = "transparent";
                       }}
                     >
                       {item}
@@ -1491,7 +1516,7 @@ const createMessage = (
                   ))}
                 </div>
 
-                {/* LOT CONTEXT CARD */}
+                {/* Lot context card */}
                 {form && (
                   <div
                     style={{
@@ -1528,10 +1553,10 @@ const createMessage = (
                   </div>
                 )}
 
-                {/* NORMAL CHAT MESSAGES */}
+                {/* Normal chat messages */}
                 {messages.map((msg) => renderMessageBubble(msg))}
 
-                {/* LOADING */}
+                {/* Loading state */}
                 {isLoading && (
                   <div
                     style={{
@@ -1580,11 +1605,11 @@ const createMessage = (
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
+                    e.preventDefault();
+                    handleSend();
                   }
                 }}
-                   placeholder={
+                placeholder={
                   mode === "lot"
                     ? currentLotStep?.key === "name"
                       ? lotNameFlowState === "suggested"
@@ -1595,7 +1620,6 @@ const createMessage = (
                         : "Type your answer..."
                     : "Ask something about your coffee..."
                 }
-
                 style={{
                   width: "100%",
                   background: "rgba(255,255,255,0.03)",
@@ -1633,5 +1657,5 @@ const createMessage = (
         </div>
       )}
     </>
-  )
+  );
 }
