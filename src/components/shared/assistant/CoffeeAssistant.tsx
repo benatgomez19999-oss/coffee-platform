@@ -248,37 +248,7 @@ export default function CoffeeAssistant({
     ),
   );
 
-  //////////////////////////////////////////////////////
-// 📜 FORM AUTO SCROLL (sync assistant → form)
-//////////////////////////////////////////////////////
 
-const scrollFormToStep = (stepIndex: number) => {
-  try {
-    const sections = document.querySelectorAll("section");
-
-    if (!sections || sections.length === 0) return;
-
-    //////////////////////////////////////////////////////
-    // 🧠 STEP → SECTION MAPPING
-    //////////////////////////////////////////////////////
-    let sectionIndex = 0;
-
-    if (stepIndex <= 1) sectionIndex = 0;
-    else if (stepIndex <= 3) sectionIndex = 1;
-    else sectionIndex = 2;
-
-    const target = sections[sectionIndex] as HTMLElement;
-
-    if (!target) return;
-
-    target.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  } catch (err) {
-    console.warn("Scroll form error:", err);
-  }
-};
 
   //////////////////////////////////////////////////////
   // 🧠 AUTO CLOSE ONLY ON FINAL STEP
@@ -430,6 +400,23 @@ const scrollFormToStep = (stepIndex: number) => {
       window.removeEventListener("startLotFlow", lotHandler);
     };
   }, []);
+
+    //////////////////////////////////////////////////////
+  // 📜 AUTO SYNC SCROLL WITH STEP
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (mode !== "lot") return;
+
+    //////////////////////////////////////////////////////
+    // 🧠 delay pequeño para evitar conflictos de render
+    //////////////////////////////////////////////////////
+    const timeout = setTimeout(() => {
+      scrollFormToStep(step);
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [step, mode]);
 
 
   //////////////////////////////////////////////////////
@@ -1825,7 +1812,11 @@ const scrollFormToStep = (stepIndex: number) => {
                 )}
 
                 {/* Normal chat messages */}
-                {messages.map((msg) => renderMessageBubble(msg))}
+{messages.map((msg, index) => (
+  <div key={msg.id || `normal-msg-${index}`}>
+    {renderMessageBubble(msg)}
+  </div>
+))}
 
                 {/* Loading state */}
                 {isLoading && (
