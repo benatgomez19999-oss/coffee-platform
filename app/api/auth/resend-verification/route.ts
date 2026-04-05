@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@/database/prisma";
-import { sendEmail } from "@/lib/email";
+import { prisma } from "@/src/database/prisma";
+import { sendEmail } from "@/src/lib/email";
 
 // =====================================================
 // RESEND VERIFICATION EMAIL

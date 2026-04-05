@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-import ContractTimelineModal from "@/components/platform/client/ContractTimelineModal"
+import ContractTimelineModal from "@/src/components/platform/client/ContractTimelineModal"
 
 import {
   selectContract,
   clearSelectedContract
-} from "@/clientLayer/layer/contractController"
+} from "@/src/clientLayer/layer/contractController"
 
-import { getRegisteredContracts } from "@/clientLayer/layer/contractRegistry"
+import { getRegisteredContracts } from "@/src/clientLayer/layer/contractRegistry"
 
 // ======================================================
 // CLIENT CONTRACTS PANEL — STATUS AWARE (PRO)

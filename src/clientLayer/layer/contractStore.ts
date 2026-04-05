@@ -1,4 +1,4 @@
-import { SupplyContract } from "./contractTypes"
+import { SupplyContract } from "@/src/clientLayer/layer/contractTypes"
 
 const STORAGE_KEY = "coffee_contracts"
 

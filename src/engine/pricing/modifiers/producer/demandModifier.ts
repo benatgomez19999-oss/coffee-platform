@@ -2,7 +2,7 @@
 // 🔥 DEMAND MODIFIER (INTERNAL MARKET SIGNAL)
 //////////////////////////////////////////////////////
 
-import { PricingModifier } from "../types"
+import { PricingModifier } from "@/src/engine/pricing/modifiers/types"
 
 export const demandModifier: PricingModifier = {
   id: "DEMAND",

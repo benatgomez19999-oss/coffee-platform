@@ -9,7 +9,7 @@
 //
 // =====================================================
 
-import type { ForecastResult } from "./predictiveSimulation"
+import type { ForecastResult } from "@/src/AI/foresight/predictiveSimulation"
 
 
 // =====================================================

@@ -1,16 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useEngineRuntime } from "@/hooks/useEngineRuntime"
+import { useEngineRuntime } from "@/src/hooks/useEngineRuntime"
 
-import LeftPanel from "@/components/lab/LeftPanel"
-import RightLabPanel from "@/components/lab/RightLabPanel"
-import EngineResearchPanel from "@/components/lab/EngineResearchPanel"
-import AIControlPanel from "@/components/lab/AIControlPanel"
+import LeftPanel from "@/src/components/lab/LeftPanel"
+import RightLabPanel from "@/src/components/lab/RightLabPanel"
+import EngineResearchPanel from "@/src/components/lab/EngineResearchPanel"
+import AIControlPanel from "@/src/components/lab/AIControlPanel"
 import CommodityMarketPanel
-from "@/components/lab/CommodityMarketPanel"
+from "@/src/components/lab/CommodityMarketPanel"
 import StrategyLeaderboardPanel
-from "@/components/lab/StrategyLeaderboardPanel"
+from "@/src/components/lab/StrategyLeaderboardPanel"
 
 export default function EngineLabPage() {
 

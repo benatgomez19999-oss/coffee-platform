@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
-import ProducerDashboard from "@/components/platform/producer/ProducerDashboard"
-import { getUserFromRequest } from "@/lib/getUserFromRequest"
+import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import ProducerView from "./ProducerView"
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export default async function ProducerPage() {
   }
 
   //////////////////////////////////////////////////////
-  // 🚨 WRONG ROLE (PROTECCIÓN EXTRA 🔥)
+  // 🚨 WRONG ROLE
   //////////////////////////////////////////////////////
 
   if (user.role !== "PRODUCER") {
@@ -37,8 +37,8 @@ export default async function ProducerPage() {
   }
 
   //////////////////////////////////////////////////////
-  // ✅ SAFE RENDER
+  // ✅ SAFE RENDER (CLIENT VIEW)
   //////////////////////////////////////////////////////
 
-  return <ProducerDashboard user={user} />
+  return <ProducerView user={user} />
 }

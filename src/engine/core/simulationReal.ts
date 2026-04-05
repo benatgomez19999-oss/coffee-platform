@@ -16,10 +16,10 @@
 //
 // =====================================================
 
-import { PHYSICS } from "./modelPhysics"
-import type { EngineState, EngineContext } from "./runtime"
-import { engineRandom } from "./runtime"
-import { getEngineCalibration } from "./runtime"
+import { PHYSICS } from "@/src/engine/core/modelPhysics"
+import type { EngineState, EngineContext } from "@/src/engine/core/runtime"
+import { engineRandom } from "@/src/engine/core/runtime"
+import { getEngineCalibration } from "@/src/engine/core/runtime"
 
 export function stepSimulationReal(
   state: EngineState,

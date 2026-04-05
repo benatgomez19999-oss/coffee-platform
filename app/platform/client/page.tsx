@@ -1,5 +1,5 @@
-import Dashboard from "@/components/platform/client/Dashboard"
-import { getUserFromRequest } from "@/lib/getUserFromRequest"
+import Dashboard from "@/src/components/platform/client/Dashboard"
+import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
 
 export const dynamic = "force-dynamic";
 export default async function ClientPage() {

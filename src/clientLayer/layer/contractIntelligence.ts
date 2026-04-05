@@ -1,4 +1,4 @@
-import type { SupplyContract } from "../layer/contractTypes"
+import type { SupplyContract } from "@/src/clientLayer/layer/contractTypes"
 
 export function evaluateContractSuggestion(
   requestedVolume: number,

@@ -6,10 +6,10 @@
 // =====================================================
 
 import type { CommodityOpportunity }
-from "@/AI/foresight/CommodityOpportunityScanner"
+from "@/src/AI/foresight/CommodityOpportunityScanner"
 
 import type { CommodityRegime }
-from "@/AI/interpretation/CommodityRegimeDetector"
+from "@/src/AI/interpretation/CommodityRegimeDetector"
 
 
 export type CommodityStrategy = {

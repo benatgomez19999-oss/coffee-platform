@@ -159,7 +159,7 @@ useEffect(() => {
     if (mode === "amend" && contractId) {
 
       const load = async () => {
-        const mod = await import("@/clientLayer/layer/contractController")
+        const mod = await import("@/src/clientLayer/layer/contractController")
         mod.selectContract(contractId)
       }
 

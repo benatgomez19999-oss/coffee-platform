@@ -12,7 +12,7 @@
 //
 // =====================================================
 
-import type { ClientTrustState } from "./clientTrustEngine"
+import type { ClientTrustState } from "@/src/clientLayer/scoring/clientTrustEngine"
 
 export type ClientActivityMetrics = {
 

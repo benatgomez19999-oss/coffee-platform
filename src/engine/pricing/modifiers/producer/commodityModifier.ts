@@ -2,7 +2,7 @@
 // 📈 C MARKET MODIFIER (GLOBAL COFFEE PRICE)
 //////////////////////////////////////////////////////
 
-import { PricingModifier } from "../types"
+import { PricingModifier } from "@/src/engine/pricing/modifiers/types"
 
 export const commodityModifier: PricingModifier = {
   id: "C_MARKET",

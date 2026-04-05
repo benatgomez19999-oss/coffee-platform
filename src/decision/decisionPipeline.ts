@@ -6,11 +6,11 @@
 // =====================================================
 
 
-import { evaluateSemaphore } from "../decision/semaphoreEvaluator"
-import { suggestVolume } from "./volumeSuggestion"
-import { recordDecision, getLearningSignal } from "@/brain/cognitiveMemory"
-import { getSystemRegime } from "@/brain/regimeLearning"
-import { getSignals } from "../signals/signalRegistry"
+import { evaluateSemaphore } from "@/src/decision/semaphoreEvaluator"
+import { suggestVolume } from "@/src/decision/volumeSuggestion"
+import { recordDecision, getLearningSignal } from "@/src/brain/cognitiveMemory"
+import { getSystemRegime } from "@/src/brain/regimeLearning"
+import { getSignals } from "@/src/signals/signalRegistry"
 
 
 

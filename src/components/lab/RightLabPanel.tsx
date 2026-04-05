@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
-import type { EngineState, EngineContext } from "@/engine/core/runtime"
-import EngineCalibrationPanel from "@/components/lab/EngineCalibrationPanel"
+import type { EngineState, EngineContext } from "@/src/engine/core/runtime"
+import EngineCalibrationPanel from "@/src/components/lab/EngineCalibrationPanel"
 
 type Props = {
   safeEngineState: EngineState

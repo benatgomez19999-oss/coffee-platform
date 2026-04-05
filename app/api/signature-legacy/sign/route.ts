@@ -2,7 +2,7 @@
 // kept for fallback & debugging
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
+import { prisma } from "@/src/database/prisma";
 import { ContractStatus } from "@prisma/client"
 
 

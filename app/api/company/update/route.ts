@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/database/prisma"
-import { getUserFromRequest } from "@/lib/auth" 
+import { prisma } from "@/src/database/prisma"
+import { getUserFromRequest } from "@/src/lib/auth" 
 
 
 // =====================================================

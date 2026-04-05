@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 type Region = {
   name: string

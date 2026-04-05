@@ -6,7 +6,7 @@
 //
 // =====================================================
 
-import { computeClientScore } from "./clientScoreEngine"
+import { computeClientScore } from "@/src/clientLayer/scoring/clientScoreEngine"
 
 export function rankClientsForMicroLot(clients: any[]) {
 

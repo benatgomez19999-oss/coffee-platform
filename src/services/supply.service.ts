@@ -1,7 +1,7 @@
-import { prisma } from "@/database/prisma"
+import { prisma } from "@/src/database/prisma"
 import {
   REGION_REGISTRY
-} from "@/spatialMarket/registries"
+} from "@/src/spatialMarket/registries"
 
 type RegionAgg = {
   name: string

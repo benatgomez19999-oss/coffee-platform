@@ -1,4 +1,4 @@
-import { ClientProfile } from "./clientTypes"
+import { ClientProfile } from "@/src/clientLayer/contracts/client/clientTypes"
 
 export const CLIENT_PROFILES: ClientProfile[] = [
 

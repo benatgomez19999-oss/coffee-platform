@@ -10,8 +10,8 @@
 //
 // =====================================================
 
-import type { StrategicForecast } from "./StrategicForecastEngine"
-import type { EngineState } from "@/engine/core/runtime"
+import type { StrategicForecast } from "@/src/AI/foresight/StrategicForecastEngine"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 export type CommodityInput = {
 

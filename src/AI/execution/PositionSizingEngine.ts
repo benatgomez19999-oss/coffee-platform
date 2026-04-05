@@ -16,9 +16,9 @@
 //
 // =====================================================
 
-import { getSignals } from "@/signals/signalRegistry"
+import { getSignals } from "@/src/signals/signalRegistry"
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 // =====================================================
 // MAIN FUNCTION

@@ -2,7 +2,7 @@
 // 📦 CONTRACT PRICING ENGINE
 //////////////////////////////////////////////////////
 
-import { calculatePricing } from "@/engine/pricing/client/calculatePricing"
+import { calculatePricing } from "@/src/engine/pricing/client/calculatePricing"
 
 type ContractPricingInput = {
   pricingInput: any

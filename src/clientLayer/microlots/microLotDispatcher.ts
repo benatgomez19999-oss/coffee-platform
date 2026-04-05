@@ -10,7 +10,7 @@
 // - AI recommendation system
 // =====================================================
 
-import { generateMicroLotOffers } from "./microLotOfferEngine"
+import { generateMicroLotOffers } from "@/src/clientLayer/microlots/microLotOfferEngine"
 
 export function dispatchMicroLotOffers(
 

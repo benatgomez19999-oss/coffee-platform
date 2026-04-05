@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
-import { signToken } from "@/lib/auth";
+import { prisma } from "@/src/database/prisma";
+import { signToken } from "@/src/lib/auth";
 
 // =====================================================
 // CONFIG

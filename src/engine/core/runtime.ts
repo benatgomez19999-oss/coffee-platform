@@ -1,25 +1,25 @@
-import { stepSimulationReal } from "./simulationReal";
-import { stepOperationalLayer } from "./engineOperational"
-import { computeUnifiedPressure } from "../../brain/systemBrain";
-import { computeLiveDecision } from "@/decision/liveDecision"
-import { stepContracts } from "@/clientLayer/layer/contractScheduler"
+import { stepSimulationReal } from "@/src/engine/core/simulationReal";
+import { stepOperationalLayer } from "@/src/engine/core/engineOperational"
+import { computeUnifiedPressure } from "@/src/brain/systemBrain";
+import { computeLiveDecision } from "@/src/decision/liveDecision"
+import { stepContracts } from "@/src/clientLayer/layer/contractScheduler"
 import { updateCommodityPrices }
-from "@/AI/market/CommodityPriceEngine"
-import { runAISystem } from "@/AI/orchestration/runAISystem"
+from "@/src/AI/market/CommodityPriceEngine"
+import { runAISystem } from "@/src/AI/orchestration/runAISystem"
 import { runSpatialMarket }
-from "@/spatialMarket/RunSpatialMarkets/runSpatialMarket"
+from "@/src/spatialMarket/RunSpatialMarkets/runSpatialMarket"
 import { propagateCommodityShock }
-from "@/spatialMarket/cascade/commodityShockPropagation"
+from "@/src/spatialMarket/cascade/commodityShockPropagation"
 import { decayCommodityShocks }
-from "@/spatialMarket/cascade/shockDecayEngine"
+from "@/src/spatialMarket/cascade/shockDecayEngine"
 import { updateGlobalShockMemory }
-from "@/spatialMarket/cascade/globalShockMemory"
+from "@/src/spatialMarket/cascade/globalShockMemory"
 import type { SupplyContract }
-from "@/clientLayer/layer/contractTypes"
+from "@/src/clientLayer/layer/contractTypes"
 import { generateMarketSignals }
-from "@/signals/marketSignals"
+from "@/src/signals/marketSignals"
 import { computeStrategyLeaderboard }
-from "@/AI/analytics/StrategyLeaderboard"
+from "@/src/AI/analytics/StrategyLeaderboard"
 
 
 

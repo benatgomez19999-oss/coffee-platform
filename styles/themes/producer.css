@@ -1,0 +1,1284 @@
+/* =====================================================
+   ☕ PRODUCER THEME — ALTURA COLLECTIVE
+   Clean • Premium • Functional
+===================================================== */
+
+
+
+
+/* ===== ROOT ===== */
+
+.producer-root {
+  min-height: 100vh;
+
+  /* Base neutra elegante (NO degradado pesado) */
+  background: #f5f1e6;
+
+  color: var(--coffee-text);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.producer-root {
+  background: #f5f1e6;
+}
+
+.producer-root {
+  background: #f5f1e6;
+  min-height: 100vh;
+}
+
+/* 💀 mata overlays heredados */
+body::before,
+body::after {
+  display: none !important;
+}
+
+
+/* ===== CONTENT WRAPPER ===== */
+
+.producer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding: 48px 24px 64px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+
+/* ===== HERO SECTION (base limpia para luego ajustar niebla) ===== */
+
+.producer-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+@keyframes heroDrift {
+  0% {
+    transform: scale(1.03) translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: scale(1.06) translateY(-8px) translateX(2px);
+  }
+  100% {
+    transform: scale(1.03) translateY(0px) translateX(0px);
+  }
+}
+
+.animate-heroDrift {
+  animation: heroDrift 18s ease-in-out infinite;
+}
+
+
+@keyframes heroLight {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+/* 🧠 WRAPPER */
+.hero-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* 🌄 IMAGE */
+.hero-image {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* 🎬 LIGHT SHAPING (luz real, lado derecho) */
+.hero-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at 80% 20%,
+    rgba(255, 210, 140, 0.08),
+    rgba(255, 210, 140, 0.03) 25%,
+    rgba(0, 0, 0, 0.35) 75%
+  );
+
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* 🎯 MICRO CONTRAST */
+.hero-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.16),
+    transparent 30%,
+    transparent 70%,
+    rgba(0,0,0,0.28)
+  );
+
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ⚡ EDGE DEPTH */
+.hero-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.28),
+    transparent 20%,
+    transparent 80%,
+    rgba(0,0,0,0.28)
+  );
+
+  pointer-events: none;
+}
+
+/* 🌫️ FADE inferior */
+.hero-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 90px;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    #f3efe6 85%
+  );
+
+  opacity: 0.9;
+}
+
+
+
+/* ===== NEW LOT  ===== */
+
+@keyframes ctaFloat {
+  0% { transform: translateY(-2px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(-2px); }
+}
+
+/* ===== CARDS ===== */
+
+.producer-card {
+  background: var(--coffee-surface);
+
+  border-radius: 18px;
+  border: 1px solid var(--coffee-border);
+
+  padding: 22px;
+
+  /* Más suave, más premium */
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.04),
+    0 2px 6px rgba(0,0,0,0.03);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.producer-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,0.08),
+    0 6px 16px rgba(0,0,0,0.06);
+
+  border-color: rgba(0,0,0,0.12);
+}
+
+
+/* ===== CARD TITLE ===== */
+
+.producer-card-title {
+  font-size: 15px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+/* ===== CARD SUBTEXT ===== */
+
+.producer-card-sub {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+
+/* ===== CARD VALUE ===== */
+
+.producer-card-value {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+
+/* ===== CARD EMPTY ===== */
+
+.producer-card-empty {
+  margin-top: 8px;
+  font-size: 13px;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+
+/* ===== BUTTON PRIMARY ===== */
+
+.producer-button {
+  background: var(--coffee-primary);
+  color: white;
+
+  padding: 12px 24px;
+  border-radius: 999px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  letter-spacing: 0.3px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.producer-button:hover {
+  background: #6f4726;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+
+/* ===== STATUS TAGS ===== */
+
+.status-tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Preparing */
+.status-preparing {
+  background: rgba(250,204,21,0.15);
+  color: #a16207;
+}
+
+/* In Lab (nuevo estado más claro) */
+.status-lab {
+  background: rgba(59,130,246,0.12);
+  color: #1e3a8a;
+}
+
+/* Ready */
+.status-ready {
+  background: rgba(34,197,94,0.15);
+  color: #166534;
+}
+
+/* Sold */
+.status-sold {
+  background: rgba(120,120,120,0.15);
+  color: #444;
+}
+
+
+/* ===== GRID (para tus 4 cards) ===== */
+
+.producer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .producer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .producer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== NOTIFICATION DOT ===== */
+
+.notification-dot {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.notification-dot span {
+  display: block;
+  border-radius: 999px;
+}
+
+.notification-dot .ping {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #d4af37;
+  opacity: 0.6;
+  animation: ping 1.5s infinite;
+}
+
+.notification-dot .dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  background: #d4af37;
+}
+
+@keyframes ping {
+  0% { transform: scale(1); opacity: 0.6; }
+  70% { transform: scale(2.5); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ===== CARD NOTIFICATION STATE ===== */
+
+.producer-card--active {
+  position: relative;
+
+  animation: pulseSoft 2.5s ease-in-out infinite;
+
+  box-shadow:
+    0 0 0 2px rgba(212,175,55,0.25),
+    0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* ===== coffee loader   ===== */
+
+/* ===== LOADER ROOT ===== */
+.loader-root {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #2a1a0f, #0f0b07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  overflow: hidden;
+  transition: opacity 0.8s ease;
+}
+
+.loader-root.fade-out {
+  opacity: 0;
+}
+
+/* ===== BEAN ===== */
+.bean {
+  position: absolute;
+  width: 90px;
+  transition: all 0.8s ease;
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+}
+
+/* GREEN */
+.bean.green {
+  opacity: 1;
+  transform: scale(0.9);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.bean.green.hide {
+  opacity: 0;
+  transform: scale(1.05);
+}
+
+/* ROASTED */
+.bean.roasted {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.bean.roasted.show {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* ===== GLOW (la magia) ===== */
+.glow {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(212,175,55,0.35), transparent 70%);
+  transition: opacity 0.6s ease;
+}
+
+.glow.active {
+  opacity: 1;
+  animation: glowPulse 1.2s ease-in-out infinite;
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 🌿 BASE ICON */
+/* ////////////////////////////////////////////////////// */
+
+.leaf-icon {
+  transform: scale(1.4) translateY(-0.2px) translateX(0.4px);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 🌿 HOVER (orgánico) */
+/* ////////////////////////////////////////////////////// */
+
+.leaf-hover:hover .leaf-icon {
+  transform: scale(1.48) translateY(-0.2px) translateX(0.4px);
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 🌿 NOTIFICATION ANIMATION */
+/* ////////////////////////////////////////////////////// */
+
+@keyframes leafPulse {
+  0% {
+    transform: scale(1.4) translateY(-0.2px) translateX(0.4px) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.48) translateY(-0.2px) translateX(0.4px) rotate(-1.5deg);
+  }
+  60% {
+    transform: scale(1.44) translateY(-0.2px) translateX(0.4px) rotate(1.5deg);
+  }
+  100% {
+    transform: scale(1.4) translateY(-0.2px) translateX(0.4px) rotate(0deg);
+  }
+}
+
+.leaf-notification .leaf-icon {
+  animation: leafPulse 2.6s ease-in-out infinite;
+}
+
+/* glow */
+
+.leaf-notification {
+  box-shadow: 0 0 18px rgba(212,175,55,0.25);
+}
+
+@keyframes chatOpen {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.85) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes pulse {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(0.9); }
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.2; transform: scale(0.9); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+  100% { opacity: 0.2; transform: scale(0.9); }
+}
+
+
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 PARCHMENT BASE (REAL LIGHT SYSTEM CLEAN) */
+/* ////////////////////////////////////////////////////// */
+
+.parchment {
+  position: relative;
+
+  background-size: 100% 240%;
+  background-blend-mode: multiply;
+  filter:
+  contrast(1.04)
+  brightness(1.06)
+  saturate(0.96);
+  transform: translateZ(0.1px);
+
+  background:
+    /* 🧵 PAPER GRAIN (TEXTURE) */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.3' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)' opacity='0.03'/%3E%3C/svg%3E"),
+  
+
+linear-gradient(
+  105deg,
+  rgba(120,80,40,0.03) 0%,
+  rgba(120,80,40,0.06) 20%,
+  transparent 40%,
+  transparent 60%,
+  rgba(120,80,40,0.05) 80%,
+  rgba(120,80,40,0.08) 100%
+),
+
+ /* 🕯 HOTSPOT (FLAME CORE - SHARPER REALISTIC) */
+radial-gradient(
+  circle at 60% 30%,
+  rgba(255,230,170,0.25) 0%,
+  rgba(240,200,140,0.18) 20%,
+  rgba(210,170,110,0.10) 40%,
+  transparent 65%
+),
+radial-gradient(
+  circle at 30% 70%,
+  rgba(255,220,160,0.18) 0%,
+  rgba(200,160,110,0.10) 30%,
+  transparent 60%
+),
+
+    /* 🌑 LIGHT FALLOFF (LEFT DARKEN) */
+    linear-gradient(
+  to left,
+  transparent 30%,
+  rgba(90,60,30,0.08) 70%,
+  rgba(60,40,20,0.12) 100%
+),
+
+    /* ✨ DIFUSIÓN LATERAL */
+    linear-gradient(
+      to left,
+      rgba(255,210,140,0.18),
+      transparent 40%
+    ),
+
+    /* 🌗 CAÍDA NATURAL (REALISTIC SHADOW FALL) */
+linear-gradient(
+  to bottom,
+  rgba(235,215,170,0.22) 0%,
+  rgba(190,150,100,0.14) 30%,
+  rgba(130,90,50,0.20) 65%,
+  rgba(90,60,30,0.22) 100%
+),
+
+radial-gradient(
+  ellipse at 50% 50%,
+  rgba(120,80,40,0.04),
+  transparent 60%
+),
+
+  /* 📜 BASE */
+    linear-gradient(
+  120deg,
+  #f3e6cc 0%,
+  #ead7b1 25%,
+  #e0c39a 50%,
+  #d6b083 75%,
+  #cfa87a 100%
+);
+
+ box-shadow:
+  0 22px 60px rgba(0,0,0,0.14),
+  inset 0 1px 0 rgba(255,240,200,0.4),
+  inset 0 10px 18px rgba(120,80,40,0.16),
+  inset 0 -18px 30px rgba(60,40,20,0.35);
+
+  border-top: 1px solid rgba(120,80,40,0.18);
+  
+}
+
+
+
+/* ////////////////////////////////////////////////////// */
+/* ✂️ PAPER EDGES */
+/* ////////////////////////////////////////////////////// */
+
+.parchment::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+
+  background:
+
+  linear-gradient(
+    to bottom,
+    rgba(255,240,200,0.35),
+    transparent 40%
+  ),
+  linear-gradient(
+    to top,
+    rgba(60,40,20,0.45),
+    transparent 60%
+  ),
+
+  linear-gradient(
+    to bottom,
+    rgba(255,245,210,0.25),
+    transparent 20%
+  ),
+  linear-gradient(
+    to right,
+    rgba(120,80,40,0.12) 0%,
+    transparent 10%,
+    transparent 90%,
+    rgba(120,80,40,0.12) 100%
+  );
+  pointer-events: none;
+  opacity: 0.5;
+
+  
+
+
+transform:
+  perspective(600px)
+  rotateX(55deg)
+  scaleY(0.6)
+  scaleX(1.05);
+
+transform-origin: bottom;
+
+mask-image: linear-gradient(
+  to right,
+  black 0%,
+  transparent 20%,
+  transparent 80%,
+  black 100%
+);
+
+}
+
+
+
+
+.parchment::after {
+  background:
+    /* 🔥 absorción lateral (NUEVO) */
+    radial-gradient(
+      ellipse at 5% 100%,
+      rgba(60,40,20,0.5),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 95% 100%,
+      rgba(60,40,20,0.5),
+      transparent 60%
+    ),
+
+    
+    linear-gradient(
+      to bottom,
+      transparent 70%,
+      rgba(90,60,30,0.18) 82%,
+      rgba(60,40,20,0.28) 92%,
+      rgba(40,25,10,0.4) 100%
+    ),
+
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(120,80,40,0.18) 85%,
+      rgba(60,40,20,0.28) 100%
+    );
+
+    opacity: 0.6;
+    
+}
+
+  
+
+
+
+
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 PARCHMENT UNROLL (ULTRA REALISTIC PHYSICS) */
+/* ////////////////////////////////////////////////////// */
+
+@keyframes parchmentUnroll {
+  0% {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  /* 🚀 caída inicial rápida */
+  6% {
+    clip-path: inset(0 0 88% 0);
+  }
+
+  14% {
+    clip-path: inset(0 0 72% 0);
+  }
+
+  24% {
+    clip-path: inset(0 0 58% 0);
+  }
+
+  /* ⚖️ empieza la resistencia */
+  36% {
+    clip-path: inset(0 0 44% 0);
+  }
+
+  50% {
+    clip-path: inset(0 0 32% 0);
+  }
+
+  /* 🐢 desaceleración fuerte */
+  64% {
+    clip-path: inset(0 0 20% 0);
+  }
+
+  76% {
+    clip-path: inset(0 0 12% 0);
+  }
+
+
+ 88% {
+  clip-path: inset(0 0 6% 0);
+}
+
+92% {
+  clip-path: inset(0 0 -1.4% 0);
+}
+
+95% {
+  clip-path: inset(0 0 0.9% 0);
+}
+
+97% {
+  clip-path: inset(0 0 -0.4% 0);
+}
+
+99% {
+  clip-path: inset(0 0 0.2% 0);
+}
+
+100% {
+  clip-path: inset(0 0 0% 0);
+}
+}
+
+.parchment-unroll {
+  overflow: hidden;
+  will-change: clip-path, transform;
+  transform: translateY(0);
+}
+
+
+
+
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 UNROLL (GOD TIER PHYSICS) */
+/* ////////////////////////////////////////////////////// */
+
+.parchment-unroll.active {
+  animation:
+    parchmentUnroll 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    parchmentSettle 2.8s ease-out forwards,
+    parchmentWarp 2.4s ease-in-out forwards,
+    candleFlicker 4.2s ease-in-out infinite;
+
+  animation-delay: 0.04s, 0.04s, 0.04s, 0.04s, 0s;
+}
+
+@keyframes parchmentDrag {
+  0% {
+    transform: translateY(-2px);
+  }
+  60% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 MICRO SETTLE (PHYSICAL RESPONSE) */
+/* ////////////////////////////////////////////////////// */
+
+@keyframes parchmentSettle {
+  0% {
+    transform: scaleY(0.985);
+  }
+
+  70% {
+    transform: scaleY(1.002);
+  }
+
+  85% {
+    transform: scaleY(0.998);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 CURL EDGE ACTIVATION */
+/* ////////////////////////////////////////////////////// */
+
+.parchment-unroll.active::after {
+  animation: parchmentCurl 2.8s cubic-bezier(0.22,1,0.36,1) forwards;
+  animation-delay: 0.08s;
+}
+
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 CYLINDER EDGE (FAKE 3D ROLL) */
+/* ////////////////////////////////////////////////////// */
+
+.parchment-unroll::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  height: 60px;
+
+  /* 🎯 luz + volumen */
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,235,190,0.35) 0%,   /* luz arriba */
+      rgba(200,160,110,0.25) 25%,
+      rgba(120,80,40,0.35) 60%,
+      rgba(60,40,20,0.45) 100%    /* sombra abajo */
+    );
+
+  border-radius: 50%;
+
+  transform-origin: bottom;
+  transform:
+    perspective(600px)
+    rotateX(65deg)
+    scaleY(0.4);
+
+  filter: blur(4px);
+  opacity: 0;
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 CYLINDER MOTION (ROLLING) */
+/* ////////////////////////////////////////////////////// */
+
+@keyframes parchmentCurl {
+  0% {
+    transform:
+      perspective(600px)
+      rotateX(80deg)
+      scaleY(0.2)
+      translateY(0px);
+
+    opacity: 0;
+  }
+
+  6% {
+    transform:
+      perspective(600px)
+      rotateX(70deg)
+      scaleY(0.3)
+      translateY(40px);
+
+    opacity: 0.9;
+  }
+
+  14% {
+    transform:
+      perspective(600px)
+      rotateX(60deg)
+      scaleY(0.45)
+      translateY(110px);
+  }
+
+  24% {
+    transform:
+      perspective(600px)
+      rotateX(55deg)
+      scaleY(0.6)
+      translateY(180px);
+  }
+
+  36% {
+    transform:
+      perspective(600px)
+      rotateX(50deg)
+      scaleY(0.75)
+      translateY(260px);
+  }
+
+  50% {
+    transform:
+      perspective(600px)
+      rotateX(45deg)
+      scaleY(0.9)
+      translateY(340px);
+  }
+
+  64% {
+    transform:
+      perspective(600px)
+      rotateX(40deg)
+      scaleY(1)
+      translateY(430px);
+  }
+
+  76% {
+    transform:
+      perspective(600px)
+      rotateX(35deg)
+      scaleY(1.05)
+      translateY(520px);
+  }
+
+  90% {
+    transform:
+      perspective(600px)
+      rotateX(30deg)
+      scaleY(0.85)
+      translateY(620px);
+  }
+
+  100% {
+    transform:
+      perspective(600px)
+      rotateX(25deg)
+      scaleY(0.6)
+      translateY(700px);
+
+    opacity: 0;
+  }
+}
+
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 CYLINDER SHADOW */
+/* ////////////////////////////////////////////////////// */
+
+.parchment-unroll::before {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 100%;
+
+  height: 20px;
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(60,40,20,0.35),
+    transparent 70%
+  );
+
+  filter: blur(10px);
+  opacity: 0;
+}
+.parchment-unroll.active::before {
+  animation: cylinderShadow 2.8s ease-out forwards;
+}
+
+@keyframes cylinderShadow {
+  0% {
+    opacity: 0;
+    transform: translateY(0%) scaleX(0.6);
+  }
+
+  40% {
+    opacity: 0.5;
+    transform: translateY(40%) scaleX(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(105%) scaleX(1.2);
+  }
+}
+
+@keyframes parchmentWarp {
+  0% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(0.6deg);
+  }
+  100% {
+    transform: skewX(0deg);
+  }
+}
+
+/* ////////////////////////////////////////////////////// */
+/* 📜 INNER CURL (BOTTOM MEMORY ROLL) */
+/* ////////////////////////////////////////////////////// */
+
+
+
+.inner-curl::after {
+  content: "";
+  position: absolute;
+
+  right: 6%;
+  bottom: 4px;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(60,40,20,0.85) 0%,
+      rgba(120,80,40,0.6) 25%,
+      rgba(200,160,110,0.35) 45%,
+      rgba(240,210,160,0.15) 65%,
+      transparent 80%
+    );
+
+  opacity: 0.6;
+
+  filter: blur(0.8px);
+  transform: translateX(2px) scaleX(0.9);
+
+  box-shadow:
+    inset 0 6px 12px rgba(255,240,200,0.2),
+    inset 0 -8px 16px rgba(0,0,0,0.4);
+
+  pointer-events: none;
+}
+
+@keyframes parchmentInnerCurl {
+  0% {
+    transform:
+      perspective(800px)
+      rotateX(0deg)
+      scaleY(0.2);
+    opacity: 0;
+  }
+
+  85% {
+    transform:
+      perspective(800px)
+      rotateX(0deg)
+      scaleY(0.2);
+    opacity: 0;
+  }
+
+  /* 🔥 empieza fuerte */
+  92% {
+    transform:
+      perspective(800px)
+      rotateX(55deg)
+      scaleY(0.7);
+    opacity: 0.7;
+  }
+
+  /* 💥 máximo exagerado */
+  96% {
+    transform:
+      perspective(800px)
+      rotateX(85deg)
+      scaleY(1.2);
+    opacity: 0.95;
+  }
+
+  /* 🎯 settle */
+  100% {
+  transform:
+    perspective(500px)
+    rotateX(65deg)
+    scaleY(0.95);
+  opacity: 1;
+}
+
+}
+.parchment-unroll.finished .inner-curl {
+  opacity: 1;
+
+  
+
+  transform:
+    perspective(500px)
+    rotateX(65deg)
+    scaleY(0.95)
+    scaleX(1.038)
+    translateY(1px);
+}
+
+@keyframes curlSettle {
+  0% { transform: rotateX(65deg) scaleY(0.95); }
+  50% { transform: rotateX(68deg) scaleY(1); }
+  100% { transform: rotateX(65deg) scaleY(0.95); }
+}
+
+.inner-curl {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+
+  height: 55px;
+
+  /* 🔥 forma más orgánica */
+  border-radius: 50% / 80%;
+
+  /* 🎨 material */
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(120,80,40,0.45) 0%,
+      rgba(120,80,40,0.35) 30%,
+      rgba(120,80,40,0.2) 55%,
+      transparent 80%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255,235,190,0.4),
+      rgba(120,80,40,0.4),
+      rgba(60,40,20,0.6)
+    );
+
+  background-blend-mode: multiply;
+
+  /* 🧠 recorte suave */
+  mask-image: radial-gradient(
+    ellipse at center,
+    black 40%,
+    rgba(0,0,0,0.85) 55%,
+    rgba(0,0,0,0.4) 70%,
+    transparent 100%
+  );
+
+  /* 🧊 volumen */
+  transform-origin: bottom;
+  transform:
+    perspective(500px)
+    rotateX(65deg)
+    scaleY(0.95)
+    scaleX(1.35)
+    translateY(1px);
+
+  /* 🎯 look final */
+  opacity: 0.95;
+  mix-blend-mode: multiply;
+
+  /* 🔬 micro textura */
+  filter: blur(0.2px) contrast(1.05);
+
+  /* 🌑 sombras físicas (MUY IMPORTANTE) */
+  box-shadow:
+    inset 0 10px 20px rgba(255,240,200,0.25),
+    inset 0 -12px 25px rgba(0,0,0,0.5),
+    0 6px 12px rgba(0,0,0,0.2),
+    0 -3px 8px rgba(0,0,0,0.35),
+    0 2px 2px rgba(0,0,0,0.25); /* contacto real */
+}
+
+
+
+@keyframes parchmentBreath {
+  0% { filter: brightness(1.02) contrast(1.04); }
+  100% { filter: brightness(1.025) contrast(1.045); }
+}
+
+.parchment {
+  animation: parchmentBreath 6s ease-in-out infinite alternate;
+}
+
+.parchment {
+  background-color: #f0e2c2;
+}
+
+.parchment::before {
+  mix-blend-mode: multiply;
+}
+
+.inner-curl::before {
+  content: "";
+  position: absolute;
+  left: -5%;
+  right: -5%;
+  bottom: 2px;
+  height: 12px;
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.35),
+    transparent 20%,
+    transparent 80%,
+    rgba(0,0,0,0.35)
+  );
+
+  filter: blur(6px);
+  opacity: 0.6;
+}
+
+
+ 
+
+.parchment-unroll.finished::after {
+  animation: none;
+  opacity: 0;
+}
+
+.parchment::before {
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    transparent 20%,
+    transparent 80%,
+    black 100%
+  );
+}
+
+
+
+
+

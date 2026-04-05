@@ -5,6 +5,6 @@
 import "@/events/bridges/contractEventBridge"
 
 import { initWebsocketServer }
-from "./websocketServer"
+from "@/src/websocket/websocketServer"
 
 initWebsocketServer()

@@ -1,4 +1,4 @@
-import { prisma } from "@/database/prisma";
+import { prisma } from "@/src/database/prisma";
 export async function generateLotNumber() {
   const year = new Date().getFullYear();
 

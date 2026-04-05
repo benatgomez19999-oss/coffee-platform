@@ -1,17 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { EngineState } from "@/engine/core/runtime"
-import { submitOperationalRequest } from "@/engine/core/runtime"
-import { acceptSuggestedVolume } from "@/engine/core/runtime"
-import RegionsSupplyChart from "@/components/shared/RegionsSupplyChart"
+import type { EngineState } from "@/src/engine/core/runtime"
+import { submitOperationalRequest } from "@/src/engine/core/runtime"
+import { acceptSuggestedVolume } from "@/src/engine/core/runtime"
+import RegionsSupplyChart from "@/src/components/shared/RegionsSupplyChart"
 
 import {
   evaluateContractSuggestion
-} from "@/clientLayer/layer/contractIntelligence"
+} from "@/src/clientLayer/layer/contractIntelligence"
 
 import { selectContract, getSelectedContract }
-from "@/clientLayer/layer/contractController"
+from "@/src/clientLayer/layer/contractController"
 
 
 type Props = {

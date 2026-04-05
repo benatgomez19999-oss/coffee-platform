@@ -13,7 +13,7 @@
 // El ranking NO es visible para el cliente.
 // =====================================================
 
-import { computeClientScore } from "../scoring/clientScoreEngine"
+import { computeClientScore } from "@/src/clientLayer/scoring/clientScoreEngine"
 
 export type MicroLot = {
 

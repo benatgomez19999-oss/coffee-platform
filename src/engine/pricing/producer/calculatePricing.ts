@@ -10,9 +10,9 @@ import {
   PRODUCER_ALTITUDE_MODIFIER,
 } from "./pricingTable"
 
-import { applyModifiers } from "@/engine/pricing/modifiers/engine"
-import { PRODUCER_MODIFIERS } from "@/engine/pricing/modifiers/producer"
-import { applyModifiersWithBreakdown } from "@/engine/pricing/modifiers/engine"
+import { applyModifiers } from "@/src/engine/pricing/modifiers/engine"
+import { PRODUCER_MODIFIERS } from "@/src/engine/pricing/modifiers/producer"
+import { applyModifiersWithBreakdown } from "@/src/engine/pricing/modifiers/engine"
 
 type ProcessType = "WASHED" | "NATURAL" | "HONEY" | "ANAEROBIC"
 

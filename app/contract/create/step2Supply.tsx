@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useEngineRuntime } from "@/hooks/useEngineRuntime"
+import { useEngineRuntime } from "@/src/hooks/useEngineRuntime"
 
 // 🔥 TEMP MOCK (luego conectamos real)
-import { calculateContractPricing } from "@/clientLayer/layer/contractPricing"
+import { calculateContractPricing } from "@/src/clientLayer/layer/contractPricing"
 
 type Supply = {
   origin: string

@@ -1,0 +1,934 @@
+/* =====================================================
+   🔬 TEMP TRADING / EXPERIMENTAL UI
+   Elements reused from prototype (to be refactored)
+
+   ⚠️ NOT FINAL — will be moved to console-theme
+   ⚠️ Do NOT expand this section
+
+   Contains:
+   - terminal-panel
+   - capacity sliders
+   - live indicators
+   - charts / signals
+
+   TODO:
+   → Move to isolated theme (console / analytics)
+===================================================== */
+
+/* ===== Capacity slider — product feel ===== */
+
+.capacity-slider {
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    #4ade80 0%,
+    #4ade80 30%,
+    #facc15 30%,
+    #facc15 65%,
+    #f87171 65%,
+    #f87171 100%
+  );
+  border-radius: 999px;
+  appearance: none;
+  outline: none;
+}
+
+.capacity-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.capacity-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(255,255,255,0.5);
+}
+
+.capacity-slider-pro {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  outline: none;
+  background: linear-gradient(
+    90deg,
+    #22c55e 0%,
+    #22c55e 30%,
+    #facc15 55%,
+    #ef4444 100%
+  );
+  box-shadow:
+    inset 0 0 8px rgba(0,0,0,0.6),
+    0 0 20px rgba(255,255,255,0.05);
+}
+
+.capacity-slider-pro::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow:
+    0 0 12px rgba(255,255,255,0.6),
+    0 0 30px rgba(255,255,255,0.25);
+  transition: transform 0.2s ease;
+}
+
+.capacity-slider-pro::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.capacity-slider-pro::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+}
+
+.capacity-slider-pro {
+  transition: box-shadow 0.4s ease;
+}
+
+.capacity-slider-pro:hover {
+  transform: scale(1.01);
+}
+
+/* ===== STATUS PULSE ===== */
+
+.status-dot {
+  position: relative;
+}
+
+.status-dot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: statusPulse 2.4s infinite ease-out;
+}
+
+@keyframes statusPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ===== LIVE SIGNAL ===== */
+
+.live-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulseLive 2.6s ease-in-out infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+/* ===== STATUS GLOW ===== */
+
+.status-glow {
+  position: relative;
+  transition: box-shadow 0.6s ease;
+}
+
+.status-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.status-green {
+  box-shadow: 0 0 25px rgba(74,222,128,0.18);
+}
+
+.status-yellow {
+  box-shadow: 0 0 25px rgba(250,204,21,0.18);
+}
+
+.status-red {
+  box-shadow: 0 0 25px rgba(248,113,113,0.18);
+}
+
+/* ===== LIVE DOT ===== */
+
+@keyframes softPulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.7; transform: scale(1); }
+}
+
+.signal-live {
+  animation: softPulse 2.6s ease-in-out infinite;
+  position: relative;
+}
+
+.signal-live::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  animation: pulseLive 2s ease-out infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(1); opacity: 0.3; }
+  70% { transform: scale(2); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ===== DATA FEED ===== */
+
+.data-feed {
+  font-size: 0.75rem;
+  opacity: 0.45;
+  letter-spacing: 1px;
+  animation: fadeFeed 4s ease-in-out infinite;
+}
+
+@keyframes fadeFeed {
+  0%,100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* ===== SIGNAL BAR ===== */
+
+.signal-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.signal-fill {
+  height: 100%;
+  border-radius: 999px;
+  animation: pulseSignal 2s ease-in-out infinite;
+}
+
+@keyframes pulseSignal {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+/* ================= CARD HOVER ================= */
+
+.direct-card {
+  transition: all 0.4s ease;
+}
+
+.direct-card:hover {
+  transform: translateY(-6px);
+  background-color: rgba(255,255,255,0.04);
+}
+
+/* ===== TERMINAL STREAM ===== */
+
+.terminal-stream {
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 0;
+  margin-top: 30px;
+}
+
+.terminal-track {
+  display: inline-block;
+  padding-left: 100%;
+  animation: terminalScroll 28s linear infinite;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  opacity: 0.65;
+}
+
+@keyframes terminalScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ===== HEARTBEAT ===== */
+
+@keyframes heartbeat {
+  0% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.85; }
+}
+
+.heartbeat {
+  animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+/* ===== TERMINAL PANEL (CORREGIDO — MÁS CLARO) ===== */
+
+.terminal-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgba(20,28,30,0.65) 0%,
+    rgba(12,18,20,0.55) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(14px);
+  border-radius: 16px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.45),
+    inset 0 0 40px rgba(74,222,128,0.06);
+}
+
+/* ===== SCAN LINE SUAVE ===== */
+
+.terminal-panel::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(74,222,128,0.04),
+    transparent
+  );
+  animation: scanLine 9s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* ===== AMBIENT BREATH LIGHT ===== */
+
+@keyframes ambientBreath {
+  0% {
+    box-shadow:
+      0 0 0 rgba(74,222,128,0.04),
+      inset 0 0 0 rgba(255,255,255,0.02);
+  }
+
+  50% {
+    box-shadow:
+      0 0 18px rgba(74,222,128,0.05),
+      inset 0 0 10px rgba(255,255,255,0.03);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 rgba(74,222,128,0.04),
+      inset 0 0 0 rgba(255,255,255,0.02);
+  }
+}
+
+.terminal-panel {
+  animation: ambientBreath 6s ease-in-out infinite;
+}
+
+/* ===== NETWORK BREATH ===== */
+
+@keyframes networkBreath {
+  0% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.01); }
+  100% { opacity: 0.4; transform: scale(1); }
+}
+
+.network-breath {
+  animation: networkBreath 6s ease-in-out infinite;
+}
+
+/* ===== SUBTLE NOISE ===== */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.01;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  z-index: 9999;
+}
+
+/* ===== LEVEL 11 — ADAPTIVE AMBIENT ===== */
+
+.status-green .terminal-panel {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.25),
+    inset 0 0 40px rgba(74,222,128,0.06);
+}
+
+.status-yellow .terminal-panel {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.25),
+    inset 0 0 40px rgba(250,204,21,0.06);
+}
+
+.status-red .terminal-panel {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.25),
+    inset 0 0 40px rgba(248,113,113,0.06);
+}
+
+/* ===== SOFT GRID ===== */
+
+.terminal-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.25;
+}
+
+/* ===== DEPTH LIGHT ===== */
+
+.terminal-panel {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.06), transparent 50%),
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.14),
+      rgba(255,255,255,0.06)
+    );
+}
+
+.alert::after {
+  background: rgba(248,113,113,0.4);
+}
+
+/* ===== FIX SLIDER INTERACTION ===== */
+
+.terminal-panel::before,
+.terminal-panel::after,
+body::before {
+  pointer-events: none;
+}
+
+.capacity-slider-pro {
+  position: relative;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.capacity-slider-pro::-webkit-slider-thumb {
+  cursor: grab;
+}
+
+.capacity-slider-pro:active::-webkit-slider-thumb {
+  cursor: grabbing;
+}
+
+.capacity-slider-pro {
+  cursor: ew-resize;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.capacity-slider-pro:active {
+  cursor: ew-resize;
+}
+
+.capacity-slider-pro::-webkit-slider-thumb {
+  cursor: ew-resize;
+}
+
+.capacity-slider-pro::-moz-range-thumb {
+  cursor: ew-resize;
+}
+
+/* ===== LEVEL 15 — CINEMATIC AMBIENT LIGHT ===== */
+
+.terminal-panel::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(74,222,128,0.06),
+    transparent 60%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+  animation: ambientDrift 18s ease-in-out infinite alternate;
+}
+
+@keyframes ambientDrift {
+  0% {
+    transform: translate3d(-2%, -2%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(2%, 2%, 0) scale(1.05);
+  }
+}
+
+/* ===== GLASS EDGE HIGHLIGHT ===== */
+
+.terminal-panel {
+  position: relative;
+}
+
+.terminal-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0.05),
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.03)
+  );
+  pointer-events: none;
+}
+
+/* ===== LEVEL 16 — NETWORK ENERGY FIELD ===== */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(74,222,128,0.05), transparent 60%),
+    radial-gradient(circle at 80% 70%, rgba(250,204,21,0.04), transparent 60%);
+  animation: energyDrift 40s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+@keyframes energyDrift {
+  0% {
+    transform: translate3d(-1%, -1%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(1%, 1%, 0) scale(1.04);
+  }
+}
+
+/* ===== MICRO UI SMOOTHNESS ===== */
+
+/* * {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    color 0.25s ease;
+} */
+
+/* ===== FINAL DEPTH BOOST ===== */
+
+.terminal-panel {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.console-root {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(74,222,128,0.05), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(250,204,21,0.04), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(248,113,113,0.04), transparent 40%),
+    #050507;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.console-mode body {
+  background:
+    radial-gradient(circle at 30% 20%, #152226, #0c1414 60%),
+    #0c1414;
+}
+
+/* ===== LIVE console animations ===== */
+
+@keyframes livePulse {
+  0% { opacity: 0.35; transform: scale(0.98); }
+  50% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0.35; transform: scale(0.98); }
+}
+
+@keyframes liveDot {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+@keyframes breathe {
+  0% { opacity: 0.75; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.75; }
+}
+
+.live-pulse {
+  animation: livePulse 4s ease-in-out infinite;
+}
+
+.live-dot {
+  animation: liveDot 1.8s ease-in-out infinite;
+}
+
+.live-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+.capacity-chart {
+  height: 120px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  padding: 12px;
+  overflow: visible;
+  position: relative;
+}
+
+.capacity-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.capacity-line {
+  fill: none;
+  stroke: rgba(74, 222, 128, 0.8);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(74,222,128,0.4));
+  stroke-dasharray: 6;
+  animation: flow 6s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+/* duplicated intentionally (as in original) */
+
+@keyframes livePulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
+
+.live-pulse {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes panelBreath {
+  0% { transform: scale(1); opacity: 0.98; }
+  50% { transform: scale(1.002); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.98; }
+}
+
+.intelligence-panel {
+  animation: panelBreath 8s ease-in-out infinite;
+}
+
+.metric-refresh {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-refresh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.08),
+    transparent
+  );
+  transform: translateX(-120%);
+  animation: shimmer 6s infinite;
+}
+
+@keyframes shimmer {
+  to { transform: translateX(120%); }
+}
+
+/* ===== RIGHT PANEL BREATH ===== */
+
+@keyframes panelBreath {
+  0% { transform: scale(1); opacity: 0.98; }
+  50% { transform: scale(1.002); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.98; }
+}
+
+.intelligence-panel {
+  animation: panelBreath 8s ease-in-out infinite;
+}
+
+/* ===== METRIC SHIMMER ===== */
+
+.metric-refresh {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-refresh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.08),
+    transparent
+  );
+  transform: translateX(-120%);
+  animation: shimmer 6s infinite;
+}
+
+@keyframes shimmer {
+  to { transform: translateX(120%); }
+}
+
+/* ===== FEED ENTRY ===== */
+
+.feed-entry {
+  animation: feedFade 0.6s ease;
+}
+
+@keyframes feedFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.capacity-chart {
+  animation: chartPulse 10s ease-in-out infinite;
+}
+
+@keyframes chartPulse {
+  0%,100% { box-shadow: inset 0 0 0 rgba(74,222,128,0.1); }
+  50% { box-shadow: inset 0 0 18px rgba(74,222,128,0.08); }
+}
+
+.intelligence-panel {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.4),
+    inset 0 0 30px rgba(74,222,128,0.05);
+}
+
+/* ===== ADAPTIVE LOAD GLOW ===== */
+
+.load-calm {
+  box-shadow: inset 0 0 30px rgba(74,222,128,0.05);
+}
+
+.load-medium {
+  box-shadow: inset 0 0 30px rgba(250,204,21,0.08);
+}
+
+.load-high {
+  box-shadow: inset 0 0 30px rgba(248,113,113,0.12);
+}
+
+/* ===== INSIGHT STRIP ===== */
+
+.insight-strip {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 20px;
+  animation: insightFade 2s ease;
+}
+
+@keyframes insightFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 0.75; transform: translateY(0); }
+}
+
+/* ===== SYSTEM TENSION ===== */
+
+@keyframes tensionPulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.04); }
+}
+
+.load-high {
+  animation: tensionPulse 4s ease-in-out infinite;
+}
+
+/* ===== ALERT BANNER ===== */
+
+.alert-banner {
+  font-size: 0.8rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: alertFade 0.4s ease;
+}
+
+.alert-watch {
+  background: rgba(250,204,21,0.08);
+  border: 1px solid rgba(250,204,21,0.2);
+  color: #facc15;
+}
+
+.alert-risk {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  color: #f87171;
+}
+
+@keyframes alertFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RISK PULSE ===== */
+
+.panel-risk {
+  animation: riskPulse 3s ease-in-out infinite;
+}
+
+@keyframes riskPulse {
+  0%,100% { box-shadow: inset 0 0 20px rgba(248,113,113,0.08); }
+  50% { box-shadow: inset 0 0 40px rgba(248,113,113,0.12); }
+}
+
+/* ===== PREDICTIVE BLOCK ===== */
+
+.predictive-block {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  animation: fadePredictive 0.6s ease;
+}
+
+.predictive-title {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+@keyframes fadePredictive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== NARRATIVE INSIGHT ===== */
+
+.narrative-insight {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.85;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  animation: narrativeFade 0.6s ease;
+}
+
+@keyframes narrativeFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 0.85; transform: translateY(0); }
+}
+
+/* ===== SITUATIONAL BLOCK ===== */
+
+.situational-block {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  animation: situationalFade 0.6s ease;
+}
+
+.situational-title {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+@keyframes situationalFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== COGNITIVE BLOCK ===== */
+
+.cognitive-block {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  animation: cognitiveFade 0.6s ease;
+}
+
+.cognitive-title {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+@keyframes cognitiveFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== INPUT RANGE FIX ===== */
+
+input[type="range"] {
+  transition: none !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  transition: none !important;
+}
+
+input[type="range"]::-moz-range-thumb {
+  transition: none !important;
+}

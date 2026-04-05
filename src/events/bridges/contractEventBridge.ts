@@ -3,13 +3,13 @@
 // =====================================================
 
 import { eventBus }
-from "@/events/core/eventBus"
+from "@/src/events/core/eventBus"
 
 import { EVENTS }
-from "@/events/core/eventTypes"
+from "@/src/events/core/eventTypes"
 
 import { registerEngineContract }
-from "@/engine/core/runtime"
+from "@/src/engine/core/runtime"
 
 
 // =====================================================

@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////
 
 import { PricingModifier } from "../types"
-import { PRODUCER_ALTITUDE_MODIFIER } from "@/engine/pricing/producer/pricingTable" 
+import { PRODUCER_ALTITUDE_MODIFIER } from "@/src/engine/pricing/producer/pricingTable" 
 
 export const producerAltitudeModifier: PricingModifier = {
   id: "PRODUCER_ALTITUDE",

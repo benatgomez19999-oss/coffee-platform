@@ -3,7 +3,7 @@
 // Señal central de tensión del sistema.
 // =====================================================
 
-import type { EngineState } from "./runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 export function computeASI(
   state: EngineState,

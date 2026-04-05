@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/database/prisma"
-import { requireAuth } from "@/lib/requireAuth"
+import { prisma } from "@/src/database/prisma"
+import { requireAuth } from "@/src/lib/requireAuth"
 
 // ======================================================
 // CREATE CONTRACT — USER SCOPED (MULTI-TENANT SAFE)

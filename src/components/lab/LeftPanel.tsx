@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 import {
   submitOperationalRequest,
   injectSupply,
   acceptSuggestedVolume
-} from "@/engine/core/runtime"
+} from "@/src/engine/core/runtime"
 
 type Props = {
   engineState: EngineState

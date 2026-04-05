@@ -14,9 +14,9 @@
 // price surface by region
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 import type { RegionMarket }
-from "@/spatialMarket/regions/regionTypes"
+from "@/src/spatialMarket/regions/regionTypes"
 
 
 // =====================================================

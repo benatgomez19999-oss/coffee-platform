@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRef } from "react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
+import { showNavOverlay } from "@/src/lib/navigationOverlay"
 
 
 
@@ -15,6 +16,7 @@ const [loaded, setLoaded] = useState(false)
 const [offset, setOffset] = useState(50)
 const pathname = usePathname()
 const router = useRouter()
+
 
 useEffect(() => {
   setLoaded(true)
@@ -62,6 +64,101 @@ useEffect(() => {
 
   const directRef = useRef(null)
   const directVisible = true 
+
+  const goToPlatform = () => {
+  const el = document.getElementById("nav-overlay-root")
+
+ 
+
+ if (el) {
+  el.innerHTML = `
+  <div style="
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1a0f07;
+  ">
+
+    <div style="
+      position:relative;
+      width:clamp(320px, 30vw, 420px);
+      height:clamp(320px, 30vw, 420px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+
+      <!-- 🍒 PRE-GLOW -->
+      <div style="
+        position:absolute;
+        width:70%;
+        height:70%;
+        border-radius:9999px;
+        filter:blur(100px);
+        opacity:0.45;
+        transform:scale(0.95);
+        background:radial-gradient(circle, rgba(255,180,100,0.12), transparent 70%);
+      "></div>
+
+      <!-- 🍒 CHERRY -->
+      <img 
+        src="/images/coffee_cherry.png"
+        style="
+          position:absolute;
+          width:75%;
+          max-width:300px;
+          transform:scale(0.96) translateY(10px);
+          opacity:0;
+          filter:
+            brightness(1.05)
+            contrast(1.05)
+            saturate(1.1);
+          animation: cherryIn 600ms cubic-bezier(0.22,1,0.36,1) forwards;
+        "
+      />
+
+      <!-- ✨ INNER GLOW -->
+      <div style="
+        position:absolute;
+        width:80px;
+        height:80px;
+        top:30%;
+        left:50%;
+        transform:translateX(-50%);
+        background:radial-gradient(circle, rgba(255,255,255,0.15), transparent);
+        filter:blur(20px);
+        opacity:0.25;
+      "></div>
+
+    </div>
+
+    <!-- 💨 ANIMATION DEFINIDA AQUÍ -->
+    <style>
+      @keyframes cherryIn {
+        0% {
+          opacity:0;
+          transform:scale(0.94) translateY(14px);
+        }
+        60% {
+          opacity:1;
+          transform:scale(1.03) translateY(-2px);
+        }
+        100% {
+          opacity:1;
+          transform:scale(1.02) translateY(0px);
+        }
+      }
+    </style>
+
+  </div>
+  `
+}
+
+  router.push("/platform")
+}
 
   return (
   <div style={{
@@ -133,7 +230,10 @@ useEffect(() => {
   {/* CLIENT NAME */}
   {user && (
   <div
-    onClick={() => router.push("/platform")}
+    onClick={() => {
+  showNavOverlay()
+  router.push("/platform")
+   }}
     style={{
       fontSize: "0.8rem",
       color: "#d4af37",
@@ -265,7 +365,7 @@ useEffect(() => {
 
 {user ? (
   <button
-    onClick={() => router.push("/platform")}
+    onClick={goToPlatform}
     style={{
       padding: "10px 24px",
       borderRadius: "999px",

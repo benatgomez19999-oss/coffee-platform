@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////
 
 import { PrismaClient } from "@prisma/client"
-import { generateLotNumber } from "@/lib/generateLotNumber";
+import { generateLotNumber } from "@/src/lib/generateLotNumber";
 import { eventBus } from "../events/core/eventBus"
 import { EVENTS } from "../events/core/eventTypes"
 import { ProcessType } from "@prisma/client";

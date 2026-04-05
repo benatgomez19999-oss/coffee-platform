@@ -2,7 +2,7 @@
 // 💰 TOTAL COST ENGINE (REAL DATA BASED)
 //////////////////////////////////////////////////////
 
-import { COST_STRUCTURE } from "./costTable"
+import { COST_STRUCTURE } from "@/src/engine/pricing/costs/costTable"
 
 type CostInput = {
   region: keyof typeof COST_STRUCTURE.internalTransport

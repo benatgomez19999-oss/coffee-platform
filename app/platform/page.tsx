@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getUserFromRequest } from "@/lib/getUserFromRequest"
+import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
 
 export const dynamic = "force-dynamic";
 
@@ -45,3 +45,4 @@ export default async function PlatformPage() {
 
   redirect("/platform/client")
 }
+

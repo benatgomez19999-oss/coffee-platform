@@ -1,13 +1,13 @@
 "use client"
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 import { useSearchParams, useRouter } from "next/navigation"
 
 
 
 
 import { computeSupplySecurityIndex }
-from "@/decision/computeSupplySecurityIndex"
+from "@/src/decision/computeSupplySecurityIndex"
 
 import { useEffect, useState } from "react"
 
@@ -15,7 +15,7 @@ type Props = {
   engineState: EngineState
 }
 
-import { getEngineContext } from "@/engine/core/runtime"
+import { getEngineContext } from "@/src/engine/core/runtime"
 
 export default function ClientOverviewPanel({
   engineState

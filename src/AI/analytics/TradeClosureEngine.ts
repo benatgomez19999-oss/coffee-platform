@@ -1,4 +1,4 @@
-import { getTradeMemory } from "../learning/TradeMemory"
+import { getTradeMemory } from "@/src/AI/learning/TradeMemory"
 
 export function closeTrades(currentPriceMap: Record<string, number>) {
 

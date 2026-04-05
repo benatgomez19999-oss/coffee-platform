@@ -3,7 +3,7 @@
 // Detecta regiones que necesitarán reposición
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 export function computeReplenishmentForecast(
   state: EngineState

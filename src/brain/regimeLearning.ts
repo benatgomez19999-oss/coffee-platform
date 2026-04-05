@@ -3,7 +3,7 @@
 // Aprende patrones de tensión y clasifica régimen.
 // =====================================================
 
-import { getDecisionMemorySnapshot } from "./cognitiveMemory"
+import { getDecisionMemorySnapshot } from "@/src/brain/cognitiveMemory"
 
 export type SystemRegime =
   | "stable"

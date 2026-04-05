@@ -1,5 +1,5 @@
-import { eventBus } from "@/events/core/eventBus"
-import { EVENTS } from "@/events/core/eventTypes"
+import { eventBus } from "@/src/events/core/eventBus"
+import { EVENTS } from "@/src/events/core/eventTypes"
 
 // =====================================================
 // LOT VERIFIED HANDLER

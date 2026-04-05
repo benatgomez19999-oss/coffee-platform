@@ -2,14 +2,14 @@
 // IMPORT ENGINE RUNTIME
 // =====================================================
 
-import { submitOperationalRequest } from "@/engine/core/runtime"
+import { submitOperationalRequest } from "@/src/engine/core/runtime"
 
 // =====================================================
 // IMPORT EVENTS 
 // =====================================================
 
-import { eventBus } from "@/events/core/eventBus"
-import { EVENTS } from "@/events/core/eventTypes"
+import { eventBus } from "@/src/events/core/eventBus"
+import { EVENTS } from "@/src/events/core/eventTypes"
 
 // =====================================================
 // DEMO TIME SCALE

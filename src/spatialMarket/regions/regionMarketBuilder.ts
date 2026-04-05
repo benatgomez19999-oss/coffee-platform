@@ -1,5 +1,5 @@
-import type { EngineState } from "@/engine/core/runtime"
-import type { RegionMarket } from "@/spatialMarket/regions/regionTypes"
+import type { EngineState } from "@/src/engine/core/runtime"
+import type { RegionMarket } from "@/src/spatialMarket/regions/regionTypes"
 
 export function buildRegionalMarkets(
   state: EngineState

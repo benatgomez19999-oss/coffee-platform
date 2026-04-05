@@ -2,7 +2,7 @@
 // 🌸 VARIETY PREMIUM MODIFIER (PRODUCER)
 //////////////////////////////////////////////////////
 
-import { PricingModifier } from "../types"
+import { PricingModifier } from "@/src/engine/pricing/modifiers/types"
 
 export const producerVarietyModifier: PricingModifier = {
   id: "PRODUCER_VARIETY_PREMIUM",

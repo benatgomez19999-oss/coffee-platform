@@ -7,34 +7,34 @@
 // =====================================================
 
 import type { EngineState, EngineContext }
-from "@/engine/core/runtime"
+from "@/src/engine/core/runtime"
 
 import { submitOperationalRequest }
-from "@/engine/core/runtime"
+from "@/src/engine/core/runtime"
 
 import { selectBestTradeRoute }
-from "@/AI/execution/selectBestTradeRoute"
+from "@/src/AI/execution/selectBestTradeRoute"
 
 import { evaluateExecutionRisk }
-from "@/AI/execution/ExecutionRiskEngine"
+from "@/src/AI/execution/ExecutionRiskEngine"
 
 import { applyMarketImpact }
-from "@/AI/execution/MarketImpactEngine"
+from "@/src/AI/execution/MarketImpactEngine"
 
 import { computePositionSize }
-from "@/AI/execution/PositionSizingEngine"
+from "@/src/AI/execution/PositionSizingEngine"
 
 import { applyExposureConstraint }
-from "@/AI/risk/PortfolioExposureEngine"
+from "@/src/AI/risk/PortfolioExposureEngine"
 
 import { computeCapitalAllocation }
-from "@/AI/risk/CapitalAllocationEngine"
+from "@/src/AI/risk/CapitalAllocationEngine"
 
 import { getCapitalWeight }
-from "@/AI/evolution/CapitalCompetitionEngine"
+from "@/src/AI/evolution/CapitalCompetitionEngine"
 
 import { recordTrade }
-from "@/AI/learning/TradeMemory"
+from "@/src/AI/learning/TradeMemory"
 
 
 

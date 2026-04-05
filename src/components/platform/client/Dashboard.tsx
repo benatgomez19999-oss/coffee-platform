@@ -2,15 +2,15 @@
 
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import ClientTradingPanel from "@/components/platform/client/ClientTradingPanel"
-import ClientContractsPanel from "@/components/platform/client/ClientContractsPanel"
-import ClientOverviewPanel from "@/components/platform/client/ClientOverviewPanel"
-import { startEngineRuntime } from "@/engine/core/runtime"
+import ClientTradingPanel from "@/src/components/platform/client/ClientTradingPanel"
+import ClientContractsPanel from "@/src/components/platform/client/ClientContractsPanel"
+import ClientOverviewPanel from "@/src/components/platform/client/ClientOverviewPanel"
+import { startEngineRuntime } from "@/src/engine/core/runtime"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
-from "@/websocket/websocketClient"
-import OnboardingWizard from "@/components/shared/OnboardingWizard"
-import { getUserFromRequest } from "@/lib/auth"
+from "@/src/websocket/websocketClient"
+import OnboardingWizard from "@/src/components/shared/OnboardingWizard"
+import { getUserFromRequest } from "@/src/lib/auth"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 
@@ -19,20 +19,20 @@ import { usePathname } from "next/navigation"
 
 
 // ENGINE
-import { stepSimulationReal } from "@/engine/core/simulationReal";
+import { stepSimulationReal } from "@/src/engine/core/simulationReal";
 import {
   updateEngineContext,
   subscribeEngine,
   getInitialEngineState,
   submitOperationalRequest
-} from "@/engine/core/runtime";
+} from "@/src/engine/core/runtime";
 
-import { runDecisionPipeline } from "@/decision/decisionPipeline";
-import { evaluateSystemDecision } from "@/decision/decisionBridge"
-import { getSignals } from "@/signals/signalRegistry"
-import { safeSignal } from "@/signals/signalFirewall";
+import { runDecisionPipeline } from "@/src/decision/decisionPipeline";
+import { evaluateSystemDecision } from "@/src/decision/decisionBridge"
+import { getSignals } from "@/src/signals/signalRegistry"
+import { safeSignal } from "@/src/signals/signalFirewall";
 
-import type { EngineState } from "@/engine/core/runtime";
+import type { EngineState } from "@/src/engine/core/runtime";
 import { useRouter } from "next/navigation"
 
 

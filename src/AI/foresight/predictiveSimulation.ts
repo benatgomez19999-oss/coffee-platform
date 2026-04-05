@@ -15,10 +15,10 @@
 //
 // =====================================================
 
-import { stepSimulationReal } from "@/engine/core/simulationReal"
-import { setEngineSeed } from "@/engine/core/runtime"
+import { stepSimulationReal } from "@/src/engine/core/simulationReal"
+import { setEngineSeed } from "@/src/engine/core/runtime"
 
-import type { EngineState, EngineContext } from "@/engine/core/runtime"
+import type { EngineState, EngineContext } from "@/src/engine/core/runtime"
 
 
 // =====================================================

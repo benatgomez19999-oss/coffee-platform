@@ -15,8 +15,8 @@
 // regional cascade stress
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
-import type { CommodityFlow } from "../flows/commodityFlowEngine"
+import type { EngineState } from "@/src/engine/core/runtime"
+import type { CommodityFlow } from "@/src/spatialMarket/flows/commodityFlowEngine"
 
 
 

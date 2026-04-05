@@ -7,19 +7,19 @@
 
 import {
   createRandomGenome
-} from "./StrategyGenome"
+} from "@/src/AI/evolution/StrategyGenome"
 
 import { mutateGenome }
-from "./StrategyMutationEngine"
+from "@/src/AI/evolution/StrategyMutationEngine"
 
 import { runStrategyArena }
-from "./StrategyArena"
+from "@/src/AI/evolution/StrategyArena"
 
 import {
   initializeCapital,
   updateCapitalAllocation,
   normalizeCapital
-} from "./CapitalCompetitionEngine"
+} from "@/src/AI/evolution/CapitalCompetitionEngine"
 
 let population = Array.from({ length: 5 }, () =>
   createRandomGenome()

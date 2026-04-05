@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { prisma } from "@/database/prisma"
-import { getUserFromRequest } from "@/lib/getUserFromRequest"
+import { prisma } from "@/src/database/prisma"
+import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
 import { NextRequest } from "next/server"
 
 export async function GET(req: NextRequest) {

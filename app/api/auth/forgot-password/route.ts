@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/database/prisma"
+import { prisma } from "@/src/database/prisma"
 import crypto from "crypto"
-import { sendEmail } from "@/lib/email"
-import { alturaEmailTemplate } from "@/lib/emailTemplates"
+import { sendEmail } from "@/src/lib/email"
+import { alturaEmailTemplate } from "@/src/lib/emailTemplates"
 
 // =====================================================
 // FORGOT PASSWORD

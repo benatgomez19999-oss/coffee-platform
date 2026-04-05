@@ -1,6 +1,6 @@
-import { prisma } from "@/database/prisma"
-import { eventBus } from "@/events/core/eventBus"
-import { EVENTS } from "@/events/core/eventTypes"
+import { prisma } from "@/src/database/prisma"
+import { eventBus } from "@/src/events/core/eventBus"
+import { EVENTS } from "@/src/events/core/eventTypes"
 
 // =====================================================
 // CONTRACT SERVICE

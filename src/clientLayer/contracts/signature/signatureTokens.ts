@@ -1,4 +1,4 @@
-import { SignatureToken } from "./signatureTypes"
+import { SignatureToken } from "@/src/clientLayer/contracts/signature/signatureTypes"
 
 function getTokenStore(): SignatureToken[] {
 

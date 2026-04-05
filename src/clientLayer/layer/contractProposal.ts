@@ -1,4 +1,4 @@
-import { getContracts, updateContract } from "./contractStore"
+import { getContracts, updateContract } from "@/src/clientLayer/layer/contractStore"
 
 export function createUpgradeProposal(newVolume: number) {
 

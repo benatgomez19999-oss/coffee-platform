@@ -3,7 +3,7 @@
 // Calcula cuánto volumen debería reponerse por región
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 export function computeSupplyPlan(
   state: EngineState

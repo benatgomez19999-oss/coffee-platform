@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { updateEngineCalibration } from "@/engine/core/runtime"
+import { updateEngineCalibration } from "@/src/engine/core/runtime"
 
 export default function EngineCalibrationPanel() {
 

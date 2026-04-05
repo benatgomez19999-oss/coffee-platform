@@ -4,7 +4,7 @@
 // No modifica dinámica — solo observa.
 // =====================================================
 
-import { runDecisionPipeline } from "../decision/decisionPipeline"
+import { runDecisionPipeline } from "@/src/decision/decisionPipeline"
 
 export interface DecisionInputs {
 

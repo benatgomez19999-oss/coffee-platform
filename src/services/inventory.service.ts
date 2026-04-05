@@ -4,7 +4,7 @@
 // Gestión de stock físico:
 // =====================================================
 
-import { prisma } from "@/database/prisma"
+import { prisma } from "@/src/database/prisma"
 
 // =====================================================
 // RESERVE ROASTED BAGS

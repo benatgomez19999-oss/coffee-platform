@@ -15,9 +15,9 @@
 //
 // =====================================================
 
-import { WeatherSignal } from "@/AI/sensing/WeatherIntelligence"
-import { DemandSignal } from "@/AI/sensing/DemandIntelligence"
-import { SupplyRiskSignal } from "@/AI/sensing/SupplyRiskIntelligence"
+import { WeatherSignal } from "@/src/AI/sensing/WeatherIntelligence"
+import { DemandSignal } from "@/src/AI/sensing/DemandIntelligence"
+import { SupplyRiskSignal } from "@/src/AI/sensing/SupplyRiskIntelligence"
 
 
 // =====================================================

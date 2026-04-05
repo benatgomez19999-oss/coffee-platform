@@ -5,11 +5,11 @@ import { useEffect, useState } from "react"
 
 import {
   generateContractPDF
-} from "@/clientLayer/layer/contractPDFGenerator"
+} from "@/src/clientLayer/layer/contractPDFGenerator"
 
 import {
   getSelectedContract
-} from "@/clientLayer/layer/contractController"
+} from "@/src/clientLayer/layer/contractController"
 
 
 // =====================================================

@@ -9,8 +9,8 @@
 //
 // =====================================================
 
-import { stepSimulationReal } from "@/engine/core/simulationReal"
-import type { EngineState, EngineContext } from "@/engine/core/runtime"
+import { stepSimulationReal } from "@/src/engine/core/simulationReal"
+import type { EngineState, EngineContext } from "@/src/engine/core/runtime"
 
 const clamp01 = (x: number) =>
   Math.max(0, Math.min(1, x))

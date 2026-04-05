@@ -1,4 +1,4 @@
-import { ClientSession } from "./clientTypes"
+import { ClientSession } from "@/src/clientLayer/contracts/client/clientTypes"
 
 const STORAGE_KEY = "clientSession"
 

@@ -1,4 +1,4 @@
-import { prisma } from "@/database/prisma";
+import { prisma } from "@/src/database/prisma";
 
 export default async function LabelPage({ params }: any) {
 

@@ -18,60 +18,60 @@
 //
 // =====================================================
 
-import { updateEngineContext } from "@/engine/core/runtime"
+import { updateEngineContext } from "@/src/engine/core/runtime"
 
-import { computeWeatherSignal } from "@/AI/sensing/WeatherIntelligence"
-import { computeDemandSignal } from "@/AI/sensing/DemandIntelligence"
-import { computeSupplyRiskSignal } from "@/AI/sensing/SupplyRiskIntelligence"
+import { computeWeatherSignal } from "@/src/AI/sensing/WeatherIntelligence"
+import { computeDemandSignal } from "@/src/AI/sensing/DemandIntelligence"
+import { computeSupplyRiskSignal } from "@/src/AI/sensing/SupplyRiskIntelligence"
 
-import { computeAISystemSignals } from "@/AI/interpretation/systemIntelligence"
+import { computeAISystemSignals } from "@/src/AI/interpretation/systemIntelligence"
 
-import { runMonteCarloForecast } from "@/AI/foresight/predictiveSimulation"
-import { computeStrategicForecast } from "@/AI/foresight/StrategicForecastEngine"
+import { runMonteCarloForecast } from "@/src/AI/foresight/predictiveSimulation"
+import { computeStrategicForecast } from "@/src/AI/foresight/StrategicForecastEngine"
 import type { StrategicForecast }
-from "@/AI/foresight/StrategicForecastEngine"
+from "@/src/AI/foresight/StrategicForecastEngine"
 
-import type { EngineState, EngineContext } from "@/engine/core/runtime"
+import type { EngineState, EngineContext } from "@/src/engine/core/runtime"
 
-import type { WeatherInput } from "@/AI/sensing/WeatherIntelligence"
-import type { DemandInput } from "@/AI/sensing/DemandIntelligence"
-import type { SupplyRiskInput } from "@/AI/sensing/SupplyRiskIntelligence"
-import { runDecisionStressTest } from "@/AI/foresight/DecisionStressTest"
+import type { WeatherInput } from "@/src/AI/sensing/WeatherIntelligence"
+import type { DemandInput } from "@/src/AI/sensing/DemandIntelligence"
+import type { SupplyRiskInput } from "@/src/AI/sensing/SupplyRiskIntelligence"
+import { runDecisionStressTest } from "@/src/AI/foresight/DecisionStressTest"
 import { scanCommodityOpportunities }
-from "@/AI/foresight/CommodityOpportunityScanner"
+from "@/src/AI/foresight/CommodityOpportunityScanner"
 import { computeCommodityShockNetwork }
-from "@/AI/foresight/CommodityShockNetwork"
+from "@/src/AI/foresight/CommodityShockNetwork"
 import { detectCommodityRegime }
-from "@/AI/interpretation/CommodityRegimeDetector"
+from "@/src/AI/interpretation/CommodityRegimeDetector"
 import { computeCommodityStrategy }
-from "@/AI/decision/CommodityStrategyEngine"
+from "@/src/AI/decision/CommodityStrategyEngine"
 import { optimizeTradeRoutes }
-from "@/AI/decision/GlobalTradeRouteOptimizer"
+from "@/src/AI/decision/GlobalTradeRouteOptimizer"
 import { simulateSupplyChainStress }
-from "@/AI/simulation/SupplyChainStressSimulator"
+from "@/src/AI/simulation/SupplyChainStressSimulator"
 import { optimizeCommodityPortfolio }
-from "@/AI/decision/GlobalCommodityPortfolioOptimizer"
+from "@/src/AI/decision/GlobalCommodityPortfolioOptimizer"
 import { computeGlobalRiskDashboard }
-from "@/AI/dashboard/GlobalRiskDashboardEngine"
+from "@/src/AI/dashboard/GlobalRiskDashboardEngine"
 import { applyGlobalScenario }
-from "@/AI/simulation/GlobalScenarioEngine"
+from "@/src/AI/simulation/GlobalScenarioEngine"
 import { generateStrategicInsights }
-from "@/AI/advisor/AIStrategicAdvisor"
+from "@/src/AI/advisor/AIStrategicAdvisor"
 import { runAutonomousStrategyAgent }
-from "@/AI/agent/AutonomousStrategyAgent"
+from "@/src/AI/agent/AutonomousStrategyAgent"
 import { updateCommodityPrices }
-from "@/AI/market/CommodityPriceEngine"
-import { getSignals } from "@/signals/signalRegistry"
+from "@/src/AI/market/CommodityPriceEngine"
+import { getSignals } from "@/src/signals/signalRegistry"
 import { runPortfolioRebalancer }
-from "@/AI/risk/PortfolioRebalancer"
+from "@/src/AI/risk/PortfolioRebalancer"
 import { computeStrategyAdjustment }
-from "@/AI/learning/StrategyLearningEngine"
+from "@/src/AI/learning/StrategyLearningEngine"
 import { evolveStrategies }
-from "@/AI/evolution/StrategyEvolutionEngine"
+from "@/src/AI/evolution/StrategyEvolutionEngine"
 import { closeTrades }
-from "@/AI/analytics/TradeClosureEngine"
+from "@/src/AI/analytics/TradeClosureEngine"
 import { computeStrategyLeaderboard }
-from "@/AI/analytics/StrategyLeaderboard"
+from "@/src/AI/analytics/StrategyLeaderboard"
 
 
 // =====================================================

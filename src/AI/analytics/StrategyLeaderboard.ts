@@ -5,7 +5,7 @@
 //
 // =====================================================
 
-import { getTradeMemory } from "../learning/TradeMemory"
+import { getTradeMemory } from "@/src/AI/learning/TradeMemory"
 
 export type StrategyStats = {
   strategyId: string

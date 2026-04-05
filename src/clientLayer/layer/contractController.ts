@@ -2,7 +2,7 @@ import {
   getContracts,
   addContract,
   updateContract
-} from "./contractStore"
+} from "@/src/clientLayer/layer/contractStore"
 
 import { SupplyContract } from "./contractTypes"
 

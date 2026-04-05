@@ -1,4 +1,4 @@
-import PartnerLotsPanel from "@/components/platform/origin partner/PartnerLotsPanel"
+import PartnerLotsPanel from "@/src/components/platform/originPartner/PartnerLotsPanel"
 
 export default function Page() {
 

@@ -5,7 +5,7 @@
 //
 // =====================================================
 
-import type { StrategyGenome } from "./StrategyGenome"
+import type { StrategyGenome } from "@/src/AI/evolution/StrategyGenome"
 
 // =====================================================
 // ARENA RESULT

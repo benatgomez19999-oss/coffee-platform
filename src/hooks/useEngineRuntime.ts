@@ -8,17 +8,17 @@ import {
   updateEngineContext,
   getInitialEngineState,
   type EngineState
-} from "@/engine/core/runtime"
+} from "@/src/engine/core/runtime"
 
-import { getEngineContext } from "@/engine/core/runtime"
+import { getEngineContext } from "@/src/engine/core/runtime"
 import { updateCommodityPrices }
-from "@/AI/market/CommodityPriceEngine"
+from "@/src/AI/market/CommodityPriceEngine"
 
 // =====================================================
 // AI SYSTEM
 // =====================================================
 
-import { runAISystem } from "@/AI/orchestration/runAISystem"
+import { runAISystem } from "@/src/AI/orchestration/runAISystem"
 
 // =====================================================
 // ENGINE ↔ REACT BRIDGE (SINGLE ENTRY POINT)

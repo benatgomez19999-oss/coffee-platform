@@ -2,7 +2,7 @@
 // 🌍 COUNTRY MULTIPLIER (PRODUCER)
 //////////////////////////////////////////////////////
 
-import { PricingModifier } from "../types"
+import { PricingModifier } from "@/src/engine/pricing/modifiers/types"
 
 export const producerCountryModifier: PricingModifier = {
   id: "PRODUCER_COUNTRY",

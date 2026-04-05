@@ -14,7 +14,7 @@
 // Solo genera el estado logístico global.
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 
 

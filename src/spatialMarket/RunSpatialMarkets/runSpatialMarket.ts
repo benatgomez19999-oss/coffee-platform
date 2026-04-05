@@ -9,31 +9,31 @@
 // SPATIAL MARKET ORCHESTRATOR
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 import { buildRegionalMarkets }
-from "@/spatialMarket/regions/regionMarketBuilder"
+from "@/src/spatialMarket/regions/regionMarketBuilder"
 
 import { buildLogisticsNetwork }
-from "@/spatialMarket/logistics/logisticsNetwork"
+from "@/src/spatialMarket/logistics/logisticsNetwork"
 
 import { computeSpatialPrices }
-from "@/spatialMarket/pricing/spatialPriceEngine"
+from "@/src/spatialMarket/pricing/spatialPriceEngine"
 
 import { computeCommodityFlows }
-from "@/spatialMarket/flows/commodityFlowEngine"
+from "@/src/spatialMarket/flows/commodityFlowEngine"
 
 import { computeExportOpportunities }
-from "@/spatialMarket/export/exportOpportunityEngine"
+from "@/src/spatialMarket/export/exportOpportunityEngine"
 
 import { propagateSupplyShock }
-from "@/spatialMarket/cascade/shockPropagation"
+from "@/src/spatialMarket/cascade/shockPropagation"
 
 import { buildCommodityGraph }
-from "@/spatialMarket/graph/commodityGraph"
+from "@/src/spatialMarket/graph/commodityGraph"
 
 import { updateRegionInventories }
-from "@/spatialMarket/regions/regionInventoryEngine"
+from "@/src/spatialMarket/regions/regionInventoryEngine"
 
 
 

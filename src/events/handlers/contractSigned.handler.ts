@@ -2,11 +2,11 @@
 // IMPORTS
 // =====================================================
 
-import { eventBus } from "../core/eventBus"
-import { EVENTS } from "../core/eventTypes"
+import { eventBus } from "@/src/events/core/eventBus"
+import { EVENTS } from "@/src/events/core/eventTypes"
 
 // 👉 conexión con el motor
-import { registerEngineContract } from "@/engine/core/runtime"
+import { registerEngineContract } from "@/src/engine/core/runtime"
 
 // 👉 (luego conectaremos semáforo aquí)
 
@@ -33,7 +33,7 @@ export function registerContractSignedHandler() {
     // ⚠️ IMPORTANTE:
     // no confiamos en el payload → vamos a DB
 
-    const { prisma } = await import("@/database/prisma")
+    const { prisma } = await import("@/src/database/prisma")
 
     const contract = await prisma.contract.findUnique({
       where: { id: contractId }

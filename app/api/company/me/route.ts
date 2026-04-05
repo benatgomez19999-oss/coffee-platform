@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { verifyToken } from "@/lib/auth"
-import { prisma } from "@/database/prisma"
+import { verifyToken } from "@/src/lib/auth"
+import { prisma } from "@/src/database/prisma"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

@@ -15,9 +15,9 @@
 // =====================================================
 
 import type { RegionMarket }
-from "@/spatialMarket/regions/regionTypes"
-import type { SpatialPriceSurface } from "../pricing/spatialPriceEngine"
-import type { CommodityFlow } from "../flows/commodityFlowEngine"
+from "@/src/spatialMarket/regions/regionTypes"
+import type { SpatialPriceSurface } from "@/src/spatialMarket/pricing/spatialPriceEngine"
+import type { CommodityFlow } from "@/src/spatialMarket/flows/commodityFlowEngine"
 
 
 

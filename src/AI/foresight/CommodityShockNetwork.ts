@@ -7,7 +7,7 @@
 // =====================================================
 
 import type { CommodityOpportunity }
-from "./CommodityOpportunityScanner"
+from "@/src/AI/foresight/CommodityOpportunityScanner"
 
 export type CommodityShock = {
 

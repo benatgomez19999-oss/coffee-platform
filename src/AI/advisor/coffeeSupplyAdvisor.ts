@@ -16,15 +16,15 @@
 // - recomendaciones estratégicas
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 import {
   analyzeMicroLotPortfolio
-} from "@/clientLayer/microlots/microLotPortfolioEngine"
+} from "@/src/clientLayer/microlots/microLotPortfolioEngine"
 import {
   computeOriginDemandScore
-} from "@/clientLayer/microlots/microLotMarketLearning"
+} from "@/src/clientLayer/microlots/microLotMarketLearning"
 
-import { getSignals } from "@/signals/signalRegistry"
+import { getSignals } from "@/src/signals/signalRegistry"
 
 export type CoffeeAdvisorInsight = {
 

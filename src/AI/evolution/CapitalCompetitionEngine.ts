@@ -6,7 +6,7 @@
 // =====================================================
 
 import type { StrategyGenome }
-from "./StrategyGenome"
+from "@/src/AI/evolution/StrategyGenome"
 
 // =====================================================
 // CAPITAL STATE

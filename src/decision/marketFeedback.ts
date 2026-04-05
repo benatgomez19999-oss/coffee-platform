@@ -3,7 +3,7 @@
 // Ajusta comportamiento del mercado según estado del sistema
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 export function computeMarketFeedback(
   state: EngineState

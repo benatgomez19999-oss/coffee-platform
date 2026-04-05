@@ -2,8 +2,8 @@
 // kept for fallback & debugging
 
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/requireAuth";
-import { prisma } from "@/database/prisma";
+import { requireAuth } from "@/src/lib/requireAuth";
+import { prisma } from "@/src/database/prisma";
 
 // ✅ NECESARIO para Vercel
 export const runtime = "nodejs";

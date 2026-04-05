@@ -1,7 +1,7 @@
 "use client"
 
 import { getContractHistory }
-from "@/clientLayer/layer/contractLedger"
+from "@/src/clientLayer/layer/contractLedger"
 
 type Props = {
   contractId: string

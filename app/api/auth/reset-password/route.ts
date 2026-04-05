@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
-import { hashPassword } from "@/lib/auth";
+import { prisma } from "@/src/database/prisma";
+import { hashPassword } from "@/src/lib/auth";
 
 // =====================================================
 // RESET PASSWORD

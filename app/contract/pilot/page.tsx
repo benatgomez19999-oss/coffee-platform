@@ -10,7 +10,7 @@ import {
   StyleSheet
 } from "@react-pdf/renderer"
 
-import { getContracts } from "@/clientLayer/layer/contractStore"
+import { getContracts } from "@/src/clientLayer/layer/contractStore"
 
 // ======================================================
 // 🔥 FIX: PDFViewer SOLO EN CLIENT (NO SSR)

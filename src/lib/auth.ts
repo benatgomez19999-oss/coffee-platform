@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/database/prisma"
+import { prisma } from "@/src/database/prisma"
 
 // =====================================================
 // ENV

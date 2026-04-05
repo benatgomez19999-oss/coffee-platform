@@ -2,7 +2,7 @@
 // 🧠 CLIENT PRICING ENGINE (ADAPTED)
 //////////////////////////////////////////////////////
 
-import { calculateProducerPricing } from "../producer/calculatePricing"
+import { calculateProducerPricing } from "@/src/engine/pricing/producer/calculatePricing"
 import { calculateTotalCost } from "../costs/calculateCosts"
 import { applyRoastedPricing } from "../roasted/applyRoastedPricing"
 

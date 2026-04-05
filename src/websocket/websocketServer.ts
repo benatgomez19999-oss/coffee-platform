@@ -6,7 +6,7 @@ import { WebSocketServer }
 from "ws"
 
 import { initWebsocketGateway }
-from "./websocketGateway"
+from "@/src/websocket/websocketGateway"
 
 
 // =====================================================

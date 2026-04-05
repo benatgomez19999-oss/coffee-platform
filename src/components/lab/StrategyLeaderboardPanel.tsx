@@ -2,10 +2,10 @@
 
 import { useMemo } from "react"
 import { computeStrategyLeaderboard }
-  from "@/AI/analytics/StrategyLeaderboard"
+  from "@/src/AI/analytics/StrategyLeaderboard"
 
 import { getTradeMemory }
-  from "@/AI/learning/TradeMemory"
+  from "@/src/AI/learning/TradeMemory"
 
 export default function StrategyLeaderboardPanel({
   engineState

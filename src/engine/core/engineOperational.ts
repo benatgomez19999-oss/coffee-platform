@@ -7,8 +7,8 @@
 // Solo ejecuta allocaciones cuando procede.
 // =====================================================
 
-import type { EngineState } from "./runtime"
-import { allocateFromRegion } from "./runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
+import { allocateFromRegion } from "@/src/engine/core/runtime"
 
 export function stepOperationalLayer(
   state: EngineState

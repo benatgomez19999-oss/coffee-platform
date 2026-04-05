@@ -21,7 +21,7 @@ import {
   computeOriginDemandScore,
   computeClientPremiumIndex,
   MarketLearningState
-} from "@/clientLayer/microlots/microLotMarketLearning"
+} from "@/src/clientLayer/microlots/microLotMarketLearning"
 
 export type MicroLotPricingInput = {
 

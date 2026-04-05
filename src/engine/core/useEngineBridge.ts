@@ -6,7 +6,7 @@ import {
   updateEngineContext,
   getInitialEngineState,
   type EngineState
-} from "./runtime";
+} from "@/src/engine/core/runtime";
 
 type BridgeInputs = {
   unifiedPressure: number;

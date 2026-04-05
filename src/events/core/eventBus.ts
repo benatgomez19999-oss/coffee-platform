@@ -11,8 +11,8 @@ import { EventEmitter } from "events"
 // Cada handler se conecta aquí una sola vez
 // =====================================================
 
-import { registerLotVerifiedHandler } from "../handlers/lotVerified.handler"
-import { registerRoastBatchHandler } from "../handlers/roastBatch.handler"
+import { registerLotVerifiedHandler } from "@/src/events/handlers/lotVerified.handler"
+import { registerRoastBatchHandler } from "@/src/events/handlers/roastBatch.handler"
 
 // =====================================================
 // GLOBAL EVENT BUS (SINGLETON)

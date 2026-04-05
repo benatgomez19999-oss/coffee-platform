@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword } from "@/src/lib/auth";
 import crypto from "crypto";
-import { sendEmail } from "@/lib/email";
-import { prisma } from "@/database/prisma";
-import { alturaEmailTemplate } from "@/lib/emailTemplates"
+import { sendEmail } from "@/src/lib/email";
+import { prisma } from "@/src/database/prisma";
+import { alturaEmailTemplate } from "@/src/lib/emailTemplates"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

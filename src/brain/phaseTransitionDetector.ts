@@ -1,4 +1,4 @@
-import type { EngineState } from "@/engine/core/runtime"
+import type { EngineState } from "@/src/engine/core/runtime"
 
 // =====================================================
 // PHASE TRANSITION DETECTOR

@@ -5,7 +5,7 @@
 //
 // =====================================================
 
-import { getTradeMemory } from "./TradeMemory"
+import { getTradeMemory } from "@/src/AI/learning/TradeMemory"
 
 export function computeStrategyAdjustment() {
 

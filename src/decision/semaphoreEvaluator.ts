@@ -1,4 +1,4 @@
-import { suggestVolume } from "./volumeSuggestion"
+import { suggestVolume } from "@/src/decision/volumeSuggestion"
 
 // =====================================================
 // SEMAPHORE EVALUATOR — ADAPTIVE

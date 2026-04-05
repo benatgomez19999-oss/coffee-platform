@@ -3,9 +3,9 @@
 // calcula riesgo estructural ajustado
 // =====================================================
 
-import type { EngineState } from "@/engine/core/runtime"
-import { computeCascadeRisk } from "@/brain/cascadeDetector"
-import { computePhaseTransitionRisk } from "@/brain/phaseTransitionDetector"
+import type { EngineState } from "@/src/engine/core/runtime"
+import { computeCascadeRisk } from "@/src/brain/cascadeDetector"
+import { computePhaseTransitionRisk } from "@/src/brain/phaseTransitionDetector"
 
 export function computeAdjustedRisk(
   state: EngineState,
