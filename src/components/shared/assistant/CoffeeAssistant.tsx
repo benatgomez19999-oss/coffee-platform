@@ -110,7 +110,7 @@ export default function CoffeeAssistant({
   // 🔧 HELPERS (pure helpers / utilidades)
   //////////////////////////////////////////////////////
 
-  const buildLotSummary = () => {
+    const buildLotSummary = () => {
     if (!form) return ""
 
     const summaryLines = [
@@ -123,6 +123,82 @@ export default function CoffeeAssistant({
     ]
 
     return summaryLines.join("\n")
+  }
+
+  const prepareLotGuideMessage = `Here is a practical step-by-step guide to prepare this lot properly:
+
+1. Prepare clean and representative samples.
+Make sure the sample truly reflects the lot you want to offer. Use clean, well-sorted parchment or green coffee depending on your process, and avoid mixing qualities or harvest moments.
+
+2. Keep the lot consistent.
+Before sending samples, confirm that the lot is homogeneous in variety, process, moisture, and physical preparation. Consistency is key for a reliable evaluation.
+
+3. Label everything clearly.
+Your sample and internal records should match the lot name, farm, process, harvest year, and any internal reference you use. This avoids confusion later with the partner review.
+
+4. Wait for partner review.
+Once the sample is reviewed, your partner may validate the lot, request adjustments, or recommend improvements before publication. Make sure you are ready to respond quickly if any clarification is needed.
+
+5. After publication, prepare the physical coffee carefully.
+When the lot is published on the platform, make sure the coffee reserved for shipment matches the approved sample as closely as possible in quality and profile.
+
+6. Prepare sacks correctly.
+Use clean, dry sacks in good condition. Label them clearly and consistently, and make sure the lot can be identified without ambiguity during storage, consolidation, and export handling.
+
+7. Protect quality during storage and dispatch.
+Keep the coffee in a clean, dry, odor-free space, protected from humidity, contamination, and unnecessary movement before shipment.
+
+8. Confirm final logistics details.
+Before shipping, double-check weights, sack count, lot identification, and any export or pickup instructions required by your partner or logistics workflow.
+
+If you want, you can now ask me follow-up questions about samples, partner review, or shipping preparation for this lot.`
+
+  const priceLotGuideMessage = `Here is a practical guide to think about pricing this lot:
+
+1. Start from the real quality of the lot.
+Your price should reflect the actual cup quality, consistency, physical preparation, and overall reliability of the lot.
+
+2. Consider process and variety carefully.
+Some varieties and processes can justify stronger positioning, but only if the execution is clean and consistent. The story alone is not enough if the cup does not support it.
+
+3. Take volume into account.
+Small, very special lots may support a higher price per kilo, while larger commercial volumes often need a more competitive structure.
+
+4. Think about market fit.
+Price should match the type of buyer this lot is likely to attract. A highly differentiated microlot and a stable larger lot usually require different positioning.
+
+5. Include your operational reality.
+Make sure the price makes sense relative to preparation, storage, logistics, risk, and the effort required to deliver the lot correctly.
+
+6. Avoid pricing too aggressively too early.
+If the lot is not yet fully validated, it is often better to position it credibly than to overprice it and reduce buyer interest.
+
+7. Keep consistency between promise and delivery.
+A strong price only works if the shipped coffee matches the approved sample and the lot is prepared professionally.
+
+If you want, you can now ask me follow-up questions about how to position this specific lot more clearly.`
+
+
+
+  const pushCurrentDraftMessage = () => {
+    const summary = buildLotSummary()
+
+    appendMessages(
+      createMessage(
+        "assistant",
+        summary
+          ? `Current lot draft:\n\n${summary}`
+          : "There is no lot draft information available yet.",
+      ),
+    )
+  }
+
+  const pushPrepareLotGuideMessage = () => {
+    appendMessages(createMessage("assistant", prepareLotGuideMessage))
+  }
+
+  const pushPriceLotGuideMessage = () => {
+    appendMessages(createMessage("assistant", priceLotGuideMessage))
   }
 
   const normalizeCommand = (value: string) => {
@@ -855,17 +931,21 @@ export default function CoffeeAssistant({
 
     const validationError = validateLotValue(currentStep.key, normalizedValue)
 
-    if (validationError) {
-      appendMessages(
-        userMessage,
-        createMessage(
-          "assistant",
-          `${validationError} ${currentStep.helper ? currentStep.helper : ""}`.trim(),
-        ),
-      )
-      setInput("")
-      return
-    }
+if (validationError) {
+  //////////////////////////////////////////////////////
+  // 🧠 OUT-OF-FLOW INPUT (human guard)
+  //////////////////////////////////////////////////////
+
+  appendMessages(
+    userMessage,
+    createMessage(
+      "assistant",
+      "Let’s finish this lot form step by step first. Once it’s complete, you can ask me anything else and I’ll be happy to help.",
+    ),
+  )
+  setInput("")
+  return
+}
 
     if (updateField) {
       updateField(currentStep.key, normalizedValue)
@@ -1628,7 +1708,7 @@ export default function CoffeeAssistant({
                   }}
                 >
                   {isLotWizard
-                    ? "I can help you complete this lot draft or answer questions about coffee, varieties, process, pricing, and export logic."
+                    ? "This assistant is focused on helping you complete this lot draft. You can also open a few guided actions below. For broader questions, please use the assistant from the dashboard."
                     : "I can help you answer questions about coffee, your profile, and platform workflows."}
                 </span>
               </div>
@@ -1641,79 +1721,109 @@ export default function CoffeeAssistant({
                   marginTop: "2px",
                 }}
               >
-                {[
-                  ...(hasLotIntegration ? ["Complete this lot"] : []),
-                  "How pricing works",
-                  "What is washed coffee?",
-                ].map((item) => (
+                {hasLotIntegration && (
                   <button
-                    key={item}
-                    onClick={() => {
-                      if (item === "Complete this lot") {
-                        startLotFlow()
-                        return
-                      }
-
-                      setInput(item)
-                    }}
+                    type="button"
+                    onClick={startLotFlow}
                     style={{
-                      padding: "7px 11px",
+                      padding: "8px 12px",
                       borderRadius: "999px",
-                      border: "1px solid rgba(212,175,55,0.2)",
-                      background: "transparent",
+                      border: "1px solid rgba(84,140,90,0.55)",
+                      background:
+                        "linear-gradient(180deg, rgba(98,166,106,0.96) 0%, rgba(73,128,80,0.96) 100%)",
                       fontSize: "12px",
-                      color: "#cbb892",
+                      fontWeight: 600,
+                      color: "#f4f8f2",
                       cursor: "pointer",
                       transition: "all 0.2s ease",
+                      boxShadow: "0 10px 24px rgba(58,97,63,0.22)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(212,175,55,0.1)"
+                      e.currentTarget.style.transform = "translateY(-1px)"
+                      e.currentTarget.style.boxShadow =
+                        "0 14px 28px rgba(58,97,63,0.28)"
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent"
+                      e.currentTarget.style.transform = "translateY(0)"
+                      e.currentTarget.style.boxShadow =
+                        "0 10px 24px rgba(58,97,63,0.22)"
                     }}
                   >
-                    {item}
+                    Complete this lot
                   </button>
-                ))}
-              </div>
+                )}
 
-              {form && (
-                <div
+                <button
+                  type="button"
+                  onClick={pushCurrentDraftMessage}
                   style={{
-                    marginTop: "4px",
-                    alignSelf: "stretch",
-                    background: "rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(212,175,55,0.10)",
-                    borderRadius: "14px",
-                    padding: "12px 14px",
+                    padding: "7px 11px",
+                    borderRadius: "999px",
+                    border: "1px solid rgba(212,175,55,0.2)",
+                    background: "transparent",
+                    fontSize: "12px",
+                    color: "#cbb892",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(212,175,55,0.1)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent"
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      color: "#bda884",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Current lot draft
-                  </div>
+                  View current draft
+                </button>
 
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#e7d9c4",
-                      lineHeight: "1.6",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
-                    {buildLotSummary()}
-                  </div>
-                </div>
-              )}
+                <button
+                  type="button"
+                  onClick={pushPrepareLotGuideMessage}
+                  style={{
+                    padding: "7px 11px",
+                    borderRadius: "999px",
+                    border: "1px solid rgba(212,175,55,0.2)",
+                    background: "transparent",
+                    fontSize: "12px",
+                    color: "#cbb892",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(212,175,55,0.1)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent"
+                  }}
+                >
+                  How to prepare this lot
+                </button>
+
+                <button
+                  type="button"
+                  onClick={pushPriceLotGuideMessage}
+                  style={{
+                    padding: "7px 11px",
+                    borderRadius: "999px",
+                    border: "1px solid rgba(212,175,55,0.2)",
+                    background: "transparent",
+                    fontSize: "12px",
+                    color: "#cbb892",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(212,175,55,0.1)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent"
+                  }}
+                >
+                  How to price this lot
+                </button>
+              </div>
+
+
 
               {messages.map((msg, index) => (
                 <div key={msg.id || `normal-msg-${index}`}>
@@ -1756,66 +1866,93 @@ export default function CoffeeAssistant({
             background: "rgba(255,255,255,0.015)",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSend()
-                }
-              }}
-              placeholder={
-                mode === "lot"
-                  ? currentLotStep?.key === "name"
-                    ? lotNameFlowState === "suggested"
-                      ? "Use the buttons below, or type a valid option..."
-                      : "Type your preferred lot name..."
-                    : currentLotStep
-                      ? `Reply for ${getFieldLabel(currentLotStep.key)}...`
-                      : "Type your answer..."
-                  : "Ask something about your coffee..."
-              }
+          {isLotWizard && mode === "normal" && messages.length === 0 ? (
+            <div
               style={{
-                width: "100%",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(212,175,55,0.2)",
-                borderRadius: "999px",
-                padding: "10px 14px",
-                fontSize: "13px",
-                color: "#e7d9c4",
-                outline: "none",
-              }}
-            />
-
-            <button
-              onClick={handleSend}
-              disabled={isLoading || !input.trim()}
-              style={{
-                border: "1px solid rgba(212,175,55,0.22)",
-                background: input.trim()
-                  ? "rgba(212,175,55,0.12)"
-                  : "rgba(255,255,255,0.03)",
-                color: input.trim() ? "#f2e6cf" : "#8f7b5b",
-                borderRadius: "999px",
-                padding: "10px 13px",
                 fontSize: "12px",
-                cursor:
-                  isLoading || !input.trim() ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                flexShrink: 0,
+                color: "#bda884",
+                lineHeight: "1.55",
+                padding: "2px 4px",
               }}
             >
-              Send
-            </button>
-          </div>
+              Choose one of the guided actions above to continue, or start the
+              lot flow directly.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+                placeholder={
+                  mode === "lot"
+                    ? currentLotStep?.key === "name"
+                      ? lotNameFlowState === "suggested"
+                        ? "Use the buttons below, or type a valid option..."
+                        : "Type your preferred lot name..."
+                      : currentLotStep
+                        ? `Answer to continue with ${getFieldLabel(currentLotStep.key)}...`
+                        : "Type your answer..."
+                    : isLotWizard
+                      ? "Ask a follow-up question..."
+                      : "Ask something about your coffee..."
+                }
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(212,175,55,0.2)",
+                  borderRadius: "999px",
+                  padding: "10px 14px",
+                  fontSize: "13px",
+                  color: "#e7d9c4",
+                  outline: "none",
+                }}
+              />
+
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                style={{
+                  border:
+                    mode === "lot"
+                      ? "1px solid rgba(212,175,55,0.22)"
+                      : "1px solid rgba(84,140,90,0.38)",
+                  background: input.trim()
+                    ? mode === "lot"
+                      ? "rgba(212,175,55,0.12)"
+                      : "linear-gradient(180deg, rgba(98,166,106,0.94) 0%, rgba(73,128,80,0.94) 100%)"
+                    : "rgba(255,255,255,0.03)",
+                  color: input.trim()
+                    ? "#f2e6cf"
+                    : "#8f7b5b",
+                  borderRadius: "999px",
+                  padding: "10px 13px",
+                  fontSize: "12px",
+                  cursor:
+                    isLoading || !input.trim() ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  flexShrink: 0,
+                  boxShadow:
+                    input.trim() && mode !== "lot"
+                      ? "0 10px 24px rgba(58,97,63,0.20)"
+                      : "none",
+                }}
+              >
+                Send
+              </button>
+            </div>
+          )}
         </div>
       </div>
     ) : null
