@@ -29,9 +29,7 @@ export default function NewLotPage() {
   //////////////////////////////////////////////////////
 
   const [draftParchmentKg, setDraftParchmentKg] = useState("")
-  const [assistantLayoutMode, setAssistantLayoutMode] = useState<
-    "default" | "mid" | "late"
-  >("default")
+ 
 
   //////////////////////////////////////////////////////
   // 🔧 HANDLERS
@@ -118,8 +116,14 @@ export default function NewLotPage() {
   // 🧠 SMART UI STATE (responsive to assistant panel)
   //////////////////////////////////////////////////////
 
-  const isAssistantMidLayout = assistantLayoutMode === "mid"
-  const isAssistantLateLayout = assistantLayoutMode === "late"
+  const isAssistantMidLayout =
+    Boolean(form.farmId) && (!form.variety || !form.process)
+
+  const isAssistantLateLayout =
+    Boolean(form.variety) &&
+    Boolean(form.process) &&
+    form.harvestYear === "2026" &&
+    !form.parchmentKg
 
   const isParchmentConfirmTight =
     isAssistantLateLayout && form.harvestYear === "2026" && !form.parchmentKg
@@ -218,7 +222,6 @@ export default function NewLotPage() {
                   form={form}
                   updateField={updateField}
                   context="lot-wizard"
-                  onLayoutModeChange={setAssistantLayoutMode}
                 />
               </div>
             </div>

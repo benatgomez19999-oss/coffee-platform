@@ -17,7 +17,6 @@ type CoffeeAssistantProps = {
   form?: LotDraftForm
   updateField?: (key: keyof LotDraftForm, value: string) => void
   context?: "lot-wizard" | "dashboard"
-  onLayoutModeChange?: (mode: "default" | "mid" | "late") => void
 }
 
 type AssistantMessage = {
@@ -33,7 +32,6 @@ export default function CoffeeAssistant({
   form,
   updateField,
   context = "dashboard",
-  onLayoutModeChange,
 }: CoffeeAssistantProps) {
   const createMessage = (
     role: "assistant" | "user",
@@ -1031,25 +1029,7 @@ export default function CoffeeAssistant({
     scrollToBottom("auto")
   }, [assistantOpen])
 
-    //////////////////////////////////////////////////////
-  // 📐 EXPOSE LAYOUT MODE TO PARENT
-  //////////////////////////////////////////////////////
-
-  useEffect(() => {
-    if (!onLayoutModeChange) return
-
-    if (!assistantOpen || context !== "lot-wizard") {
-      onLayoutModeChange("default")
-      return
-    }
-
-    onLayoutModeChange(assistantLayoutMode)
-  }, [
-    assistantOpen,
-    assistantLayoutMode,
-    context,
-    onLayoutModeChange,
-  ])
+ 
 
   useEffect(() => {
     if (mode !== "lot") return
