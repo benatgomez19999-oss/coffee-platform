@@ -54,6 +54,7 @@ export default function CoffeeAssistant({
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   //////////////////////////////////////////////////////
   // 🏷️ LOT NAME SUBFLOW (mini flujo guiado)
@@ -83,6 +84,8 @@ export default function CoffeeAssistant({
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const autoCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const finalCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  
 
   //////////////////////////////////////////////////////
   // 🧠 FLAGS / banderas internas
@@ -316,9 +319,45 @@ export default function CoffeeAssistant({
     }
   }
 
- const resetToNormalMode = () => {
+   //////////////////////////////////////////////////////
+  // 🚪 SAFE CLOSE (avoid portal removeChild issues)
   //////////////////////////////////////////////////////
-  // 🧹 CLEAR AUTO CLOSE
+
+  const closeAssistantSafely = () => {
+    //////////////////////////////////////////////////////
+    // 🧹 CLEAR PENDING TIMERS
+    //////////////////////////////////////////////////////
+
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current)
+      autoCloseTimeoutRef.current = null
+    }
+
+    if (finalCloseTimeoutRef.current) {
+      clearTimeout(finalCloseTimeoutRef.current)
+      finalCloseTimeoutRef.current = null
+    }
+
+    //////////////////////////////////////////////////////
+    // 🎬 PHASE 1: VISUAL CLOSING
+    //////////////////////////////////////////////////////
+
+    setIsClosing(true)
+
+    //////////////////////////////////////////////////////
+    // 🧩 PHASE 2: REAL CLOSE AFTER RENDER SETTLES
+    //////////////////////////////////////////////////////
+
+    finalCloseTimeoutRef.current = setTimeout(() => {
+      setAssistantOpen(false)
+      setIsClosing(false)
+      finalCloseTimeoutRef.current = null
+    }, 180)
+  }
+
+  const resetToNormalMode = () => {
+  //////////////////////////////////////////////////////
+  // 🧹 CLEAR AUTO CLOSE TIMERS
   //////////////////////////////////////////////////////
 
   if (autoCloseTimeoutRef.current) {
@@ -326,9 +365,15 @@ export default function CoffeeAssistant({
     autoCloseTimeoutRef.current = null
   }
 
+  if (finalCloseTimeoutRef.current) {
+    clearTimeout(finalCloseTimeoutRef.current)
+    finalCloseTimeoutRef.current = null
+  }
+
   lotFlowRunRef.current = 0
   lastExternalSyncRef.current = ""
 
+  setIsClosing(false)
   setMode("normal")
   setStep(0)
   setInput("")
@@ -441,23 +486,27 @@ export default function CoffeeAssistant({
   // 🧠 CLIENT MOUNT GUARD
   //////////////////////////////////////////////////////
 
- useEffect(() => {
-  setIsMounted(true)
+   useEffect(() => {
+    setIsMounted(true)
 
-  return () => {
+    return () => {
+      //////////////////////////////////////////////////////
+      // 🧹 CLEANUP TIMERS
+      //////////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////////
-    // 🧹 CLEANUP AUTO CLOSE
-    //////////////////////////////////////////////////////
+      if (autoCloseTimeoutRef.current) {
+        clearTimeout(autoCloseTimeoutRef.current)
+        autoCloseTimeoutRef.current = null
+      }
 
-    if (autoCloseTimeoutRef.current) {
-      clearTimeout(autoCloseTimeoutRef.current)
-      autoCloseTimeoutRef.current = null
+      if (finalCloseTimeoutRef.current) {
+        clearTimeout(finalCloseTimeoutRef.current)
+        finalCloseTimeoutRef.current = null
+      }
+
+      setIsMounted(false)
     }
-
-    setIsMounted(false)
-  }
-}, [])
+  }, [])
 
   //////////////////////////////////////////////////////
   // 🎧 EVENTS / lifecycle
@@ -528,39 +577,44 @@ export default function CoffeeAssistant({
   }, [form, step, mode, assistantOpen])
 
   //////////////////////////////////////////////////////
-// ⏳ AUTO CLOSE WHEN LOT FLOW IS FULLY COMPLETE
-//////////////////////////////////////////////////////
+  // ⏳ AUTO CLOSE WHEN LOT FLOW IS FULLY COMPLETE
+  //////////////////////////////////////////////////////
 
-useEffect(() => {
-  const lotFlowCompleted = step >= lotDraftSteps.length
-  const formCompleted =
-    Boolean(form) && missingRequiredFields.length === 0
+  useEffect(() => {
+    const lotFlowCompleted = step >= lotDraftSteps.length
+    const formCompleted = Boolean(form) && missingRequiredFields.length === 0
 
-  if (!assistantOpen || mode !== "lot" || !lotFlowCompleted || !formCompleted) {
+    if (
+      !assistantOpen ||
+      mode !== "lot" ||
+      !lotFlowCompleted ||
+      !formCompleted
+    ) {
+      if (autoCloseTimeoutRef.current) {
+        clearTimeout(autoCloseTimeoutRef.current)
+        autoCloseTimeoutRef.current = null
+      }
+      return
+    }
+
     if (autoCloseTimeoutRef.current) {
       clearTimeout(autoCloseTimeoutRef.current)
-      autoCloseTimeoutRef.current = null
     }
-    return
-  }
 
-  if (autoCloseTimeoutRef.current) {
-    clearTimeout(autoCloseTimeoutRef.current)
-  }
-
-  autoCloseTimeoutRef.current = setTimeout(() => {
-    setAssistantOpen(false)
-    autoCloseTimeoutRef.current = null
-  }, 3000)
-
-  return () => {
-    if (autoCloseTimeoutRef.current) {
-      clearTimeout(autoCloseTimeoutRef.current)
+    autoCloseTimeoutRef.current = setTimeout(() => {
+      closeAssistantSafely()
       autoCloseTimeoutRef.current = null
-    }
-  }
-}, [assistantOpen, mode, step, form, missingRequiredFields.length])
+    }, 3000)
 
+    return () => {
+      if (autoCloseTimeoutRef.current) {
+        clearTimeout(autoCloseTimeoutRef.current)
+        autoCloseTimeoutRef.current = null
+      }
+    }
+  }, [assistantOpen, mode, step, form, missingRequiredFields.length])
+
+ 
   //////////////////////////////////////////////////////
   // ✉️ LOT MODE (guided lot flow)
   //////////////////////////////////////////////////////
@@ -937,6 +991,13 @@ useEffect(() => {
           zIndex: 9999,
           transformOrigin: "top right",
           animation: "chatOpen 0.25s cubic-bezier(0.22,1,0.36,1)",
+          opacity: isClosing ? 0 : 1,
+          transform:
+            isClosing
+              ? "translateY(8px) scale(0.985)"
+              : "translateY(0) scale(1)",
+          transition: "opacity 0.18s ease, transform 0.18s ease",
+          pointerEvents: isClosing ? "none" : "auto",
         }}
       >
         <div
@@ -1019,7 +1080,7 @@ useEffect(() => {
             )}
 
             <div
-              onClick={() => setAssistantOpen(false)}
+              onClick={closeAssistantSafely}
               style={{
                 cursor: "pointer",
                 fontSize: "14px",
