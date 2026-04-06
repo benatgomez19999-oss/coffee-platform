@@ -111,7 +111,14 @@ export default function NewLotPage() {
     return Number.isFinite(numericValue) && numericValue > 0
   }, [draftParchmentKg])
 
-    //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  // 🧠 SMART UI STATE (tight confirm layout near assistant)
+  //////////////////////////////////////////////////////
+
+  const isParchmentConfirmTight =
+    form.harvestYear === "2026" && !form.parchmentKg
+
+  //////////////////////////////////////////////////////
   // 🔄 SYNC DRAFT WITH FORM (chat → UI)
   //////////////////////////////////////////////////////
 
@@ -520,7 +527,7 @@ export default function NewLotPage() {
                 )}
               </div>
 
-              <div>
+                <div className={isParchmentConfirmTight ? "md:pr-12" : ""}>
                 <label className={labelClassName}>Parchment Kg *</label>
                 <div className="relative">
   <input
@@ -537,7 +544,7 @@ export default function NewLotPage() {
     onWheel={(e) => e.currentTarget.blur()}
     min={1}
     step="any"
-    className={inputClassName + " pr-24"}
+    className={inputClassName + (isParchmentConfirmTight ? " pr-32" : " pr-24")}
     placeholder="e.g. 1200"
   />
 
@@ -545,9 +552,13 @@ export default function NewLotPage() {
   <button
     type="button"
     onClick={confirmParchmentKg}
-    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-[#d4af37]/40 bg-[#1f3d2b]/90 px-3 py-1 text-xs text-white hover:bg-[#d4af37] hover:text-black transition-all"
+    className={`absolute top-1/2 -translate-y-1/2 rounded-full border border-[#d4af37]/40 bg-[#1f3d2b]/90 py-1 text-xs text-white transition-all hover:bg-[#d4af37] hover:text-black ${
+      isParchmentConfirmTight
+        ? "right-14 px-2.5"
+        : "right-2 px-3"
+    }`}
   >
-    Confirm
+    {isParchmentConfirmTight ? "OK" : "Confirm"}
   </button>
 </div>
 
