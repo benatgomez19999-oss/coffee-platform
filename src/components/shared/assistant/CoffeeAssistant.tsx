@@ -889,6 +889,67 @@ export default function CoffeeAssistant({
     )
   }
 
+    //////////////////////////////////////////////////////
+  // 🎨 UI / SMART LAYOUT STATE
+  //////////////////////////////////////////////////////
+
+  const totalLotSteps = lotDraftSteps.length
+  const currentLotStep = mode === "lot" ? lotDraftSteps[step] : null
+  const currentStepNumber =
+    mode === "lot" ? Math.min(step + 1, totalLotSteps) : 0
+
+  const completedLotSteps = form
+    ? lotDraftSteps.filter((item) => String(form[item.key] || "").trim()).length
+    : 0
+
+  const progressPercent =
+    totalLotSteps > 0
+      ? Math.min((completedLotSteps / totalLotSteps) * 100, 100)
+      : 0
+
+  //////////////////////////////////////////////////////
+  // 🧠 SMART PANEL POSITIONING
+  //////////////////////////////////////////////////////
+
+  const isMidWizardStep =
+    context === "lot-wizard" &&
+    mode === "lot" &&
+    (currentLotStep?.key === "variety" || currentLotStep?.key === "process")
+
+  const isLateWizardStep =
+    context === "lot-wizard" &&
+    mode === "lot" &&
+    (currentLotStep?.key === "harvestYear" ||
+      currentLotStep?.key === "parchmentKg" ||
+      step >= totalLotSteps - 2)
+
+  const assistantLayoutMode: "default" | "mid" | "late" = isLateWizardStep
+    ? "late"
+    : isMidWizardStep
+      ? "mid"
+      : "default"
+
+  const assistantPanelWidth =
+    assistantLayoutMode === "late"
+      ? "320px"
+      : assistantLayoutMode === "mid"
+        ? "336px"
+        : "380px"
+
+  const assistantPanelRight =
+    assistantLayoutMode === "late"
+      ? "14px"
+      : assistantLayoutMode === "mid"
+        ? "16px"
+        : "24px"
+
+  const assistantPanelTop =
+    assistantLayoutMode === "late"
+      ? "64px"
+      : assistantLayoutMode === "mid"
+        ? "58px"
+        : "80px"
+
   //////////////////////////////////////////////////////
   // 🤖 NORMAL MODE (chat general)
   //////////////////////////////////////////////////////
@@ -1036,66 +1097,7 @@ export default function CoffeeAssistant({
     )
   }
 
-  //////////////////////////////////////////////////////
-  // 🎨 UI
-  //////////////////////////////////////////////////////
 
-   const totalLotSteps = lotDraftSteps.length
-  const currentLotStep = mode === "lot" ? lotDraftSteps[step] : null
-  const currentStepNumber =
-    mode === "lot" ? Math.min(step + 1, totalLotSteps) : 0
-
-  //////////////////////////////////////////////////////
-  // 🧠 SMART PANEL POSITIONING
-  //////////////////////////////////////////////////////
-
-  const isMidWizardStep =
-    context === "lot-wizard" &&
-    mode === "lot" &&
-    (currentLotStep?.key === "variety" || currentLotStep?.key === "process")
-
-  const isLateWizardStep =
-    context === "lot-wizard" &&
-    mode === "lot" &&
-    (currentLotStep?.key === "harvestYear" ||
-      currentLotStep?.key === "parchmentKg" ||
-      step >= totalLotSteps - 2)
-
-  const assistantLayoutMode: "default" | "mid" | "late" = isLateWizardStep
-    ? "late"
-    : isMidWizardStep
-      ? "mid"
-      : "default"
-
-  const assistantPanelWidth =
-    assistantLayoutMode === "late"
-      ? "320px"
-      : assistantLayoutMode === "mid"
-        ? "336px"
-        : "380px"
-
-  const assistantPanelRight =
-    assistantLayoutMode === "late"
-      ? "14px"
-      : assistantLayoutMode === "mid"
-        ? "16px"
-        : "24px"
-
-  const assistantPanelTop =
-    assistantLayoutMode === "late"
-      ? "64px"
-      : assistantLayoutMode === "mid"
-        ? "58px"
-        : "80px"
-
-  const completedLotSteps = form
-    ? lotDraftSteps.filter((item) => String(form[item.key] || "").trim()).length
-    : 0
-
-  const progressPercent =
-    totalLotSteps > 0
-      ? Math.min((completedLotSteps / totalLotSteps) * 100, 100)
-      : 0
 
   //////////////////////////////////////////////////////
   // 💬 ASSISTANT PANEL
