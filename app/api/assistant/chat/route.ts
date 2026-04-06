@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    const { message, context, form } = body
+    const { message, context, form, assistantContextTag } = body
 
     //////////////////////////////////////////////////////
     // 🛡️ BASIC INPUT GUARD
@@ -60,6 +60,15 @@ Response rules:
 - Do not invent platform features that were not mentioned
 - Do not output markdown titles
 - Do not use bullet points unless truly necessary
+
+Additional conversation context:
+${
+  assistantContextTag === "prepare_lot"
+    ? "The user is asking follow-up questions about how to prepare a lot correctly, including samples, partner review preparation, consistency, packaging, and shipment readiness."
+    : assistantContextTag === "partner_review"
+      ? "The user is asking follow-up questions about how partner review works, including physical analysis, sample roasting, cupping, consistency checks, and approval standards."
+      : "No additional guided context."
+}
 
 User message:
 ${message.trim()}

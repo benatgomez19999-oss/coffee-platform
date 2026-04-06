@@ -55,6 +55,9 @@ export default function CoffeeAssistant({
   const [isLoading, setIsLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [assistantContextTag, setAssistantContextTag] = useState<
+    "prepare_lot" | "partner_review" | null
+  >(null)
 
   //////////////////////////////////////////////////////
   // 🏷️ LOT NAME SUBFLOW (mini flujo guiado)
@@ -194,12 +197,11 @@ If you want, you can now ask me follow-up questions about how to position this s
   }
 
   const pushPrepareLotGuideMessage = () => {
+    setAssistantContextTag("prepare_lot")
     appendMessages(createMessage("assistant", prepareLotGuideMessage))
   }
 
-  const pushPriceLotGuideMessage = () => {
-    appendMessages(createMessage("assistant", priceLotGuideMessage))
-  }
+  
 
   const normalizeCommand = (value: string) => {
     return value.trim().toLowerCase()
@@ -491,6 +493,7 @@ If you want, you can now ask me follow-up questions about how to position this s
   setInput("")
   setMessages([])
   setIsLoading(false)
+  setAssistantContextTag(null)
   setFarmOptions([])
   setHasCheckedFarms(false)
   setSelectedFarmName("")
@@ -1052,6 +1055,7 @@ if (validationError) {
           message: cleanInput,
           context,
           form,
+          assistantContextTag,
         }),
       })
 
@@ -1801,7 +1805,16 @@ if (validationError) {
 
                 <button
                   type="button"
-                  onClick={pushPriceLotGuideMessage}
+                  onClick={() => {
+  setAssistantContextTag("partner_review")
+
+  appendMessages(
+    createMessage(
+      "assistant",
+      "The partner evaluates your coffee in several stages to understand its real quality and export potential.\n\nFirst, the green coffee is physically inspected to check grain condition, uniformity, moisture, and the presence of defects. Then a standardized sample roast is performed to reveal the true profile of the coffee without altering it.\n\nAfter that, the coffee is cupped following specialty industry protocols, where aroma, flavor, balance, acidity, body, and overall clarity are evaluated. Beyond taste, the partner also looks for consistency across the lot and whether the profile can be reliably reproduced.\n\nBased on this full evaluation, the partner decides if the lot meets quality standards and can move forward into the commercial stage."
+    )
+  )
+}}
                   style={{
                     padding: "7px 11px",
                     borderRadius: "999px",
@@ -1819,7 +1832,7 @@ if (validationError) {
                     e.currentTarget.style.background = "transparent"
                   }}
                 >
-                  How to price this lot
+                  How partner review works
                 </button>
               </div>
 
