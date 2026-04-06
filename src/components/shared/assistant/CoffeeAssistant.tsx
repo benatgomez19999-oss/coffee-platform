@@ -1018,10 +1018,25 @@ export default function CoffeeAssistant({
   // 🎨 UI
   //////////////////////////////////////////////////////
 
-  const totalLotSteps = lotDraftSteps.length
+   const totalLotSteps = lotDraftSteps.length
   const currentLotStep = mode === "lot" ? lotDraftSteps[step] : null
   const currentStepNumber =
     mode === "lot" ? Math.min(step + 1, totalLotSteps) : 0
+
+  //////////////////////////////////////////////////////
+  // 🧠 SMART PANEL POSITIONING
+  //////////////////////////////////////////////////////
+
+  const isHarvestVolumeStep =
+    context === "lot-wizard" &&
+    mode === "lot" &&
+    (currentLotStep?.key === "harvestYear" ||
+      currentLotStep?.key === "parchmentKg" ||
+      step >= totalLotSteps - 2)
+
+  const assistantPanelWidth = isHarvestVolumeStep ? "340px" : "380px"
+  const assistantPanelRight = isHarvestVolumeStep ? "16px" : "24px"
+  const assistantPanelTop = isHarvestVolumeStep ? "72px" : "80px"
 
   const completedLotSteps = form
     ? lotDraftSteps.filter((item) => String(form[item.key] || "").trim()).length
@@ -1041,10 +1056,10 @@ export default function CoffeeAssistant({
       <div
         style={{
           position: "fixed",
-          top: "80px",
-          right: "24px",
-          width: "380px",
-          height: "540px",
+          top: assistantPanelTop,
+          right: assistantPanelRight,
+          width: assistantPanelWidth,
+          height: isHarvestVolumeStep ? "520px" : "540px",
           minHeight: 0,
           background:
             "linear-gradient(180deg, rgba(31,26,20,0.98) 0%, rgba(24,20,15,0.99) 100%)",
