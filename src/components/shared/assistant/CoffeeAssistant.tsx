@@ -291,6 +291,42 @@ export default function CoffeeAssistant({
     )
   }
 
+    //////////////////////////////////////////////////////
+  // 🛡️ EXTERNAL SYNC GUARDS (avoid premature chat updates)
+  //////////////////////////////////////////////////////
+
+  const isExternalValueReadyForSync = (
+    key: keyof LotDraftForm,
+    value: string,
+  ) => {
+    const cleanValue = String(value || "").trim()
+
+    if (!cleanValue) return false
+
+    //////////////////////////////////////////////////////
+    // 📅 HARVEST YEAR: only allow exact current year
+    //////////////////////////////////////////////////////
+
+    if (key === "harvestYear") {
+      return cleanValue === "2026"
+    }
+
+    //////////////////////////////////////////////////////
+    // ⚖️ PARCHMENT KG: require a real positive numeric value
+    //////////////////////////////////////////////////////
+
+    if (key === "parchmentKg") {
+      const numericValue = Number(cleanValue)
+      return Number.isFinite(numericValue) && numericValue > 0
+    }
+
+    //////////////////////////////////////////////////////
+    // 🌿 SELECT / TEXT FIELDS
+    //////////////////////////////////////////////////////
+
+    return cleanValue.length > 0
+  }
+
   const scrollFormToStep = (targetStep: number) => {
     try {
       const sections = document.querySelectorAll("section")
@@ -541,6 +577,12 @@ export default function CoffeeAssistant({
     const externalValue = String(form[currentStep.key] || "").trim()
     if (!externalValue) return
 
+    //////////////////////////////////////////////////////
+    // 🛡️ ONLY SYNC EXTERNAL VALUES WHEN THEY ARE REALLY READY
+    //////////////////////////////////////////////////////
+
+    if (!isExternalValueReadyForSync(currentStep.key, externalValue)) return
+
     const normalizedExternalValue = normalizeLotValue(
       currentStep.key,
       externalValue,
@@ -559,6 +601,12 @@ export default function CoffeeAssistant({
 
     lastExternalSyncRef.current = syncKey
 
+    //////////////////////////////////////////////////////
+    // 💬 EXTERNAL FORM → MIRROR USER CHOICE IN CHAT
+    //////////////////////////////////////////////////////
+
+    const userMirrorMessage = createMessage("user", normalizedExternalValue)
+
     const confirmationMessage =
       normalizedExternalValue === ""
         ? `${getFieldLabel(currentStep.key)} skipped.`
@@ -567,6 +615,7 @@ export default function CoffeeAssistant({
     const rafId = window.requestAnimationFrame(() => {
       goToNextLotStep(
         step + 1,
+        userMirrorMessage,
         createMessage("assistant", confirmationMessage),
       )
     })
@@ -782,11 +831,28 @@ export default function CoffeeAssistant({
       }
     }
 
-    //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
     // 🌿 STANDARD LOT STEPS (validación + avance)
     //////////////////////////////////////////////////////
 
     const normalizedValue = normalizeLotValue(currentStep.key, cleanInput)
+
+    //////////////////////////////////////////////////////
+    // 📅 HARVEST YEAR STRICT GUARD
+    //////////////////////////////////////////////////////
+
+    if (currentStep.key === "harvestYear" && normalizedValue !== "2026") {
+      appendMessages(
+        userMessage,
+        createMessage(
+          "assistant",
+          "Please enter a valid harvest year. Right now, only 2026 is allowed.",
+        ),
+      )
+      setInput("")
+      return
+    }
+
     const validationError = validateLotValue(currentStep.key, normalizedValue)
 
     if (validationError) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { KeyboardEvent, useMemo, useState } from "react"
 import { ProcessType } from "@prisma/client"
 import { useRouter } from "next/navigation"
 import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
@@ -18,7 +18,7 @@ export default function NewLotPage() {
     name: "",
     variety: "",
     process: "" as ProcessType | "",
-    harvestYear: "",
+    harvestYear: "2026",
     parchmentKg: "",
   })
 
@@ -36,6 +36,16 @@ export default function NewLotPage() {
   const handleSubmit = async () => {
     if (!form.farmId || !form.variety || !form.process || !form.parchmentKg) {
       alert("Please fill all required fields")
+      return
+    }
+
+    if (form.harvestYear !== "2026") {
+      alert("Please enter a valid harvest year. Only 2026 is allowed.")
+      return
+    }
+
+    if (!isParchmentKgValid) {
+      alert("Please enter a valid parchment kg value.")
       return
     }
 
@@ -67,7 +77,7 @@ export default function NewLotPage() {
         name: "",
         variety: "",
         process: "" as ProcessType | "",
-        harvestYear: "",
+        harvestYear: "2026",
         parchmentKg: "",
       })
 
@@ -79,6 +89,68 @@ export default function NewLotPage() {
 
     setLoading(false)
   }
+
+    //////////////////////////////////////////////////////
+  // 🛡️ VALIDATION / INPUT GUARDS
+  //////////////////////////////////////////////////////
+
+  const isHarvestYearValid = form.harvestYear === "2026"
+
+  const isParchmentKgValid = useMemo(() => {
+    const numericValue = Number(form.parchmentKg)
+    return Number.isFinite(numericValue) && numericValue > 0
+  }, [form.parchmentKg])
+
+  const handleCommitFieldOnEnter =
+    (key: keyof typeof form) => (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key !== "Enter") return
+
+      e.preventDefault()
+
+      //////////////////////////////////////////////////////
+      // 📅 HARVEST YEAR STRICT GUARD
+      //////////////////////////////////////////////////////
+
+      if (key === "harvestYear") {
+        const cleanValue = e.currentTarget.value.trim()
+
+        if (cleanValue !== "2026") {
+          updateField("harvestYear", cleanValue)
+          e.currentTarget.blur()
+          return
+        }
+
+        updateField("harvestYear", "2026")
+        e.currentTarget.blur()
+        return
+      }
+
+      //////////////////////////////////////////////////////
+      // ⚖️ PARCHMENT KG STRICT GUARD
+      //////////////////////////////////////////////////////
+
+      if (key === "parchmentKg") {
+        const cleanValue = e.currentTarget.value.trim()
+        const numericValue = Number(cleanValue)
+
+        if (!cleanValue || !Number.isFinite(numericValue) || numericValue <= 0) {
+          updateField("parchmentKg", cleanValue)
+          e.currentTarget.blur()
+          return
+        }
+
+        updateField("parchmentKg", cleanValue)
+        e.currentTarget.blur()
+        return
+      }
+
+      //////////////////////////////////////////////////////
+      // 🧾 STANDARD TEXT INPUTS
+      //////////////////////////////////////////////////////
+
+      updateField(key, e.currentTarget.value)
+      e.currentTarget.blur()
+    }
 
   //////////////////////////////////////////////////////
   // 🎨 UI TOKENS
@@ -201,6 +273,7 @@ export default function NewLotPage() {
                   type="text"
                   value={form.farmId}
                   onChange={(e) => updateField("farmId", e.target.value)}
+                  onKeyDown={handleCommitFieldOnEnter("farmId")}
                   className={inputClassName}
                   placeholder="Farm ID"
                 />
@@ -215,6 +288,7 @@ export default function NewLotPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
+                  onKeyDown={handleCommitFieldOnEnter("name")}
                   className={inputClassName}
                   placeholder="e.g. El Paraíso Lot A"
                 />
@@ -416,9 +490,20 @@ export default function NewLotPage() {
                   type="number"
                   value={form.harvestYear}
                   onChange={(e) => updateField("harvestYear", e.target.value)}
+                  onKeyDown={handleCommitFieldOnEnter("harvestYear")}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  min={2026}
+                  max={2026}
+                  step={1}
                   className={inputClassName}
-                  placeholder="2025"
+                  placeholder="2026"
                 />
+
+                {!isHarvestYearValid && (
+                  <p className="mt-2 text-xs leading-relaxed text-[#9f4d3f]">
+                    Please enter a valid harvest year. Only 2026 is allowed.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -427,15 +512,26 @@ export default function NewLotPage() {
                   type="number"
                   value={form.parchmentKg}
                   onChange={(e) => updateField("parchmentKg", e.target.value)}
+                  onKeyDown={handleCommitFieldOnEnter("parchmentKg")}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  min={1}
+                  step="any"
                   className={inputClassName}
                   placeholder="e.g. 1200"
                 />
+
+                {form.parchmentKg && !isParchmentKgValid && (
+                  <p className="mt-2 text-xs leading-relaxed text-[#9f4d3f]">
+                    Please enter a valid parchment amount greater than 0.
+                  </p>
+                )}
               </div>
             </div>
 
             <p className="mt-4 rounded-xl border border-[#dfcfb7] bg-[#f7efde] px-4 py-3 text-xs leading-relaxed text-[#685540]">
-              This is your total parchment volume. A small sample (~300g) will
-              be sent for lab analysis.
+              Use harvest year 2026 for this intake. Parchment kg should reflect
+              the full available volume. A small sample (~300g) will be sent for
+              lab analysis.
             </p>
           </section>
         </div>
