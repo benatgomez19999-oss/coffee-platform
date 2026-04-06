@@ -925,7 +925,7 @@ export default function CoffeeAssistant({
       {assistantOpen && (
         <div
           style={{
-            position: "fixed",
+            position: "absolute",
             top: "80px",
             right: "24px",
             width: "380px",
