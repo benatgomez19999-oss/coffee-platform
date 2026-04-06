@@ -208,16 +208,17 @@ return (
   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
 
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 md:gap-10 xl:gap-12">
-      
-
-
       <Column
-        title="📝 Preparing"
-        subtitle="Coffee you're working on"
+        title="📦 Sample Requested"
+        subtitle="Awaiting pickup or delivery"
         count={data.drafts.length}
         variant="preparing"
+        emptyText="No samples awaiting pickup"
+        moreCount={Math.max(data.drafts.length - 1, 0)}
+        ctaLabel="View lots"
+        ctaHref="/platform/producer/lots"
       >
-        {data.drafts.map((lot: any) => (
+        {data.drafts.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}
@@ -228,27 +229,35 @@ return (
       </Column>
 
       <Column
-        title="🔬 In the Lab"
-        subtitle="Being analyzed"
+        title="🧪 Under Review"
+        subtitle="Samples being analyzed"
         count={data.inLab.length}
         variant="lab"
+        emptyText="No lots currently under review"
+        moreCount={Math.max(data.inLab.length - 1, 0)}
+        ctaLabel="View lots"
+        ctaHref="/platform/producer/lots"
       >
-        {data.inLab.map((lot: any) => (
+        {data.inLab.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}
-            status="Waiting analysis"
+            status="Under review"
           />
         ))}
       </Column>
 
       <Column
-        title="🌿 Ready"
-        subtitle="Approved for sale"
+        title="🌿 Ready for Sale"
+        subtitle="Approved and available"
         count={data.verified.length}
         variant="ready"
+        emptyText="No approved lots available"
+        moreCount={Math.max(data.verified.length - 1, 0)}
+        ctaLabel="View lots"
+        ctaHref="/platform/producer/lots"
       >
-        {data.verified.map((lot: any) => (
+        {data.verified.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}
@@ -259,11 +268,15 @@ return (
 
       <Column
         title="💰 Sold"
-        subtitle="Already purchased"
+        subtitle="Purchased by clients"
         count={data.sold.length}
         variant="sold"
+        emptyText="No sold lots yet"
+        moreCount={Math.max(data.sold.length - 1, 0)}
+        ctaLabel="View lots"
+        ctaHref="/platform/producer/lots"
       >
-        {data.sold.map((lot: any) => (
+        {data.sold.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}
@@ -271,8 +284,7 @@ return (
           />
         ))}
       </Column>
-
-  </div>
+    </div>
 
   {/* FULL WIDTH WRAPPER */}
 <div className="w-screen left-1/2 -translate-x-1/2 relative mt-14">
@@ -588,80 +600,109 @@ return (
 {/* // COLUMN (RURAL STYLE) */}
 {/* ////////////////////////////////////////////////////// */}
 
-function Column({ title, subtitle, count, children, variant = "default", className }: {
+function Column({
+  title,
+  subtitle,
+  count,
+  children,
+  variant = "default",
+  className,
+  emptyText = "No lots yet",
+  moreCount = 0,
+  ctaLabel,
+  ctaHref,
+}: {
   title: string
   subtitle: string
   count: number
   children?: React.ReactNode
   variant?: ColumnVariant
   className?: string
+  emptyText?: string
+  moreCount?: number
+  ctaLabel?: string
+  ctaHref?: string
 }) {
+  const hasChildren = React.Children.count(children) > 0
+
   return (
     <div
- className={`
-  relative
-  ${variants[variant]}
+      className={`
+        relative
+        ${variants[variant]}
 
-  p-5
-  rounded-2xl
+        min-h-[238px]
+        p-6
+        rounded-2xl
+        border-2
+        overflow-hidden
 
-  border-2
+        before:absolute before:inset-0 before:rounded-2xl
+        before:pointer-events-none
+        before:border before:border-[#e6dccb]
+        before:opacity-60
 
-  overflow-hidden
+        after:absolute after:inset-0 after:rounded-2xl
+        after:pointer-events-none
+        after:bg-[linear-gradient(120deg,transparent_30%,rgba(255,255,255,0.25)_50%,transparent_70%)]
+        after:opacity-0
+        after:transition-opacity after:duration-500
 
-  
+        hover:after:opacity-40
 
-  /* CAPA LUZ SUAVE */
-  before:absolute before:inset-0 before:rounded-2xl
-  before:pointer-events-none
-  before:border before:border-[#e6dccb]
-  before:opacity-60
+        shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.05)]
 
-  /* LIGHT SWEEP (MUY SUTIL) */
-  after:absolute after:inset-0 after:rounded-2xl
-  after:pointer-events-none
-  after:bg-[linear-gradient(120deg,transparent_30%,rgba(255,255,255,0.25)_50%,transparent_70%)]
-  after:opacity-0
-  after:transition-opacity after:duration-500
+        hover:-translate-y-[4px]
+        hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)]
 
-  hover:after:opacity-40
+        transition-all duration-300
 
-  /* MATERIAL DEPTH */
-  shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.05)]
-
-  hover:-translate-y-[4px]
-  hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)]
-
-  transition-all duration-300
-
-  ${className || ""}
-`}
+        ${className || ""}
+      `}
     >
-      <div className="mb-5">
-        <h2 className="text-[15px] font-semibold text-[#2f2418]">
-  {title}
-</h2>
+      <div className="relative z-[1] flex h-full flex-col">
+        <div>
+          <h2 className="text-[16px] font-semibold tracking-tight text-[#2f2418]">
+            {title}
+          </h2>
 
-<p className="text-sm text-[#6b5a45] mt-1">
-  {subtitle}
-</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[#6b5a45]">
+            {subtitle}
+          </p>
 
-<div className="mb-4 text-sm text-[#a67c52] font-medium">
-  {count} lots
-</div>
+          <div className="mt-4 text-[15px] font-semibold text-[#9a6f3e]">
+            {count} {count === 1 ? "lot" : "lots"}
+          </div>
+        </div>
 
+        <div className="mt-5 flex flex-1 flex-col justify-between">
+          <div className="flex flex-col gap-3">
+            {hasChildren ? (
+              children
+            ) : (
+              <p className="text-[12px] leading-relaxed text-[#8a7a65]">
+                {emptyText}
+              </p>
+            )}
 
+            {moreCount > 0 && (
+              <p className="text-[12px] font-medium text-[#8c6c47]">
+                + {moreCount} more {moreCount === 1 ? "lot" : "lots"}
+              </p>
+            )}
+          </div>
 
-<div className="flex flex-col gap-3">
-  {React.Children.count(children) > 0 ? children : (
-    <p className="text-[#8a7a65] text-[12px] mt-2">
-      No lots yet
-    </p>
-  )}
-</div>
+          {ctaLabel && ctaHref && (
+            <a
+              href={ctaHref}
+              className="mt-5 inline-flex w-fit items-center rounded-full border border-[#cfb48a] bg-[#f7efdf] px-4 py-2 text-[12px] font-medium text-[#5f472f] transition-all duration-200 hover:bg-[#efe3ce] hover:text-[#3f2e1d]"
+            >
+              {ctaLabel}
+            </a>
+          )}
+        </div>
+      </div>
     </div>
-    </div>
-
   )
 }
 
@@ -670,60 +711,67 @@ function Column({ title, subtitle, count, children, variant = "default", classNa
 {/* // LOT CARD (WARM / ORGANIC STYLE) */}
 {/* ////////////////////////////////////////////////////// */}
 
-function LotCard({ lot, actionLabel, onAction, status, variant = "default", isNew = false }: any) {
+function LotCard({
+  lot,
+  actionLabel,
+  onAction,
+  status,
+  isNew = false,
+}: any) {
   return (
-   <div className={`
-  producer-card
-  ${isNew ? "producer-card--active" : ""}
-`}>
- {isNew && (
-  <div className="notification-dot">
-    <span className="ping"></span>
-    <span className="dot"></span>
-  </div>
-)}
-      {/* 🔹 TOP: NAME */}
+    <div
+      className={`
+        producer-card
+        ${isNew ? "producer-card--active" : ""}
+        rounded-[18px]
+        border border-[#dbcab2]
+        bg-[linear-gradient(180deg,rgba(255,251,244,0.88)_0%,rgba(247,239,223,0.92)_100%)]
+        px-4 py-4
+        shadow-[0_8px_18px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.55)]
+      `}
+    >
+      {isNew && (
+        <div className="notification-dot">
+          <span className="ping"></span>
+          <span className="dot"></span>
+        </div>
+      )}
+
       <div className="mb-2">
-        <p className="font-semibold text-[14px] text-[#2f2418] leading-tight">
+        <p className="text-[15px] font-semibold leading-tight text-[#2f2418]">
           {lot.name || "Unnamed Lot"}
         </p>
       </div>
 
-      {/* 🔹 META INFO */}
-      <p className="text-[12px] text-[#6b5a45]">
+      <p className="text-[12px] leading-relaxed text-[#6b5a45]">
         {lot.variety} · {lot.process}
       </p>
 
-      {/* 🔹 STATUS (MUCHO MÁS IMPORTANTE AHORA) */}
       {status && (
         <div className="mt-3">
-          <span className="inline-block text-[11px] px-2 py-[3px] rounded-full 
-                           bg-[#efe7da] text-[#7a5c2e] font-medium">
+          <span className="inline-flex rounded-full bg-[#efe7da] px-2.5 py-1 text-[11px] font-medium text-[#7a5c2e]">
             {status}
           </span>
         </div>
       )}
 
-      {/* 🔹 ACTION */}
       {actionLabel && (
         <button
           onClick={onAction}
           className="
-mt-4 w-full
+            mt-4 inline-flex w-full items-center justify-center
+            rounded-xl
+            border border-[#8d6641]
+            bg-[#7a5230] text-white
+            py-2.5 text-[12px] font-medium
 
-bg-[#7a5230] text-white
-py-2 rounded-lg text-xs font-medium
+            transition-all duration-200
+            cursor-pointer
 
-transition-all duration-200
-cursor-pointer
-
-hover:bg-[#6f4726]
-hover:scale-[1.01]
-hover:shadow-[0_6px_18px_rgba(139,94,52,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]
-
-active:scale-[0.96]
-active:shadow-[inset_0_3px_8px_rgba(0,0,0,0.25)]
-"
+            hover:bg-[#6f4726]
+            hover:shadow-[0_6px_18px_rgba(139,94,52,0.22)]
+            active:scale-[0.98]
+          "
         >
           {actionLabel}
         </button>
