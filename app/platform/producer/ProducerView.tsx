@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import CoffeeLoader from "@/src/components/shared/CoffeeLoader";
-import PlatformHeader from "@/src/components/shared/PlatformHeader";
+import CoffeeLoader from "@/src/components/shared/general/CoffeeLoader";
+import PlatformHeader from "@/src/components/shared/general/PlatformHeader";
 import ProducerDashboard from "@/src/components/platform/producer/ProducerDashboard";
 
 export default function ProducerView({ user }: { user: any }) {

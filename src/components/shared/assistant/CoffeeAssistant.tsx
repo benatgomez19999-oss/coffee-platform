@@ -11,6 +11,17 @@ import {
   requiredLotFields,
   validateLotValue,
 } from "@/src/components/shared/assistant/flows/lotDraftFlow"
+import {
+  createEmptyStoryForm,
+  getStoryFieldLabel,
+  normalizeStoryValue,
+  storySteps,
+  StoryForm,
+  validateStoryValue,
+} from "@/src/components/shared/assistant/flows/storyFlow"
+
+
+
 
 type CoffeeAssistantProps = {
   iconSize?: number
@@ -25,7 +36,8 @@ type AssistantMessage = {
   content: string
 }
 
-type AssistantMode = "normal" | "lot"
+type AssistantMode = "normal" | "lot" | "story"
+
 
 export default function CoffeeAssistant({
   iconSize = 54,
@@ -56,8 +68,10 @@ export default function CoffeeAssistant({
   const [isMounted, setIsMounted] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [assistantContextTag, setAssistantContextTag] = useState<
-    "prepare_lot" | "partner_review" | null
+    "prepare_lot" | "partner_review" | "farm_story" | null
   >(null)
+  const [storyStep, setStoryStep] = useState(0)
+  const [storyForm, setStoryForm] = useState<StoryForm>(createEmptyStoryForm())
 
   //////////////////////////////////////////////////////
   // 🏷️ LOT NAME SUBFLOW (mini flujo guiado)
@@ -199,6 +213,95 @@ If you want, you can now ask me follow-up questions about how to position this s
   const pushPrepareLotGuideMessage = () => {
     setAssistantContextTag("prepare_lot")
     appendMessages(createMessage("assistant", prepareLotGuideMessage))
+  }
+
+  const startStoryFlow = () => {
+    setAssistantOpen(true)
+    setMode("story")
+    setStoryStep(0)
+    setStoryForm(createEmptyStoryForm())
+    setAssistantContextTag("farm_story")
+    setInput("")
+    setMessages([
+      createMessage(
+        "assistant",
+        "Great — I can help you create a clear farm story for buyers. I’ll ask you a few short questions and then generate it for you.",
+      ),
+      createMessage("assistant", storySteps[0].question),
+    ])
+  }
+
+  const goToNextStoryStep = (nextStep: number, ...msgs: AssistantMessage[]) => {
+    if (nextStep >= storySteps.length) {
+      return
+    }
+
+    setStoryStep(nextStep)
+
+    appendMessages(
+      ...msgs,
+      createMessage("assistant", storySteps[nextStep].question),
+    )
+  }
+
+  const finishStoryFlow = async (
+    nextStoryForm: StoryForm,
+    ...msgs: AssistantMessage[]
+  ) => {
+    appendMessages(
+      ...msgs,
+      createMessage(
+        "assistant",
+        "Perfect — I’m generating your farm story now.",
+      ),
+    )
+
+    setIsLoading(true)
+
+    try {
+      window.dispatchEvent(new Event("storyGenerating"))
+
+      const res = await fetch("/api/assistant/story", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nextStoryForm),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data?.story) {
+        throw new Error(data?.error || "Failed to generate story")
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("storyGenerated", {
+          detail: data.story,
+        }),
+      )
+
+      appendMessages(
+        createMessage(
+          "assistant",
+          "Your farm story is ready. You can review it in the farm profile section below.",
+        ),
+      )
+    } catch (error) {
+      console.error("Story flow error:", error)
+
+      appendMessages(
+        createMessage(
+          "assistant",
+          "I couldn’t generate your farm story right now. Please try again in a moment.",
+        ),
+      )
+    } finally {
+      setIsLoading(false)
+      setMode("normal")
+      setStoryStep(0)
+      setInput("")
+    }
   }
 
   
@@ -494,6 +597,8 @@ If you want, you can now ask me follow-up questions about how to position this s
   setMessages([])
   setIsLoading(false)
   setAssistantContextTag(null)
+  setStoryStep(0)
+  setStoryForm(createEmptyStoryForm())
   setFarmOptions([])
   setHasCheckedFarms(false)
   setSelectedFarmName("")
@@ -632,10 +737,16 @@ If you want, you can now ask me follow-up questions about how to position this s
       startLotFlow()
     }
 
+    const storyHandler = () => {
+      startStoryFlow()
+    }
+
     window.addEventListener("startLotFlow", lotHandler)
+    window.addEventListener("startStoryFlow", storyHandler)
 
     return () => {
       window.removeEventListener("startLotFlow", lotHandler)
+      window.removeEventListener("startStoryFlow", storyHandler)
     }
   }, [])
 
@@ -984,8 +1095,12 @@ if (validationError) {
     : 0
 
   const progressPercent =
-    totalLotSteps > 0
+  mode === "lot"
+    ? totalLotSteps > 0
       ? Math.min((completedLotSteps / totalLotSteps) * 100, 100)
+      : 0
+    : mode === "story"
+      ? Math.min((storyStep / storySteps.length) * 100, 100)
       : 0
 
   //////////////////////////////////////////////////////
@@ -1030,6 +1145,56 @@ if (validationError) {
       : assistantLayoutMode === "mid"
         ? "58px"
         : "80px"
+
+
+    //////////////////////////////////////////////////////
+  // ✍️ STORY MODE (guided farm story flow)
+  //////////////////////////////////////////////////////
+
+  const handleStorySend = async () => {
+    if (!input.trim()) return
+
+    const cleanInput = input.trim()
+    const currentStoryStep = storySteps[storyStep]
+
+    if (!currentStoryStep) return
+
+    const userMessage = createMessage("user", cleanInput)
+    const normalizedValue = normalizeStoryValue(cleanInput)
+    const validationError = validateStoryValue(normalizedValue)
+
+    if (validationError) {
+      appendMessages(
+        userMessage,
+        createMessage("assistant", validationError),
+      )
+      setInput("")
+      return
+    }
+
+    const nextStoryForm = {
+      ...storyForm,
+      [currentStoryStep.key]: normalizedValue,
+    }
+
+    setStoryForm(nextStoryForm)
+    setInput("")
+
+    const confirmationMessage = createMessage(
+      "assistant",
+      `${getStoryFieldLabel(currentStoryStep.key)} noted.`,
+    )
+
+    const nextStep = storyStep + 1
+
+    if (nextStep >= storySteps.length) {
+      setStoryStep(nextStep)
+      await finishStoryFlow(nextStoryForm, userMessage, confirmationMessage)
+      return
+    }
+
+    goToNextStoryStep(nextStep, userMessage, confirmationMessage)
+  }
 
   //////////////////////////////////////////////////////
   // 🤖 NORMAL MODE (chat general)
@@ -1089,6 +1254,11 @@ if (validationError) {
   const handleSend = async () => {
     if (mode === "lot") {
       handleLotSend()
+      return
+    }
+
+    if (mode === "story") {
+      await handleStorySend()
       return
     }
 
@@ -1256,9 +1426,11 @@ if (validationError) {
               >
                 {mode === "lot"
                   ? "Guided lot creation"
-                  : isLotWizard
-                    ? "Lot help and coffee guidance"
-                    : "Coffee workflow support"}
+                  : mode === "story"
+                    ? "Guided farm story"
+                    : isLotWizard
+                      ? "Lot help and coffee guidance"
+                      : "Coffee workflow support"}
               </div>
             </div>
           </div>
@@ -1298,7 +1470,7 @@ if (validationError) {
           </div>
         </div>
 
-        {mode === "lot" && (
+        {(mode === "lot" || mode === "story") && (
           <div
             style={{
               padding: "12px 18px",
@@ -1324,7 +1496,7 @@ if (validationError) {
                     marginBottom: "6px",
                   }}
                 >
-                  Lot draft assistant
+                  {mode === "lot" ? "Lot draft assistant" : "Farm story assistant"}
                 </div>
 
                 <div
@@ -1334,8 +1506,19 @@ if (validationError) {
                     lineHeight: "1.45",
                   }}
                 >
-                  Step {currentStepNumber} of {totalLotSteps}
-                  {currentLotStep ? ` · ${getFieldLabel(currentLotStep.key)}` : ""}
+                  {mode === "lot" ? (
+                    <>
+                      Step {currentStepNumber} of {totalLotSteps}
+                      {currentLotStep ? ` · ${getFieldLabel(currentLotStep.key)}` : ""}
+                    </>
+                  ) : (
+                    <>
+                      Step {Math.min(storyStep + 1, storySteps.length)} of {storySteps.length}
+                      {storySteps[storyStep]
+                        ? ` · ${getStoryFieldLabel(storySteps[storyStep].key)}`
+                        : ""}
+                    </>
+                  )}
                 </div>
 
                 <div
@@ -1345,8 +1528,9 @@ if (validationError) {
                     color: "#cbb892",
                   }}
                 >
-                  {missingRequiredFields.length} required field
-                  {missingRequiredFields.length === 1 ? "" : "s"} pending
+                  {mode === "lot"
+                    ? `${missingRequiredFields.length} required field${missingRequiredFields.length === 1 ? "" : "s"} pending`
+                    : "Answer a few questions to generate your buyer-facing farm story."}
                 </div>
               </div>
 
@@ -1394,7 +1578,8 @@ if (validationError) {
               />
             </div>
 
-            {farmOptions.length > 0 && step === 0 && (
+            {mode === "lot" && farmOptions.length > 0 && step === 0 && (
+            
               <div
                 style={{
                   marginTop: "12px",
@@ -1691,6 +1876,26 @@ if (validationError) {
 
               <div ref={messagesEndRef} />
             </>
+          ) : mode === "story" ? (
+            <>
+              {messages.map((msg, index) => (
+                <div key={msg.id || `story-msg-${index}`}>
+                  {renderMessageBubble(msg)}
+                </div>
+              ))}
+
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#bda884",
+                  lineHeight: "1.5",
+                }}
+              >
+                {storySteps[storyStep]?.helper || "Answer in a natural way — I’ll turn it into a polished buyer-facing story."}
+              </div>
+
+              <div ref={messagesEndRef} />
+            </>
           ) : (
             <>
               <div
@@ -1725,6 +1930,39 @@ if (validationError) {
                   marginTop: "2px",
                 }}
               >
+
+                                {!isLotWizard && (
+                  <button
+                    type="button"
+                    onClick={startStoryFlow}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "999px",
+                      border: "1px solid rgba(84,140,90,0.55)",
+                      background:
+                        "linear-gradient(180deg, rgba(98,166,106,0.96) 0%, rgba(73,128,80,0.96) 100%)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "#f4f8f2",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow: "0 10px 24px rgba(58,97,63,0.22)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)"
+                      e.currentTarget.style.boxShadow =
+                        "0 14px 28px rgba(58,97,63,0.28)"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)"
+                      e.currentTarget.style.boxShadow =
+                        "0 10px 24px rgba(58,97,63,0.22)"
+                    }}
+                  >
+                    Improve my farm story
+                  </button>
+                )}
+
                 {hasLotIntegration && (
                   <button
                     type="button"
@@ -1917,9 +2155,13 @@ if (validationError) {
                       : currentLotStep
                         ? `Answer to continue with ${getFieldLabel(currentLotStep.key)}...`
                         : "Type your answer..."
-                    : isLotWizard
-                      ? "Ask a follow-up question..."
-                      : "Ask something about your coffee..."
+                    : mode === "story"
+                      ? storySteps[storyStep]
+                        ? `Answer for ${getStoryFieldLabel(storySteps[storyStep].key)}...`
+                        : "Type your answer..."
+                      : isLotWizard
+                        ? "Ask a follow-up question..."
+                        : "Ask something about your coffee..."
                 }
                 style={{
                   width: "100%",

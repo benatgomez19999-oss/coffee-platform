@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import type { EngineState } from "@/src/engine/core/runtime"
 import { submitOperationalRequest } from "@/src/engine/core/runtime"
 import { acceptSuggestedVolume } from "@/src/engine/core/runtime"
-import RegionsSupplyChart from "@/src/components/shared/RegionsSupplyChart"
+import RegionsSupplyChart from "@/src/components/shared/general/RegionsSupplyChart"
 
 import {
   evaluateContractSuggestion

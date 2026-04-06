@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Playfair_Display } from "next/font/google";
 import Script from "next/script";
-import RemoveInitialBg from "@/src/components/shared/RemoveInitialBg"
+import RemoveInitialBg from "@/src/components/shared/general/RemoveInitialBg"
 
 const playfair = Playfair_Display({
   subsets: ["latin"],

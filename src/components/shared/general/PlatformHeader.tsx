@@ -1,7 +1,7 @@
 "use client"
 import { useRouter, usePathname,  } from "next/navigation"
 import Image from "next/image"
-import OnboardingWizard from "@/src/components/shared/OnboardingWizard"
+import OnboardingWizard from "@/src/components/shared/general/OnboardingWizard"
 import { useEffect } from "react"
 import "@/styles/themes/producer.css"
 import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
