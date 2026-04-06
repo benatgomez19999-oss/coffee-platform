@@ -82,6 +82,7 @@ export default function CoffeeAssistant({
   const lastExternalSyncRef = useRef("")
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const autoCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   //////////////////////////////////////////////////////
   // 🧠 FLAGS / banderas internas
@@ -315,21 +316,30 @@ export default function CoffeeAssistant({
     }
   }
 
-  const resetToNormalMode = () => {
-    lotFlowRunRef.current = 0
-    lastExternalSyncRef.current = ""
+ const resetToNormalMode = () => {
+  //////////////////////////////////////////////////////
+  // 🧹 CLEAR AUTO CLOSE
+  //////////////////////////////////////////////////////
 
-    setMode("normal")
-    setStep(0)
-    setInput("")
-    setMessages([])
-    setIsLoading(false)
-    setFarmOptions([])
-    setHasCheckedFarms(false)
-    setSelectedFarmName("")
-    setLotNameSuggestion("")
-    setLotNameFlowState("idle")
+  if (autoCloseTimeoutRef.current) {
+    clearTimeout(autoCloseTimeoutRef.current)
+    autoCloseTimeoutRef.current = null
   }
+
+  lotFlowRunRef.current = 0
+  lastExternalSyncRef.current = ""
+
+  setMode("normal")
+  setStep(0)
+  setInput("")
+  setMessages([])
+  setIsLoading(false)
+  setFarmOptions([])
+  setHasCheckedFarms(false)
+  setSelectedFarmName("")
+  setLotNameSuggestion("")
+  setLotNameFlowState("idle")
+}
 
   //////////////////////////////////////////////////////
   // 🚀 START LOT FLOW (entry point / inicio guiado)
@@ -431,13 +441,23 @@ export default function CoffeeAssistant({
   // 🧠 CLIENT MOUNT GUARD
   //////////////////////////////////////////////////////
 
-  useEffect(() => {
-    setIsMounted(true)
+ useEffect(() => {
+  setIsMounted(true)
 
-    return () => {
-      setIsMounted(false)
+  return () => {
+
+    //////////////////////////////////////////////////////
+    // 🧹 CLEANUP AUTO CLOSE
+    //////////////////////////////////////////////////////
+
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current)
+      autoCloseTimeoutRef.current = null
     }
-  }, [])
+
+    setIsMounted(false)
+  }
+}, [])
 
   //////////////////////////////////////////////////////
   // 🎧 EVENTS / lifecycle
@@ -506,6 +526,40 @@ export default function CoffeeAssistant({
       window.cancelAnimationFrame(rafId)
     }
   }, [form, step, mode, assistantOpen])
+
+  //////////////////////////////////////////////////////
+// ⏳ AUTO CLOSE WHEN LOT FLOW IS FULLY COMPLETE
+//////////////////////////////////////////////////////
+
+useEffect(() => {
+  const lotFlowCompleted = step >= lotDraftSteps.length
+  const formCompleted =
+    Boolean(form) && missingRequiredFields.length === 0
+
+  if (!assistantOpen || mode !== "lot" || !lotFlowCompleted || !formCompleted) {
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current)
+      autoCloseTimeoutRef.current = null
+    }
+    return
+  }
+
+  if (autoCloseTimeoutRef.current) {
+    clearTimeout(autoCloseTimeoutRef.current)
+  }
+
+  autoCloseTimeoutRef.current = setTimeout(() => {
+    setAssistantOpen(false)
+    autoCloseTimeoutRef.current = null
+  }, 3000)
+
+  return () => {
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current)
+      autoCloseTimeoutRef.current = null
+    }
+  }
+}, [assistantOpen, mode, step, form, missingRequiredFields.length])
 
   //////////////////////////////////////////////////////
   // ✉️ LOT MODE (guided lot flow)
