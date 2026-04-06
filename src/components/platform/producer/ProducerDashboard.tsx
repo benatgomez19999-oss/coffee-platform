@@ -130,19 +130,6 @@ This story preview is only temporary so we can validate the parchment effect in 
 {/* // UI */}
 {/* ////////////////////////////////////////////////////// */}
 
-const debugLot = {
-  id: "debug-1",
-  name: "Finca El Paraíso",
-  variety: "Geisha",
-  process: "Washed",
-  availableKg: 120
-}
-
-
-
-
-
-
 
 return (
   <>
@@ -221,11 +208,14 @@ return (
   <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
 
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 md:gap-10 xl:gap-12">
+      
 
-      {/* <Column
+
+      <Column
         title="📝 Preparing"
         subtitle="Coffee you're working on"
         count={data.drafts.length}
+        variant="preparing"
       >
         {data.drafts.map((lot: any) => (
           <LotCard
@@ -235,13 +225,13 @@ return (
             onAction={() => sendSample(lot.id)}
           />
         ))}
-
       </Column>
 
       <Column
         title="🔬 In the Lab"
         subtitle="Being analyzed"
         count={data.inLab.length}
+        variant="lab"
       >
         {data.inLab.map((lot: any) => (
           <LotCard
@@ -256,6 +246,7 @@ return (
         title="🌿 Ready"
         subtitle="Approved for sale"
         count={data.verified.length}
+        variant="ready"
       >
         {data.verified.map((lot: any) => (
           <LotCard
@@ -270,6 +261,7 @@ return (
         title="💰 Sold"
         subtitle="Already purchased"
         count={data.sold.length}
+        variant="sold"
       >
         {data.sold.map((lot: any) => (
           <LotCard
@@ -278,58 +270,7 @@ return (
             status="Sold"
           />
         ))}
-      </Column> */}
-
- <Column
-  title="📝 Preparing"
-  subtitle="Coffee you're working on"
-  count={data.drafts.length}
-  variant="preparing"
->
-  <LotCard
-    lot={debugLot}
-    actionLabel="Send Sample"
-    onAction={() => {}}
-  />
-</Column>
-
-<Column
-  title="🔬 In the Lab"
-  subtitle="Being analyzed"
-  count={data.inLab.length}
-  variant="lab"
->
-  <LotCard
-    lot={debugLot}
-    status="Waiting analysis"
-  />
-</Column>
-
-<Column
-  title="🌿 Ready"
-  subtitle="Approved for sale"
-  count={data.verified.length}
-  variant="ready"
->
-  <LotCard
-  lot={debugLot}
-  status="120 kg available"
-  variant="ready"
-  isNew={true}
-/>
-  </Column>
-
-<Column
-  title="💰 Sold"
-  subtitle="Already purchased"
-  count={data.sold.length}
-  variant="sold"
->
-  <LotCard
-    lot={debugLot}
-    status="Sold"
-  />
-</Column>
+      </Column>
 
   </div>
 
@@ -709,13 +650,7 @@ function Column({ title, subtitle, count, children, variant = "default", classNa
   {count} lots
 </div>
 
-{/* <div className="flex flex-col gap-3">
-  {Array.isArray(children) && children.length > 0 ? children : (
-    <p className="text-[#8a7a65] text-[12px] mt-2">
-  No lots yet
-</p>
-  )}
-</div> */}
+
 
 <div className="flex flex-col gap-3">
   {React.Children.count(children) > 0 ? children : (
@@ -803,14 +738,18 @@ active:shadow-[inset_0_3px_8px_rgba(0,0,0,0.25)]
 
 async function sendSample(lotId: string) {
   try {
-    await fetch(`/api/producer/lot/${lotId}/send-to-lab`, {
-      method: "POST",
-      credentials: "include"
+    const res = await fetch(`/api/producer/lot-draft/${lotId}/send-to-lab`, {
+      method: "PATCH",
+      credentials: "include",
     })
 
-    window.location.reload()
+    if (!res.ok) {
+      throw new Error("Failed to send sample")
+    }
 
+    window.location.reload()
   } catch (err) {
+    console.error(err)
     alert("Error sending sample")
   }
 }
