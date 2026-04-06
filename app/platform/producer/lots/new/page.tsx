@@ -29,6 +29,9 @@ export default function NewLotPage() {
   //////////////////////////////////////////////////////
 
   const [draftParchmentKg, setDraftParchmentKg] = useState("")
+  const [assistantLayoutMode, setAssistantLayoutMode] = useState<
+    "default" | "mid" | "late"
+  >("default")
 
   //////////////////////////////////////////////////////
   // 🔧 HANDLERS
@@ -111,12 +114,17 @@ export default function NewLotPage() {
     return Number.isFinite(numericValue) && numericValue > 0
   }, [draftParchmentKg])
 
-  //////////////////////////////////////////////////////
-  // 🧠 SMART UI STATE (tight confirm layout near assistant)
+    //////////////////////////////////////////////////////
+  // 🧠 SMART UI STATE (responsive to assistant panel)
   //////////////////////////////////////////////////////
 
+  const isAssistantMidLayout = assistantLayoutMode === "mid"
+  const isAssistantLateLayout = assistantLayoutMode === "late"
+
   const isParchmentConfirmTight =
-    form.harvestYear === "2026" && !form.parchmentKg
+    isAssistantLateLayout && form.harvestYear === "2026" && !form.parchmentKg
+
+
 
   //////////////////////////////////////////////////////
   // 🔄 SYNC DRAFT WITH FORM (chat → UI)
@@ -205,11 +213,12 @@ export default function NewLotPage() {
 
               {/* 🌿 REAL ASSISTANT */}
               <div className="flex items-center justify-center rounded-2xl border border-[#d4af37]/45 bg-[linear-gradient(180deg,rgba(86,65,46,0.62)_0%,rgba(64,47,33,0.7)_100%)] p-2 shadow-[0_8px_20px_rgba(20,12,7,0.3),inset_0_1px_0_rgba(255,241,210,0.18)] backdrop-blur-[2px]">
-                <CoffeeAssistant
+                                <CoffeeAssistant
                   iconSize={86}
                   form={form}
                   updateField={updateField}
                   context="lot-wizard"
+                  onLayoutModeChange={setAssistantLayoutMode}
                 />
               </div>
             </div>
@@ -342,7 +351,7 @@ export default function NewLotPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
+              <div className={isAssistantMidLayout ? "md:pr-10" : ""}>
                 <label className={labelClassName}>Variety *</label>
                 <div className="relative">
                   <select
@@ -423,7 +432,7 @@ export default function NewLotPage() {
                 </div>
               </div>
 
-              <div>
+              <div className={isAssistantMidLayout ? "md:pr-16" : ""}>
                 <label className={labelClassName}>Process *</label>
                 <div className="relative">
                   <select
@@ -544,7 +553,10 @@ export default function NewLotPage() {
     onWheel={(e) => e.currentTarget.blur()}
     min={1}
     step="any"
-    className={inputClassName + (isParchmentConfirmTight ? " pr-32" : " pr-24")}
+    className={
+      inputClassName +
+      (isParchmentConfirmTight ? " pr-36 md:max-w-[430px]" : " pr-24")
+    }
     placeholder="e.g. 1200"
   />
 
@@ -554,7 +566,7 @@ export default function NewLotPage() {
     onClick={confirmParchmentKg}
     className={`absolute top-1/2 -translate-y-1/2 rounded-full border border-[#d4af37]/40 bg-[#1f3d2b]/90 py-1 text-xs text-white transition-all hover:bg-[#d4af37] hover:text-black ${
       isParchmentConfirmTight
-        ? "right-14 px-2.5"
+        ? "right-20 px-2.5"
         : "right-2 px-3"
     }`}
   >

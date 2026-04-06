@@ -17,6 +17,7 @@ type CoffeeAssistantProps = {
   form?: LotDraftForm
   updateField?: (key: keyof LotDraftForm, value: string) => void
   context?: "lot-wizard" | "dashboard"
+  onLayoutModeChange?: (mode: "default" | "mid" | "late") => void
 }
 
 type AssistantMessage = {
@@ -32,6 +33,7 @@ export default function CoffeeAssistant({
   form,
   updateField,
   context = "dashboard",
+  onLayoutModeChange,
 }: CoffeeAssistantProps) {
   const createMessage = (
     role: "assistant" | "user",
@@ -968,6 +970,26 @@ export default function CoffeeAssistant({
     scrollToBottom("auto")
   }, [assistantOpen])
 
+    //////////////////////////////////////////////////////
+  // 📐 EXPOSE LAYOUT MODE TO PARENT
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (!onLayoutModeChange) return
+
+    if (!assistantOpen || context !== "lot-wizard") {
+      onLayoutModeChange("default")
+      return
+    }
+
+    onLayoutModeChange(assistantLayoutMode)
+  }, [
+    assistantOpen,
+    assistantLayoutMode,
+    context,
+    onLayoutModeChange,
+  ])
+
   useEffect(() => {
     if (mode !== "lot") return
     if (!assistantOpen) return
@@ -1027,16 +1049,44 @@ export default function CoffeeAssistant({
   // 🧠 SMART PANEL POSITIONING
   //////////////////////////////////////////////////////
 
-  const isHarvestVolumeStep =
+  const isMidWizardStep =
+    context === "lot-wizard" &&
+    mode === "lot" &&
+    (currentLotStep?.key === "variety" || currentLotStep?.key === "process")
+
+  const isLateWizardStep =
     context === "lot-wizard" &&
     mode === "lot" &&
     (currentLotStep?.key === "harvestYear" ||
       currentLotStep?.key === "parchmentKg" ||
       step >= totalLotSteps - 2)
 
-  const assistantPanelWidth = isHarvestVolumeStep ? "340px" : "380px"
-  const assistantPanelRight = isHarvestVolumeStep ? "16px" : "24px"
-  const assistantPanelTop = isHarvestVolumeStep ? "72px" : "80px"
+  const assistantLayoutMode: "default" | "mid" | "late" = isLateWizardStep
+    ? "late"
+    : isMidWizardStep
+      ? "mid"
+      : "default"
+
+  const assistantPanelWidth =
+    assistantLayoutMode === "late"
+      ? "320px"
+      : assistantLayoutMode === "mid"
+        ? "336px"
+        : "380px"
+
+  const assistantPanelRight =
+    assistantLayoutMode === "late"
+      ? "14px"
+      : assistantLayoutMode === "mid"
+        ? "16px"
+        : "24px"
+
+  const assistantPanelTop =
+    assistantLayoutMode === "late"
+      ? "64px"
+      : assistantLayoutMode === "mid"
+        ? "58px"
+        : "80px"
 
   const completedLotSteps = form
     ? lotDraftSteps.filter((item) => String(form[item.key] || "").trim()).length
@@ -1059,7 +1109,12 @@ export default function CoffeeAssistant({
           top: assistantPanelTop,
           right: assistantPanelRight,
           width: assistantPanelWidth,
-          height: isHarvestVolumeStep ? "520px" : "540px",
+          height:
+            assistantLayoutMode === "late"
+              ? "512px"
+              : assistantLayoutMode === "mid"
+                ? "524px"
+                : "540px",
           minHeight: 0,
           background:
             "linear-gradient(180deg, rgba(31,26,20,0.98) 0%, rgba(24,20,15,0.99) 100%)",
