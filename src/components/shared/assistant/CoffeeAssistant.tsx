@@ -77,6 +77,7 @@ export default function CoffeeAssistant({
   //////////////////////////////////////////////////////
   
   const lotFlowRunRef = useRef(0)
+  const lastExternalSyncRef = useRef("")
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -314,6 +315,7 @@ export default function CoffeeAssistant({
 
     const resetToNormalMode = () => {
     lotFlowRunRef.current = 0
+    lastExternalSyncRef.current = ""
     setMode("normal")
     setStep(0)
     setInput("")
@@ -438,6 +440,56 @@ export default function CoffeeAssistant({
       window.removeEventListener("startLotFlow", lotHandler)
     }
   }, [])
+
+  //////////////////////////////////////////////////////
+  // 🔄 SYNC EXTERNAL FORM CHANGES WITH CHAT STEP
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (mode !== "lot") return
+    if (!assistantOpen) return
+    if (!form) return
+
+    const currentStep = lotDraftSteps[step]
+    if (!currentStep) return
+    if (currentStep.key === "name") return
+    if (currentStep.key === "farmId") return
+
+    const externalValue = String(form[currentStep.key] || "").trim()
+    if (!externalValue) return
+
+    //////////////////////////////////////////////////////
+    // 🧠 avoid duplicate auto-advances on rerender
+    //////////////////////////////////////////////////////
+
+    const syncKey = `${step}:${currentStep.key}:${externalValue}`
+
+    if (lastExternalSyncRef.current === syncKey) return
+
+    const normalizedExternalValue = normalizeLotValue(
+      currentStep.key,
+      externalValue,
+    )
+
+    const validationError = validateLotValue(
+      currentStep.key,
+      normalizedExternalValue,
+    )
+
+    if (validationError) return
+
+    lastExternalSyncRef.current = syncKey
+
+    const confirmationMessage =
+      normalizedExternalValue === ""
+        ? `${getFieldLabel(currentStep.key)} skipped.`
+        : `${getFieldLabel(currentStep.key)} updated.`
+
+    goToNextLotStep(
+      step + 1,
+      createMessage("assistant", confirmationMessage),
+    )
+  }, [form, step, mode, assistantOpen])
 
   //////////////////////////////////////////////////////
   // ✉️ LOT MODE (guided lot flow)
