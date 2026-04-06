@@ -52,6 +52,7 @@ export default function CoffeeAssistant({
   const [messages, setMessages] = useState<AssistantMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  
 
   //////////////////////////////////////////////////////
   // 🏷️ LOT NAME SUBFLOW (mini flujo guiado)
@@ -78,6 +79,8 @@ export default function CoffeeAssistant({
   
   const lotFlowRunRef = useRef(0)
   const lastExternalSyncRef = useRef("")
+  const externalSyncTimeoutRef = useRef<number | null>(null)
+  const transitionLockRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -103,6 +106,17 @@ export default function CoffeeAssistant({
   //////////////////////////////////////////////////////
   // 🔧 HELPERS (pure helpers / utilidades)
   //////////////////////////////////////////////////////
+
+    const withTransitionLock = (callback: () => void) => {
+    if (transitionLockRef.current) return
+
+    transitionLockRef.current = true
+    callback()
+
+    window.setTimeout(() => {
+      transitionLockRef.current = false
+    }, 120)
+  }
 
   const buildLotSummary = () => {
     if (!form) return ""
@@ -253,36 +267,40 @@ export default function CoffeeAssistant({
     appendMessages(...getLotNameSuggestionMessages(suggestion))
   }
 
-  const finishLotFlow = (...msgs: AssistantMessage[]) => {
-    setStep(lotDraftSteps.length)
-    appendMessages(
-      ...msgs,
-      createMessage(
-        "assistant",
-        "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
-      ),
-    )
+    const finishLotFlow = (...msgs: AssistantMessage[]) => {
+    withTransitionLock(() => {
+      setStep(lotDraftSteps.length)
+      appendMessages(
+        ...msgs,
+        createMessage(
+          "assistant",
+          "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
+        ),
+      )
+    })
   }
 
-  const goToNextLotStep = (nextStep: number, ...msgs: AssistantMessage[]) => {
+    const goToNextLotStep = (nextStep: number, ...msgs: AssistantMessage[]) => {
     if (nextStep >= lotDraftSteps.length) {
       finishLotFlow(...msgs)
       return
     }
 
-    setStep(nextStep)
+    withTransitionLock(() => {
+      setStep(nextStep)
 
-    if (lotDraftSteps[nextStep]?.key === "name") {
-      setLotNameFlowState("idle")
-      setLotNameSuggestion("")
-      appendMessages(...msgs, ...getLotNameEntryMessages())
-      return
-    }
+      if (lotDraftSteps[nextStep]?.key === "name") {
+        setLotNameFlowState("idle")
+        setLotNameSuggestion("")
+        appendMessages(...msgs, ...getLotNameEntryMessages())
+        return
+      }
 
-    appendMessages(
-      ...msgs,
-      createMessage("assistant", lotDraftSteps[nextStep].question),
-    )
+      appendMessages(
+        ...msgs,
+        createMessage("assistant", lotDraftSteps[nextStep].question),
+      )
+    })
   }
 
   const scrollFormToStep = (targetStep: number) => {
@@ -313,9 +331,16 @@ export default function CoffeeAssistant({
     }
   }
 
-    const resetToNormalMode = () => {
+     const resetToNormalMode = () => {
     lotFlowRunRef.current = 0
     lastExternalSyncRef.current = ""
+    transitionLockRef.current = false
+
+    if (externalSyncTimeoutRef.current) {
+      window.clearTimeout(externalSyncTimeoutRef.current)
+      externalSyncTimeoutRef.current = null
+    }
+
     setMode("normal")
     setStep(0)
     setInput("")
@@ -441,7 +466,7 @@ export default function CoffeeAssistant({
     }
   }, [])
 
-  //////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////
   // 🔄 SYNC EXTERNAL FORM CHANGES WITH CHAT STEP
   //////////////////////////////////////////////////////
 
@@ -449,6 +474,7 @@ export default function CoffeeAssistant({
     if (mode !== "lot") return
     if (!assistantOpen) return
     if (!form) return
+    if (transitionLockRef.current) return
 
     const currentStep = lotDraftSteps[step]
     if (!currentStep) return
@@ -457,10 +483,6 @@ export default function CoffeeAssistant({
 
     const externalValue = String(form[currentStep.key] || "").trim()
     if (!externalValue) return
-
-    //////////////////////////////////////////////////////
-    // 🧠 avoid duplicate auto-advances on rerender
-    //////////////////////////////////////////////////////
 
     const syncKey = `${step}:${currentStep.key}:${externalValue}`
 
@@ -478,17 +500,31 @@ export default function CoffeeAssistant({
 
     if (validationError) return
 
-    lastExternalSyncRef.current = syncKey
+    if (externalSyncTimeoutRef.current) {
+      window.clearTimeout(externalSyncTimeoutRef.current)
+    }
 
-    const confirmationMessage =
-      normalizedExternalValue === ""
-        ? `${getFieldLabel(currentStep.key)} skipped.`
-        : `${getFieldLabel(currentStep.key)} updated.`
+    externalSyncTimeoutRef.current = window.setTimeout(() => {
+      if (transitionLockRef.current) return
 
-    goToNextLotStep(
-      step + 1,
-      createMessage("assistant", confirmationMessage),
-    )
+      lastExternalSyncRef.current = syncKey
+
+      const confirmationMessage =
+        normalizedExternalValue === ""
+          ? `${getFieldLabel(currentStep.key)} skipped.`
+          : `${getFieldLabel(currentStep.key)} updated.`
+
+      goToNextLotStep(
+        step + 1,
+        createMessage("assistant", confirmationMessage),
+      )
+    }, 80)
+
+    return () => {
+      if (externalSyncTimeoutRef.current) {
+        window.clearTimeout(externalSyncTimeoutRef.current)
+      }
+    }
   }, [form, step, mode, assistantOpen])
 
   //////////////////////////////////////////////////////

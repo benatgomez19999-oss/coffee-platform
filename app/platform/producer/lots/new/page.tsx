@@ -99,7 +99,7 @@ export default function NewLotPage() {
     <div className="min-h-screen bg-[radial-gradient(1200px_650px_at_8%_-12%,#8a6847_0%,transparent_56%),radial-gradient(1200px_720px_at_100%_0%,#6e5239_0%,transparent_58%),linear-gradient(180deg,#5a4331_0%,#4a3729_100%)] px-5 pb-14 pt-24 md:px-6 md:pb-20">
       <div className="mx-auto max-w-5xl">
         {/* HERO */}
-        <div className="relative overflow-hidden rounded-[30px] border border-[#a98355]/55 bg-[linear-gradient(165deg,rgba(153,122,92,0.95)_0%,rgba(140,109,82,0.96)_62%,rgba(126,98,74,0.97)_100%)] p-6 shadow-[0_24px_54px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(212,175,55,0.22)] md:p-10">
+         <div className="relative overflow-hidden rounded-[30px] border border-[#a98355]/55 bg-[linear-gradient(165deg,rgba(153,122,92,0.95)_0%,rgba(140,109,82,0.96)_62%,rgba(126,98,74,0.97)_100%)] p-6 shadow-[0_24px_54px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(212,175,55,0.22)] md:p-10">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)]" />
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#d4af37]/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-64 bg-[radial-gradient(ellipse_at_left,rgba(91,128,95,0.2),transparent_72%)]" />
@@ -111,9 +111,9 @@ export default function NewLotPage() {
               </p>
 
               {/* 🌿 REAL ASSISTANT */}
-              <div className="flex items-center">
+              <div className="flex items-center justify-center rounded-2xl border border-[#d4af37]/45 bg-[linear-gradient(180deg,rgba(86,65,46,0.62)_0%,rgba(64,47,33,0.7)_100%)] p-2 shadow-[0_8px_20px_rgba(20,12,7,0.3),inset_0_1px_0_rgba(255,241,210,0.18)] backdrop-blur-[2px]">
                 <CoffeeAssistant
-                  iconSize={64}
+                  iconSize={86}
                   form={form}
                   updateField={updateField}
                   context="lot-wizard"
@@ -133,7 +133,7 @@ export default function NewLotPage() {
 
             {/* Step Language */}
             <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-[#8ca888]/60 bg-[linear-gradient(180deg,rgba(82,109,86,0.9),rgba(69,94,73,0.92))] px-4 py-3">
+               <div className="rounded-xl border border-[#8ca888]/60 bg-[linear-gradient(180deg,rgba(82,109,86,0.9),rgba(69,94,73,0.92))] px-4 py-3">
                 <div className="mb-1 flex items-center gap-2">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#edd9b8]">
