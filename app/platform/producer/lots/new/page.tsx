@@ -61,7 +61,11 @@ export default function NewLotPage() {
     setLoading(true)
 
     try {
-      const res = await fetch("/api/producer/lot-draft", {
+      //////////////////////////////////////////////////////
+      // 1️⃣ CREATE LOT DRAFT
+      //////////////////////////////////////////////////////
+
+      const createRes = await fetch("/api/producer/lot-draft", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,11 +80,40 @@ export default function NewLotPage() {
         }),
       })
 
-      const data = await res.json()
+      const createData = await createRes.json()
 
-      console.log("✅ Draft created:", data)
+      if (!createRes.ok) {
+        throw new Error(createData?.error || "Failed to create lot draft")
+      }
 
-      // reset
+      const draftId =
+        createData?.id || createData?.draft?.id || createData?.lotDraft?.id
+
+      if (!draftId) {
+        throw new Error("Lot draft created but no draft id was returned")
+      }
+
+      //////////////////////////////////////////////////////
+      // 2️⃣ SEND SAMPLE TO LAB / PARTNER
+      //////////////////////////////////////////////////////
+
+      const sendRes = await fetch(
+        `/api/producer/lot-draft/${draftId}/send-to-lab`,
+        {
+          method: "PATCH",
+        },
+      )
+
+      const sendData = await sendRes.json().catch(() => null)
+
+      if (!sendRes.ok) {
+        throw new Error(sendData?.error || "Failed to send sample to lab")
+      }
+
+      //////////////////////////////////////////////////////
+      // 3️⃣ RESET LOCAL STATE
+      //////////////////////////////////////////////////////
+
       setForm({
         farmId: "",
         name: "",
@@ -92,13 +125,17 @@ export default function NewLotPage() {
 
       setDraftParchmentKg("")
 
-      router.push("/platform/producer/lots")
+      //////////////////////////////////////////////////////
+      // 4️⃣ GO BACK TO PRODUCER DASHBOARD
+      //////////////////////////////////////////////////////
+
+      router.push("/platform/producer")
     } catch (err) {
       console.error(err)
-      alert("Error creating lot")
+      alert("Error sending this lot for analysis")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
     //////////////////////////////////////////////////////
@@ -742,7 +779,7 @@ export default function NewLotPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-medium text-[#3a2d1f]">
-                Final check before sending this lot for analysis
+                Final check before sending this sample for partner review
               </p>
               <p className="mt-1 text-xs text-[#6f5c46]">
                 Required fields: Farm ID, Variety, Process, and Parchment Kg.
@@ -770,7 +807,7 @@ export default function NewLotPage() {
                 e.currentTarget.style.boxShadow = "none"
               }}
             >
-              {loading ? "Creating..." : "Save Lot for Analysis"}
+              {loading ? "Sending sample..." : "Send Sample for Analysis"}
             </button>
           </div>
         </div>
