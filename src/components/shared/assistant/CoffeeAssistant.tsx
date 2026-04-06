@@ -79,11 +79,8 @@ export default function CoffeeAssistant({
   
   const lotFlowRunRef = useRef(0)
   const lastExternalSyncRef = useRef("")
-  const externalSyncTimeoutRef = useRef<number | null>(null)
-  const transitionLockRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-
   //////////////////////////////////////////////////////
   // 🧠 FLAGS / banderas internas
   //////////////////////////////////////////////////////
@@ -107,16 +104,7 @@ export default function CoffeeAssistant({
   // 🔧 HELPERS (pure helpers / utilidades)
   //////////////////////////////////////////////////////
 
-    const withTransitionLock = (callback: () => void) => {
-    if (transitionLockRef.current) return
-
-    transitionLockRef.current = true
-    callback()
-
-    window.setTimeout(() => {
-      transitionLockRef.current = false
-    }, 120)
-  }
+   
 
   const buildLotSummary = () => {
     if (!form) return ""
@@ -268,40 +256,36 @@ export default function CoffeeAssistant({
   }
 
     const finishLotFlow = (...msgs: AssistantMessage[]) => {
-    withTransitionLock(() => {
-      setStep(lotDraftSteps.length)
-      appendMessages(
-        ...msgs,
-        createMessage(
-          "assistant",
-          "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
-        ),
-      )
-    })
+  setStep(lotDraftSteps.length)
+  appendMessages(
+    ...msgs,
+    createMessage(
+      "assistant",
+      "Everything looks good. Please review your form before submitting the lot. If you need anything else, I’m here.",
+    ),
+  )
+}
+
+   const goToNextLotStep = (nextStep: number, ...msgs: AssistantMessage[]) => {
+  if (nextStep >= lotDraftSteps.length) {
+    finishLotFlow(...msgs)
+    return
   }
 
-    const goToNextLotStep = (nextStep: number, ...msgs: AssistantMessage[]) => {
-    if (nextStep >= lotDraftSteps.length) {
-      finishLotFlow(...msgs)
-      return
-    }
+  setStep(nextStep)
 
-    withTransitionLock(() => {
-      setStep(nextStep)
-
-      if (lotDraftSteps[nextStep]?.key === "name") {
-        setLotNameFlowState("idle")
-        setLotNameSuggestion("")
-        appendMessages(...msgs, ...getLotNameEntryMessages())
-        return
-      }
-
-      appendMessages(
-        ...msgs,
-        createMessage("assistant", lotDraftSteps[nextStep].question),
-      )
-    })
+  if (lotDraftSteps[nextStep]?.key === "name") {
+    setLotNameFlowState("idle")
+    setLotNameSuggestion("")
+    appendMessages(...msgs, ...getLotNameEntryMessages())
+    return
   }
+
+  appendMessages(
+    ...msgs,
+    createMessage("assistant", lotDraftSteps[nextStep].question),
+  )
+}
 
   const scrollFormToStep = (targetStep: number) => {
     try {
@@ -331,27 +315,21 @@ export default function CoffeeAssistant({
     }
   }
 
-     const resetToNormalMode = () => {
-    lotFlowRunRef.current = 0
-    lastExternalSyncRef.current = ""
-    transitionLockRef.current = false
+    const resetToNormalMode = () => {
+  lotFlowRunRef.current = 0
+  lastExternalSyncRef.current = ""
 
-    if (externalSyncTimeoutRef.current) {
-      window.clearTimeout(externalSyncTimeoutRef.current)
-      externalSyncTimeoutRef.current = null
-    }
-
-    setMode("normal")
-    setStep(0)
-    setInput("")
-    setMessages([])
-    setIsLoading(false)
-    setFarmOptions([])
-    setHasCheckedFarms(false)
-    setSelectedFarmName("")
-    setLotNameSuggestion("")
-    setLotNameFlowState("idle")
-  }
+  setMode("normal")
+  setStep(0)
+  setInput("")
+  setMessages([])
+  setIsLoading(false)
+  setFarmOptions([])
+  setHasCheckedFarms(false)
+  setSelectedFarmName("")
+  setLotNameSuggestion("")
+  setLotNameFlowState("idle")
+}
 
   //////////////////////////////////////////////////////
   // 🚀 START LOT FLOW (entry point / inicio guiado)
@@ -471,61 +449,52 @@ export default function CoffeeAssistant({
   //////////////////////////////////////////////////////
 
   useEffect(() => {
-    if (mode !== "lot") return
-    if (!assistantOpen) return
-    if (!form) return
-    if (transitionLockRef.current) return
+  if (mode !== "lot") return
+  if (!assistantOpen) return
+  if (!form) return
 
-    const currentStep = lotDraftSteps[step]
-    if (!currentStep) return
-    if (currentStep.key === "name") return
-    if (currentStep.key === "farmId") return
+  const currentStep = lotDraftSteps[step]
+  if (!currentStep) return
+  if (currentStep.key === "name") return
+  if (currentStep.key === "farmId") return
 
-    const externalValue = String(form[currentStep.key] || "").trim()
-    if (!externalValue) return
+  const externalValue = String(form[currentStep.key] || "").trim()
+  if (!externalValue) return
 
-    const syncKey = `${step}:${currentStep.key}:${externalValue}`
+  const normalizedExternalValue = normalizeLotValue(
+    currentStep.key,
+    externalValue,
+  )
 
-    if (lastExternalSyncRef.current === syncKey) return
+  const validationError = validateLotValue(
+    currentStep.key,
+    normalizedExternalValue,
+  )
 
-    const normalizedExternalValue = normalizeLotValue(
-      currentStep.key,
-      externalValue,
+  if (validationError) return
+
+  const syncKey = `${step}:${currentStep.key}:${normalizedExternalValue}`
+
+  if (lastExternalSyncRef.current === syncKey) return
+
+  lastExternalSyncRef.current = syncKey
+
+  const confirmationMessage =
+    normalizedExternalValue === ""
+      ? `${getFieldLabel(currentStep.key)} skipped.`
+      : `${getFieldLabel(currentStep.key)} updated.`
+
+  const rafId = window.requestAnimationFrame(() => {
+    goToNextLotStep(
+      step + 1,
+      createMessage("assistant", confirmationMessage),
     )
+  })
 
-    const validationError = validateLotValue(
-      currentStep.key,
-      normalizedExternalValue,
-    )
-
-    if (validationError) return
-
-    if (externalSyncTimeoutRef.current) {
-      window.clearTimeout(externalSyncTimeoutRef.current)
-    }
-
-    externalSyncTimeoutRef.current = window.setTimeout(() => {
-      if (transitionLockRef.current) return
-
-      lastExternalSyncRef.current = syncKey
-
-      const confirmationMessage =
-        normalizedExternalValue === ""
-          ? `${getFieldLabel(currentStep.key)} skipped.`
-          : `${getFieldLabel(currentStep.key)} updated.`
-
-      goToNextLotStep(
-        step + 1,
-        createMessage("assistant", confirmationMessage),
-      )
-    }, 80)
-
-    return () => {
-      if (externalSyncTimeoutRef.current) {
-        window.clearTimeout(externalSyncTimeoutRef.current)
-      }
-    }
-  }, [form, step, mode, assistantOpen])
+  return () => {
+    window.cancelAnimationFrame(rafId)
+  }
+}, [form, step, mode, assistantOpen])
 
   //////////////////////////////////////////////////////
   // ✉️ LOT MODE (guided lot flow)
@@ -925,7 +894,7 @@ export default function CoffeeAssistant({
       {assistantOpen && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed",
             top: "80px",
             right: "24px",
             width: "380px",
