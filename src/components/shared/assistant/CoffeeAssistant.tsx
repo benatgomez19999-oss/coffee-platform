@@ -227,6 +227,10 @@ If you want, you can now ask me follow-up questions about how to position this s
         "assistant",
         "Great — I can help you create a clear farm story for buyers. I’ll ask you a few short questions and then generate it for you.",
       ),
+      createMessage(
+        "assistant",
+        "This story will help buyers quickly understand who you are, how you work, and what makes your coffee credible and distinctive.",
+      ),
       createMessage("assistant", storySteps[0].question),
     ])
   }
@@ -298,11 +302,21 @@ If you want, you can now ask me follow-up questions about how to position this s
       )
     } finally {
       setIsLoading(false)
-      setMode("normal")
       setStoryStep(0)
       setInput("")
-    }
-  }
+
+      //////////////////////////////////////////////////////
+      // 🛡️ SAFE CLOSE AFTER STORY GENERATION
+      //////////////////////////////////////////////////////
+
+      window.setTimeout(() => {
+        closeAssistantSafely()
+
+        window.setTimeout(() => {
+          setMode("normal")
+        }, 220)
+      }, 80)
+    }  }
 
   
 
@@ -1152,6 +1166,7 @@ if (validationError) {
   //////////////////////////////////////////////////////
 
   const handleStorySend = async () => {
+    if (isLoading) return
     if (!input.trim()) return
 
     const cleanInput = input.trim()
