@@ -1,6 +1,6 @@
 "use client"
 
-import { KeyboardEvent, useMemo, useState } from "react"
+import { KeyboardEvent, useMemo, useState, useEffect } from "react"
 import { ProcessType } from "@prisma/client"
 import { useRouter } from "next/navigation"
 import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
@@ -14,6 +14,8 @@ export default function NewLotPage() {
   const router = useRouter()
 
   const [form, setForm] = useState({
+
+    
     farmId: "",
     name: "",
     variety: "",
@@ -21,6 +23,12 @@ export default function NewLotPage() {
     harvestYear: "2026",
     parchmentKg: "",
   })
+
+  //////////////////////////////////////////////////////
+  // 🧠 DRAFT STATE (prevent premature assistant sync)
+  //////////////////////////////////////////////////////
+
+  const [draftParchmentKg, setDraftParchmentKg] = useState("")
 
   //////////////////////////////////////////////////////
   // 🔧 HANDLERS
@@ -81,6 +89,8 @@ export default function NewLotPage() {
         parchmentKg: "",
       })
 
+      setDraftParchmentKg("")
+
       router.push("/platform/producer/lots")
     } catch (err) {
       console.error(err)
@@ -97,9 +107,32 @@ export default function NewLotPage() {
   const isHarvestYearValid = form.harvestYear === "2026"
 
   const isParchmentKgValid = useMemo(() => {
-    const numericValue = Number(form.parchmentKg)
+    const numericValue = Number(draftParchmentKg)
     return Number.isFinite(numericValue) && numericValue > 0
+  }, [draftParchmentKg])
+
+    //////////////////////////////////////////////////////
+  // 🔄 SYNC DRAFT WITH FORM (chat → UI)
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    setDraftParchmentKg(form.parchmentKg || "")
   }, [form.parchmentKg])
+
+  //////////////////////////////////////////////////////
+  // ✅ CONFIRM PARCHMENT KG (manual commit)
+  //////////////////////////////////////////////////////
+
+  const confirmParchmentKg = () => {
+    const cleanValue = draftParchmentKg.trim()
+    const numericValue = Number(cleanValue)
+
+    if (!cleanValue || !Number.isFinite(numericValue) || numericValue <= 0) {
+      return
+    }
+
+    updateField("parchmentKg", cleanValue)
+  }
 
   const handleCommitFieldOnEnter =
     (key: keyof typeof form) => (e: KeyboardEvent<HTMLInputElement>) => {
@@ -121,25 +154,6 @@ export default function NewLotPage() {
         }
 
         updateField("harvestYear", "2026")
-        e.currentTarget.blur()
-        return
-      }
-
-      //////////////////////////////////////////////////////
-      // ⚖️ PARCHMENT KG STRICT GUARD
-      //////////////////////////////////////////////////////
-
-      if (key === "parchmentKg") {
-        const cleanValue = e.currentTarget.value.trim()
-        const numericValue = Number(cleanValue)
-
-        if (!cleanValue || !Number.isFinite(numericValue) || numericValue <= 0) {
-          updateField("parchmentKg", cleanValue)
-          e.currentTarget.blur()
-          return
-        }
-
-        updateField("parchmentKg", cleanValue)
         e.currentTarget.blur()
         return
       }
@@ -508,19 +522,36 @@ export default function NewLotPage() {
 
               <div>
                 <label className={labelClassName}>Parchment Kg *</label>
-                <input
-                  type="number"
-                  value={form.parchmentKg}
-                  onChange={(e) => updateField("parchmentKg", e.target.value)}
-                  onKeyDown={handleCommitFieldOnEnter("parchmentKg")}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  min={1}
-                  step="any"
-                  className={inputClassName}
-                  placeholder="e.g. 1200"
-                />
+                <div className="relative">
+  <input
+    type="number"
+    value={draftParchmentKg}
+    onChange={(e) => setDraftParchmentKg(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        confirmParchmentKg()
+        e.currentTarget.blur()
+      }
+    }}
+    onWheel={(e) => e.currentTarget.blur()}
+    min={1}
+    step="any"
+    className={inputClassName + " pr-24"}
+    placeholder="e.g. 1200"
+  />
 
-                {form.parchmentKg && !isParchmentKgValid && (
+  {/* ✅ CONFIRM BUTTON */}
+  <button
+    type="button"
+    onClick={confirmParchmentKg}
+    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-[#d4af37]/40 bg-[#1f3d2b]/90 px-3 py-1 text-xs text-white hover:bg-[#d4af37] hover:text-black transition-all"
+  >
+    Confirm
+  </button>
+</div>
+
+                {draftParchmentKg && !isParchmentKgValid && (
                   <p className="mt-2 text-xs leading-relaxed text-[#9f4d3f]">
                     Please enter a valid parchment amount greater than 0.
                   </p>
