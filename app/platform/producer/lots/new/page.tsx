@@ -1,6 +1,6 @@
 "use client"
 
-import { KeyboardEvent, useMemo, useState, useEffect } from "react"
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
 import { ProcessType } from "@prisma/client"
 import { useRouter } from "next/navigation"
 import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
@@ -185,6 +185,79 @@ export default function NewLotPage() {
       e.currentTarget.blur()
     }
 
+    //////////////////////////////////////////////////////
+  // 🧠 CUSTOM POPBOX / DROPDOWN STATE
+  //////////////////////////////////////////////////////
+
+  const [openDropdown, setOpenDropdown] = useState<"variety" | "process" | null>(
+    null,
+  )
+
+  const varietyDropdownRef = useRef<HTMLDivElement | null>(null)
+  const processDropdownRef = useRef<HTMLDivElement | null>(null)
+
+  const varietyOptions = [
+    { value: "CASTILLO", label: "Castillo" },
+    { value: "CATURRA", label: "Caturra" },
+    { value: "COLOMBIA", label: "Colombia" },
+    { value: "TYPICA", label: "Typica" },
+    { value: "BOURBON", label: "Bourbon" },
+    { value: "PINK_BOURBON", label: "Pink Bourbon" },
+    { value: "GEISHA", label: "Geisha" },
+    { value: "TABI", label: "Tabi" },
+  ] as const
+
+  const processOptions = [
+    { value: "WASHED", label: "Washed" },
+    { value: "NATURAL", label: "Natural" },
+    { value: "HONEY", label: "Honey" },
+    { value: "ANAEROBIC", label: "Anaerobic" },
+  ] as const
+
+  const getVarietyLabel = (value: string) => {
+    return varietyOptions.find((item) => item.value === value)?.label || ""
+  }
+
+  const getProcessLabel = (value: string) => {
+    return processOptions.find((item) => item.value === value)?.label || ""
+  }
+
+  //////////////////////////////////////////////////////
+  // 🧹 CLOSE CUSTOM DROPDOWN ON OUTSIDE CLICK / ESC
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node
+
+      const clickedInsideVariety =
+        varietyDropdownRef.current?.contains(target) ?? false
+      const clickedInsideProcess =
+        processDropdownRef.current?.contains(target) ?? false
+
+      if (!clickedInsideVariety && !clickedInsideProcess) {
+        setOpenDropdown(null)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenDropdown(null)
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown)
+    document.addEventListener("keydown", handleKeyDown as unknown as EventListener)
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown)
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown as unknown as EventListener,
+      )
+    }
+  }, [])
+
   //////////////////////////////////////////////////////
   // 🎨 UI TOKENS
   //////////////////////////////////////////////////////
@@ -195,7 +268,17 @@ export default function NewLotPage() {
     "mt-2 w-full rounded-xl border border-[#d8c8af] bg-[#fffdf8] px-4 py-3 text-[15px] text-[#2f2419] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition-all duration-200 placeholder:text-[#9a876f] focus:border-[#8d6a43] focus:outline-none focus:ring-4 focus:ring-[#cfb48a]/35"
   const selectClassName =
     "mt-2 w-full appearance-none rounded-xl border border-[#7e6243] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] px-4 py-3 pr-11 text-[15px] text-[#f6eee0] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_14px_rgba(34,22,12,0.28)] transition-all duration-200 focus:border-[#d4af37] focus:outline-none focus:ring-4 focus:ring-[#d4af37]/25"
+    const popboxTriggerClassName =
+    "mt-2 flex w-full items-center justify-between rounded-xl border border-[#7e6243] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] px-4 py-3 text-left text-[15px] text-[#f6eee0] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_14px_rgba(34,22,12,0.28)] transition-all duration-200 focus:border-[#d4af37] focus:outline-none focus:ring-4 focus:ring-[#d4af37]/25"
 
+  const popboxMenuClassName =
+    "absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-[#8a6a44] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] shadow-[0_18px_36px_rgba(18,11,7,0.36)]"
+
+  const popboxOptionClassName =
+    "flex w-full items-center justify-between px-4 py-3 text-left text-[15px] text-[#f6eee0] transition-colors duration-150 hover:bg-[#6c5036]"
+
+  const popboxOptionActiveClassName =
+    "bg-[#6a4c31] text-[#fff3db]"
   //////////////////////////////////////////////////////
   // 🧩 UI
   //////////////////////////////////////////////////////
@@ -354,143 +437,167 @@ export default function NewLotPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className={isAssistantMidLayout ? "md:pr-10" : ""}>
+                            <div className={isAssistantMidLayout ? "md:pr-14" : ""}>
                 <label className={labelClassName}>Variety *</label>
-                <div className="relative">
-                  <select
-                    value={form.variety}
-                    onChange={(e) => updateField("variety", e.target.value)}
-                    className={selectClassName}
-                  >
-                    <option value="" className="bg-[#4b3624] text-[#f4e8d2]">
-                      Select variety
-                    </option>
-                    <option
-                      value="CASTILLO"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Castillo
-                    </option>
-                    <option
-                      value="CATURRA"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Caturra
-                    </option>
-                    <option
-                      value="COLOMBIA"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Colombia
-                    </option>
-                    <option
-                      value="TYPICA"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Typica
-                    </option>
-                    <option
-                      value="BOURBON"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Bourbon
-                    </option>
-                    <option
-                      value="PINK_BOURBON"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Pink Bourbon
-                    </option>
-                    <option
-                      value="GEISHA"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Geisha
-                    </option>
-                    <option
-                      value="TABI"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Tabi
-                    </option>
-                  </select>
 
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[#d4af37]">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M6 9L12 15L18 9"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                <div ref={varietyDropdownRef} className="relative">
+                  <button
+                    type="button"
+                    className={popboxTriggerClassName}
+                    onClick={() =>
+                      setOpenDropdown((prev) =>
+                        prev === "variety" ? null : "variety",
+                      )
+                    }
+                  >
+                    <span>
+                      {form.variety
+                        ? getVarietyLabel(form.variety)
+                        : "Select variety"}
+                    </span>
+
+                    <span className="ml-3 shrink-0 text-[#d4af37]">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                        style={{
+                          transform:
+                            openDropdown === "variety"
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
+                          transition: "transform 0.2s ease",
+                        }}
+                      >
+                        <path
+                          d="M6 9L12 15L18 9"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+
+                  {openDropdown === "variety" && (
+                    <div className={popboxMenuClassName}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateField("variety", "")
+                          setOpenDropdown(null)
+                        }}
+                        className={popboxOptionClassName}
+                      >
+                        Select variety
+                      </button>
+
+                      {varietyOptions.map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => {
+                            updateField("variety", item.value)
+                            setOpenDropdown(null)
+                          }}
+                          className={`${popboxOptionClassName} ${
+                            form.variety === item.value
+                              ? popboxOptionActiveClassName
+                              : ""
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className={isAssistantMidLayout ? "md:pr-16" : ""}>
+                            <div
+                className={
+                  isAssistantMidLayout ? "md:pr-24 md:max-w-[430px]" : ""
+                }
+              >
                 <label className={labelClassName}>Process *</label>
-                <div className="relative">
-                  <select
-                    value={form.process}
-                    onChange={(e) =>
-                      updateField("process", e.target.value as ProcessType)
-                    }
-                    className={selectClassName}
-                  >
-                    <option value="" className="bg-[#4b3624] text-[#f4e8d2]">
-                      Select process
-                    </option>
-                    <option
-                      value="WASHED"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Washed
-                    </option>
-                    <option
-                      value="NATURAL"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Natural
-                    </option>
-                    <option
-                      value="HONEY"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Honey
-                    </option>
-                    <option
-                      value="ANAEROBIC"
-                      className="bg-[#4b3624] text-[#f4e8d2]"
-                    >
-                      Anaerobic
-                    </option>
-                  </select>
 
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[#d4af37]">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M6 9L12 15L18 9"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                <div ref={processDropdownRef} className="relative">
+                  <button
+                    type="button"
+                    className={popboxTriggerClassName}
+                    onClick={() =>
+                      setOpenDropdown((prev) =>
+                        prev === "process" ? null : "process",
+                      )
+                    }
+                  >
+                    <span>
+                      {form.process
+                        ? getProcessLabel(form.process)
+                        : "Select process"}
+                    </span>
+
+                    <span className="ml-3 shrink-0 text-[#d4af37]">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                        style={{
+                          transform:
+                            openDropdown === "process"
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
+                          transition: "transform 0.2s ease",
+                        }}
+                      >
+                        <path
+                          d="M6 9L12 15L18 9"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+
+                  {openDropdown === "process" && (
+                    <div className={popboxMenuClassName}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateField("process", "" as ProcessType | "")
+                          setOpenDropdown(null)
+                        }}
+                        className={popboxOptionClassName}
+                      >
+                        Select process
+                      </button>
+
+                      {processOptions.map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => {
+                            updateField("process", item.value as ProcessType)
+                            setOpenDropdown(null)
+                          }}
+                          className={`${popboxOptionClassName} ${
+                            form.process === item.value
+                              ? popboxOptionActiveClassName
+                              : ""
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -557,8 +664,8 @@ export default function NewLotPage() {
     min={1}
     step="any"
     className={
-      inputClassName +
-      (isParchmentConfirmTight ? " pr-36 md:max-w-[430px]" : " pr-24")
+            inputClassName +
+      (isParchmentConfirmTight ? " pr-44 md:max-w-[360px]" : " pr-24")
     }
     placeholder="e.g. 1200"
   />
@@ -569,7 +676,7 @@ export default function NewLotPage() {
     onClick={confirmParchmentKg}
     className={`absolute top-1/2 -translate-y-1/2 rounded-full border border-[#d4af37]/40 bg-[#1f3d2b]/90 py-1 text-xs text-white transition-all hover:bg-[#d4af37] hover:text-black ${
       isParchmentConfirmTight
-        ? "right-20 px-2.5"
+        ? "right-28 px-2.5"
         : "right-2 px-3"
     }`}
   >
