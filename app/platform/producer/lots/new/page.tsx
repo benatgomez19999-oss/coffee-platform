@@ -128,6 +128,13 @@ export default function NewLotPage() {
   const isParchmentConfirmTight =
     isAssistantLateLayout && form.harvestYear === "2026" && !form.parchmentKg
 
+  //////////////////////////////////////////////////////
+  // 🧠 CUSTOM POPBOX POSITIONING
+  //////////////////////////////////////////////////////
+
+  const shouldOpenVarietyUp = isAssistantMidLayout
+  const isProcessCompact = isAssistantMidLayout
+
 
 
   //////////////////////////////////////////////////////
@@ -272,10 +279,16 @@ export default function NewLotPage() {
     "mt-2 flex w-full items-center justify-between rounded-xl border border-[#7e6243] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] px-4 py-3 text-left text-[15px] text-[#f6eee0] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_14px_rgba(34,22,12,0.28)] transition-all duration-200 focus:border-[#d4af37] focus:outline-none focus:ring-4 focus:ring-[#d4af37]/25"
 
   const popboxMenuClassName =
-    "absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-[#8a6a44] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] shadow-[0_18px_36px_rgba(18,11,7,0.36)]"
+    "absolute left-0 right-0 z-30 overflow-hidden rounded-xl border border-[#8a6a44] bg-[linear-gradient(180deg,#5a422d_0%,#4a3524_100%)] shadow-[0_18px_36px_rgba(18,11,7,0.36)]"
+
+  const popboxMenuDownClassName = "mt-2"
+  const popboxMenuUpClassName = "bottom-full mb-2"
 
   const popboxOptionClassName =
     "flex w-full items-center justify-between px-4 py-3 text-left text-[15px] text-[#f6eee0] transition-colors duration-150 hover:bg-[#6c5036]"
+
+  const popboxOptionCompactClassName =
+    "flex w-full items-center justify-between px-4 py-2.5 text-left text-[15px] text-[#f6eee0] transition-colors duration-150 hover:bg-[#6c5036]"
 
   const popboxOptionActiveClassName =
     "bg-[#6a4c31] text-[#fff3db]"
@@ -483,35 +496,43 @@ export default function NewLotPage() {
                   </button>
 
                   {openDropdown === "variety" && (
-                    <div className={popboxMenuClassName}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateField("variety", "")
-                          setOpenDropdown(null)
-                        }}
-                        className={popboxOptionClassName}
-                      >
-                        Select variety
-                      </button>
-
-                      {varietyOptions.map((item) => (
+                    <div
+                      className={`${popboxMenuClassName} ${
+                        shouldOpenVarietyUp
+                          ? popboxMenuUpClassName
+                          : popboxMenuDownClassName
+                      }`}
+                    >
+                      <div className="max-h-[280px] overflow-y-auto">
                         <button
-                          key={item.value}
                           type="button"
                           onClick={() => {
-                            updateField("variety", item.value)
+                            updateField("variety", "")
                             setOpenDropdown(null)
                           }}
-                          className={`${popboxOptionClassName} ${
-                            form.variety === item.value
-                              ? popboxOptionActiveClassName
-                              : ""
-                          }`}
+                          className={popboxOptionCompactClassName}
                         >
-                          {item.label}
+                          Select variety
                         </button>
-                      ))}
+
+                        {varietyOptions.map((item) => (
+                          <button
+                            key={item.value}
+                            type="button"
+                            onClick={() => {
+                              updateField("variety", item.value)
+                              setOpenDropdown(null)
+                            }}
+                            className={`${popboxOptionCompactClassName} ${
+                              form.variety === item.value
+                                ? popboxOptionActiveClassName
+                                : ""
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -519,7 +540,7 @@ export default function NewLotPage() {
 
                             <div
                 className={
-                  isAssistantMidLayout ? "md:pr-24 md:max-w-[430px]" : ""
+                  isAssistantMidLayout ? "md:pr-24 md:max-w-[380px]" : ""
                 }
               >
                 <label className={labelClassName}>Process *</label>
@@ -567,35 +588,51 @@ export default function NewLotPage() {
                   </button>
 
                   {openDropdown === "process" && (
-                    <div className={popboxMenuClassName}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateField("process", "" as ProcessType | "")
-                          setOpenDropdown(null)
-                        }}
-                        className={popboxOptionClassName}
+                    <div
+                      className={`${popboxMenuClassName} ${popboxMenuDownClassName}`}
+                    >
+                      <div
+                        className={`overflow-y-auto ${
+                          isProcessCompact ? "max-h-[220px]" : "max-h-[280px]"
+                        }`}
                       >
-                        Select process
-                      </button>
-
-                      {processOptions.map((item) => (
                         <button
-                          key={item.value}
                           type="button"
                           onClick={() => {
-                            updateField("process", item.value as ProcessType)
+                            updateField("process", "" as ProcessType | "")
                             setOpenDropdown(null)
                           }}
-                          className={`${popboxOptionClassName} ${
-                            form.process === item.value
-                              ? popboxOptionActiveClassName
-                              : ""
+                          className={`${
+                            isProcessCompact
+                              ? popboxOptionCompactClassName
+                              : popboxOptionClassName
                           }`}
                         >
-                          {item.label}
+                          Select process
                         </button>
-                      ))}
+
+                        {processOptions.map((item) => (
+                          <button
+                            key={item.value}
+                            type="button"
+                            onClick={() => {
+                              updateField("process", item.value as ProcessType)
+                              setOpenDropdown(null)
+                            }}
+                            className={`${
+                              isProcessCompact
+                                ? popboxOptionCompactClassName
+                                : popboxOptionClassName
+                            } ${
+                              form.process === item.value
+                                ? popboxOptionActiveClassName
+                                : ""
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
