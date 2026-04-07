@@ -50,22 +50,20 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
 
       <div className="pt-[70px]">
 
-        {/* ////////////////////////////////////////////////////// */}
-        {/* // 🌄 HERO (GRADIENT — NO IMAGE) */}
-        {/* ////////////////////////////////////////////////////// */}
+       {/* ////////////////////////////////////////////////////// */}
+{/* // 🌄 HERO (CLEAN LIGHT VERSION) */}
+{/* ////////////////////////////////////////////////////// */}
 
-        <div className="relative h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+<div className="relative h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
 
-          {/* BACKGROUND GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#3a3120] via-[#2c2618] to-[#241f12]" />
+  {/* BACKGROUND BASE (LIGHT, CLEAN) */}
+  <div className="absolute inset-0 bg-gradient-to-b from-[#f7f3ed] to-[#f1ebe2]" />
 
-          {/* SUBTLE GOLD GLOW */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(212,175,55,0.10)_0%,transparent_60%)]" />
+  {/* VERY SUBTLE TOP SHADOW */}
+  <div className="absolute inset-0 bg-gradient-to-b from-[rgba(0,0,0,0.05)] to-transparent" />
 
-          {/* BOTTOM FADE INTO PAGE BG */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#f3efe6] via-transparent to-transparent" />
-
-          {/* TITLE */}
+  {/* TITLE */}
+  
           <div className="absolute z-10 left-44 md:left-50 top-12 md:top-16 max-w-xl">
 
             <p className="text-[11px] tracking-[0.25em] text-[#d4af37]/70 uppercase mb-3">
