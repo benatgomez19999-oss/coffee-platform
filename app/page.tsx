@@ -554,7 +554,7 @@ useEffect(() => {
                 fontSize: "1.12rem",
                 lineHeight: "1.9",
                 fontWeight: 300,
-                color: "rgba(255,255,255,0.78)",
+                color: "rgba(237,232,223,0.70)",
                 opacity: loaded ? 1 : 0,
                 transform: loaded ? "translateY(0px)" : "translateY(16px)",
                 transition:
@@ -583,20 +583,20 @@ useEffect(() => {
                 style={{
                   padding: "14px 28px",
                   borderRadius: "999px",
-                  background: "#d4af37",
-                  color: "#111",
+                  background: "#C6A85A",
+                  color: "#0B0C0D",
                   textDecoration: "none",
                   fontSize: "0.95rem",
                   fontWeight: 500,
                   letterSpacing: "0.02em",
-                  border: "1px solid rgba(212,175,55,0.95)",
+                  border: "1px solid rgba(198,168,90,0.7)",
                   boxShadow: "0 12px 30px rgba(212,175,55,0.18)",
                   transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-2px)"
                   e.currentTarget.style.boxShadow =
-                    "0 18px 40px rgba(212,175,55,0.26)"
+                    "0 14px 34px rgba(198,168,90,0.22)"
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)"
@@ -643,7 +643,7 @@ useEffect(() => {
               style={{
                 marginTop: "58px",
                 paddingTop: "24px",
-                borderTop: "1px solid rgba(255,255,255,0.12)",
+                borderTop: "1px solid rgba(255,255,255,0.08)",
                 display: "grid",
                 gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: "28px",
@@ -660,7 +660,7 @@ useEffect(() => {
                     fontSize: "0.75rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
-                    color: "rgba(212,175,55,0.88)",
+                    color: "rgba(198,168,90,0.85)",
                     marginBottom: "8px",
                   }}
                 >
