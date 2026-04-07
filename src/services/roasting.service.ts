@@ -101,7 +101,7 @@ export async function createLotDraft(input: {
 
 export async function updateLotDraftStatus(
   draftId: string,
-  status: "PENDING" | "SENT_TO_LAB" | "VERIFIED" | "REJECTED"
+  status: "PENDING" | "SAMPLE_REQUESTED" | "VERIFIED" | "REJECTED"
 ) {
 
   return prisma.producerLotDraft.update({

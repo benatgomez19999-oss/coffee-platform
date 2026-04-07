@@ -27,33 +27,33 @@ export async function GET(req: NextRequest) {
 
     if (!producer) {
       return NextResponse.json({
-        drafts: [],
-        inLab: [],
+        sampleRequested: [],
+        inReview: [],
         verified: [],
         sold: []
       })
     }
 
     //////////////////////////////////////////////////////
-    // 🧠 DRAFTS
+    // 🧠 SAMPLE REQUESTED
     //////////////////////////////////////////////////////
 
-    const drafts = await prisma.producerLotDraft.findMany({
+    const sampleRequested = await prisma.producerLotDraft.findMany({
       where: {
         producerId: producer.id,
-        status: "PENDING"
+        status: "SAMPLE_REQUESTED"
       },
       orderBy: { createdAt: "desc" }
     })
 
     //////////////////////////////////////////////////////
-    // 🧠 IN LAB
+    // 🧠 UNDER REVIEW
     //////////////////////////////////////////////////////
 
-    const inLab = await prisma.producerLotDraft.findMany({
+    const inReview = await prisma.producerLotDraft.findMany({
       where: {
         producerId: producer.id,
-        status: "SENT_TO_LAB"
+        status: "IN_REVIEW"
       },
       orderBy: { createdAt: "desc" }
     })
@@ -83,8 +83,8 @@ export async function GET(req: NextRequest) {
     //////////////////////////////////////////////////////
 
     return NextResponse.json({
-      drafts,
-      inLab,
+      sampleRequested,
+      inReview,
       verified,
       sold
     })

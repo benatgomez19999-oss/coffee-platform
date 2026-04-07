@@ -564,7 +564,8 @@ enum ContractStatus {
 
 enum LotDraftStatus {
   PENDING
-  SENT_TO_LAB
+  SAMPLE_REQUESTED
+  IN_REVIEW
   VERIFIED
   REJECTED
 }

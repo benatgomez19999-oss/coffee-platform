@@ -211,19 +211,18 @@ return (
       <Column
         title="📦 Sample Requested"
         subtitle="Awaiting pickup or delivery"
-        count={data.drafts.length}
+        count={data.sampleRequested.length}
         variant="preparing"
         emptyText="No samples awaiting pickup"
-        moreCount={Math.max(data.drafts.length - 1, 0)}
+        moreCount={Math.max(data.sampleRequested.length - 1, 0)}
         ctaLabel="View lots"
         ctaHref="/platform/producer/lots"
       >
-        {data.drafts.slice(0, 1).map((lot: any) => (
+        {data.sampleRequested.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}
-            actionLabel="Send Sample"
-            onAction={() => sendSample(lot.id)}
+            status="Awaiting review"
           />
         ))}
       </Column>
@@ -231,14 +230,14 @@ return (
       <Column
         title="🧪 Under Review"
         subtitle="Samples being analyzed"
-        count={data.inLab.length}
+        count={data.inReview.length}
         variant="lab"
         emptyText="No lots currently under review"
-        moreCount={Math.max(data.inLab.length - 1, 0)}
+        moreCount={Math.max(data.inReview.length - 1, 0)}
         ctaLabel="View lots"
         ctaHref="/platform/producer/lots"
       >
-        {data.inLab.slice(0, 1).map((lot: any) => (
+        {data.inReview.slice(0, 1).map((lot: any) => (
           <LotCard
             key={lot.id}
             lot={lot}

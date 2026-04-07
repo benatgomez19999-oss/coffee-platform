@@ -8,10 +8,10 @@ export async function PATCH(
     const updated = await prisma.producerLotDraft.update({
       where: { id: params.id },
       data: {
-        status: "SENT_TO_LAB",
-        // opcional futuro:
-        // labRequestedAt: new Date(),
-      },
+  status: "SAMPLE_REQUESTED",
+  // opcional futuro:
+  // sampleRequestedAt: new Date(),
+},
     });
 
     return Response.json(updated);
