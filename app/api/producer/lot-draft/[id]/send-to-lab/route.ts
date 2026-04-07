@@ -9,6 +9,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
   status: "SAMPLE_REQUESTED",
+  sampleShippingStatus: "PICKUP_REQUESTED",
   // opcional futuro:
   // sampleRequestedAt: new Date(),
 },

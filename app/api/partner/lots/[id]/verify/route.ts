@@ -1,4 +1,4 @@
-import { verifyLotService } from "@/services/lotVerification.service";
+import { verifyLotService } from "@/src/services/partner/lotVerification.service";
 
 export async function POST(
   req: Request,

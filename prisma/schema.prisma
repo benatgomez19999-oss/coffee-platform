@@ -87,6 +87,12 @@ model ProducerLotDraft {
   status LotDraftStatus @default(PENDING)
 
   //////////////////////////////////////////////////////
+  // 🚚 SAMPLE SHIPPING STATUS
+  //////////////////////////////////////////////////////
+
+  sampleShippingStatus SampleShippingStatus?
+
+  //////////////////////////////////////////////////////
   // 🔗 RELATION (cuando se valida)
   //////////////////////////////////////////////////////
 
@@ -568,6 +574,13 @@ enum LotDraftStatus {
   IN_REVIEW
   VERIFIED
   REJECTED
+}
+
+enum SampleShippingStatus {
+  PICKUP_REQUESTED
+  PICKUP_SCHEDULED
+  IN_TRANSIT
+  DELIVERED
 }
 
 enum StorySource {

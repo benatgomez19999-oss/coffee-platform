@@ -52,6 +52,22 @@ const scrollToStory = () => {
 }
 
 
+const getSampleRequestedBadge = (shippingStatus?: string | null) => {
+  switch (shippingStatus) {
+    case "PICKUP_REQUESTED":
+      return "Recogida solicitada"
+    case "PICKUP_SCHEDULED":
+      return "Recogida programada"
+    case "IN_TRANSIT":
+      return "En tránsito"
+    case "DELIVERED":
+      return "Entregada al partner"
+    default:
+      return "Pendiente de revisión"
+  }
+}
+
+
 
 useEffect(() => {
   const generatingHandler = () => {
@@ -222,7 +238,7 @@ return (
           <LotCard
             key={lot.id}
             lot={lot}
-            status="Awaiting review"
+            status={getSampleRequestedBadge(lot.sampleShippingStatus)}
           />
         ))}
       </Column>

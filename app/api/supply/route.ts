@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getRealSupply } from "@/src/services/supply.service"
+import { getRealSupply } from "@/src/services/system/supply.service"
 
 export async function GET() {
   const supply = await getRealSupply()
