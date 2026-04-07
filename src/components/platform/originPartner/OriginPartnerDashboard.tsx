@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import "@/styles/themes/producer.css"
 import React from "react"
+import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
 
 type ColumnVariant = "incoming" | "review" | "verified" | "orders" | "preparing" | "ready" | "default"
 
@@ -15,14 +17,11 @@ const variants: Record<ColumnVariant, string> = {
   default:   "bg-[#f3eee6] border-[#bfae92]",
 }
 
-export default function PartnerDashboard() {
+export default function PartnerDashboard({ user }: { user?: any } = {}) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  //////////////////////////////////////////////////////
   // LOAD DATA
-  //////////////////////////////////////////////////////
-
   useEffect(() => {
     fetch("/api/partner/dashboard", {
       credentials: "include"
@@ -44,48 +43,92 @@ export default function PartnerDashboard() {
     <>
 
       {/* ////////////////////////////////////////////////////// */}
-      {/* // 🌄 HERO */}
+      {/* // 🔝 SHARED HEADER */}
       {/* ////////////////////////////////////////////////////// */}
 
-      <div className="relative h-[320px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+      <PlatformHeader user={user ?? { role: "PARTNER", onboardingCompleted: true }} />
 
-        {/* IMAGE BASE */}
-        <div className="absolute inset-0">
-          <div className="w-full h-full">
-            <img
-              src="/images/hero_producer.png"
-              alt="Partner operations"
-              loading="eager"
-              decoding="async"
-              className="w-full h-full object-cover"
-            />
+      <div className="pt-[70px]">
+
+        {/* ////////////////////////////////////////////////////// */}
+        {/* // 🌄 HERO (GRADIENT — NO IMAGE) */}
+        {/* ////////////////////////////////////////////////////// */}
+
+        <div className="relative h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+
+          {/* BACKGROUND GRADIENT */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0f1208] via-[#161510] to-[#1e1a12]" />
+
+          {/* SUBTLE GOLD GLOW */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(212,175,55,0.06)_0%,transparent_60%)]" />
+
+          {/* BOTTOM FADE INTO PAGE BG */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#f3efe6] via-transparent to-transparent" />
+
+          {/* TITLE */}
+          <div className="absolute z-10 left-44 md:left-50 top-12 md:top-16 max-w-xl">
+
+            <p className="text-[11px] tracking-[0.25em] text-[#d4af37]/70 uppercase mb-3">
+              Origin Partner
+            </p>
+
+            <h1 className="text-3xl md:text-4xl text-[#eae4d8]/95 font-semibold mb-3 tracking-tight drop-shadow-sm">
+              Partner Operations
+            </h1>
+
+            <p className="text-[#eae4d8]/60 text-[15px] tracking-wide">
+              Lab processing · Export preparation
+            </p>
+
           </div>
+
+          {/* CTA */}
+          <div className="absolute z-20 left-[270px] md:left-[310px] bottom-29 md:bottom-31">
+            <button
+              onClick={() => window.location.href = "/platform/partner/lots"}
+              className="
+                relative
+                bg-[#8b5e34] text-white
+                px-10 py-4 text-base font-medium
+                rounded-full
+
+                border border-[#d4af37]/60 hover:border-[#d4af37]
+
+                shadow-[0_14px_40px_rgba(139,94,52,0.45)]
+                hover:bg-[#6f4726]
+                hover:scale-[1.06]
+                active:scale-[0.98]
+
+                transition-all duration-300
+                animate-[ctaFloat_4s_ease-in-out_infinite]
+
+                cursor-pointer
+              "
+              style={{
+                backdropFilter: "blur(6px)",
+                boxShadow: `
+                  0 18px 50px rgba(139,94,52,0.5),
+                  inset 0 1px 0 rgba(255,255,255,0.15)
+                `
+              }}
+            >
+              View All Lots
+            </button>
+          </div>
+
         </div>
 
-        {/* BLEND */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
 
-        {/* TITLE */}
-        <div className="absolute z-10 left-44 md:left-50 top-12 md:top-16 max-w-xl">
-          <h1 className="text-3xl md:text-4xl text-[#eae4d8]/95 font-semibold mb-3 tracking-tight drop-shadow-sm">
-            Partner Operations
-          </h1>
-          <p className="text-[#eae4d8]/70 text-[15px] tracking-wide">
-            Lab processing · Export preparation
-          </p>
-        </div>
+        {/* ////////////////////////////////////////////////////// */}
+        {/* // 📊 DASHBOARD */}
+        {/* ////////////////////////////////////////////////////// */}
 
-      </div>
+        <div className="relative z-20 -mt-24 pt-32 pb-16 w-screen left-1/2 -translate-x-1/2">
 
-      {/* ////////////////////////////////////////////////////// */}
-      {/* // 📊 DASHBOARD */}
-      {/* ////////////////////////////////////////////////////// */}
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
 
-      <div className="relative z-20 -mt-16 pt-24 pb-16 w-screen left-1/2 -translate-x-1/2">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16 space-y-14">
 
-          {/* ================= LAB ================= */}
-          <section>
+            {/* ===== 🧪 LAB ===== */}
 
             <div className="flex items-center gap-3 mb-8">
               <span className="text-[18px]">🧪</span>
@@ -95,7 +138,7 @@ export default function PartnerDashboard() {
               <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-16">
 
               <Column
                 title="📦 Incoming"
@@ -104,6 +147,8 @@ export default function PartnerDashboard() {
                 variant="incoming"
                 emptyText="No incoming lots"
                 moreCount={Math.max(data.incoming.length - 1, 0)}
+                ctaLabel="View lots"
+                ctaHref="/platform/partner/lots"
               >
                 {data.incoming.slice(0, 1).map((lot: any) => (
                   <LotCard
@@ -122,6 +167,8 @@ export default function PartnerDashboard() {
                 variant="review"
                 emptyText="No lots ready to verify"
                 moreCount={Math.max(data.readyToVerify.length - 1, 0)}
+                ctaLabel="View lots"
+                ctaHref="/platform/partner/lots"
               >
                 {data.readyToVerify.slice(0, 1).map((lot: any) => (
                   <LotCard
@@ -140,6 +187,8 @@ export default function PartnerDashboard() {
                 variant="verified"
                 emptyText="No verified lots yet"
                 moreCount={Math.max((data.verified?.length || 0) - 1, 0)}
+                ctaLabel="View lots"
+                ctaHref="/platform/partner/lots"
               >
                 {data.verified?.slice(0, 1).map((lot: any) => (
                   <LotCard
@@ -151,10 +200,9 @@ export default function PartnerDashboard() {
               </Column>
 
             </div>
-          </section>
 
-          {/* ================= EXPORT ================= */}
-          <section>
+
+            {/* ===== 📦 EXPORT PREPARATION ===== */}
 
             <div className="flex items-center gap-3 mb-8">
               <span className="text-[18px]">📦</span>
@@ -164,7 +212,7 @@ export default function PartnerDashboard() {
               <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-16">
 
               <Column
                 title="📋 Orders"
@@ -173,6 +221,8 @@ export default function PartnerDashboard() {
                 variant="orders"
                 emptyText="No pending orders"
                 moreCount={Math.max(data.orders.length - 1, 0)}
+                ctaLabel="View orders"
+                ctaHref="/platform/partner/orders"
               >
                 {data.orders.slice(0, 1).map((order: any) => (
                   <LotCard
@@ -191,6 +241,8 @@ export default function PartnerDashboard() {
                 variant="preparing"
                 emptyText="Nothing being prepared"
                 moreCount={Math.max(data.preparing.length - 1, 0)}
+                ctaLabel="View orders"
+                ctaHref="/platform/partner/orders"
               >
                 {data.preparing.slice(0, 1).map((order: any) => (
                   <LotCard
@@ -209,6 +261,8 @@ export default function PartnerDashboard() {
                 variant="ready"
                 emptyText="No shipments ready"
                 moreCount={Math.max(data.ready.length - 1, 0)}
+                ctaLabel="View orders"
+                ctaHref="/platform/partner/orders"
               >
                 {data.ready.slice(0, 1).map((order: any) => (
                   <LotCard
@@ -220,18 +274,105 @@ export default function PartnerDashboard() {
               </Column>
 
             </div>
-          </section>
 
+
+            {/* ////////////////////////////////////////////////////// */}
+            {/* // 🏷 PARTNER PROFILE CARD */}
+            {/* ////////////////////////////////////////////////////// */}
+
+            <div className="w-screen left-1/2 -translate-x-1/2 relative mt-2">
+              <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
+
+                <div className="relative bg-[#f3eee6]">
+
+                  <div
+                    className="
+                      relative
+                      bg-[#f3eee6]
+
+                      border-2 border-[#bfae92]
+                      rounded-2xl
+
+                      px-10 py-8
+
+                      flex items-center
+                      gap-10
+
+                      min-h-[140px]
+                      overflow-visible
+
+                      shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.05)]
+                      transition-all duration-300
+                    "
+                  >
+
+                    {/* LEFT: CONTENT */}
+                    <div className="max-w-xl">
+
+                      <p className="text-[12px] tracking-[0.2em] text-[#a08b6b] uppercase">
+                        Partner Profile
+                      </p>
+
+                      <p className="text-[20px] font-semibold text-[#2f2418] mt-2">
+                        Complete your lab and export credentials
+                      </p>
+
+                      <p className="text-[14px] text-[#6b5a45] mt-3 leading-relaxed">
+                        Add your certifications, processing capacities and export details so producers and buyers can trust your operations.
+                      </p>
+
+                    </div>
+
+                    {/* CTA */}
+                    <div className="flex-1 flex justify-end">
+                      <button
+                        className="
+                          bg-[#8b5e34] text-white
+                          px-7 py-3 rounded-full text-sm font-medium
+                          border border-[#d4af37]/50
+                          hover:bg-[#6f4726]
+                          hover:scale-[1.05]
+                          transition-all duration-200
+                          cursor-pointer
+                        "
+                      >
+                        Edit profile
+                      </button>
+                    </div>
+
+                    {/* RIGHT: VISUAL PLACEHOLDER */}
+                    <div className="hidden md:block w-[260px] h-[120px] relative">
+
+                      <div className="
+                        absolute inset-0 rounded-xl
+                        bg-gradient-to-br from-[#e8dfd1] to-[#d6c7b2]
+                        opacity-60
+                      " />
+
+                      <div className="absolute top-3 left-3 w-20 h-14 bg-white/40 rounded-md" />
+                      <div className="absolute bottom-3 right-4 w-24 h-16 bg-white/30 rounded-md" />
+
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
         </div>
+
       </div>
 
     </>
   )
 }
 
-//////////////////////////////////////////////////////
+
+// //////////////////////////////////////////////////////
 // COLUMN
-//////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////
 
 function Column({
   title,
@@ -335,9 +476,10 @@ function Column({
   )
 }
 
-//////////////////////////////////////////////////////
-// CARD
-//////////////////////////////////////////////////////
+
+// //////////////////////////////////////////////////////
+// LOT CARD
+// //////////////////////////////////////////////////////
 
 function LotCard({ lot, actionLabel, onAction, status }: any) {
   return (
@@ -393,9 +535,10 @@ function LotCard({ lot, actionLabel, onAction, status }: any) {
   )
 }
 
-//////////////////////////////////////////////////////
+
+// //////////////////////////////////////////////////////
 // ACTIONS
-//////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////
 
 function openAnalyze(id: string) {
   window.location.href = `/platform/partner/lots/${id}`
