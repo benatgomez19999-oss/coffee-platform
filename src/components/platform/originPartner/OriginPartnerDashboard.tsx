@@ -57,10 +57,10 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
         <div className="relative h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
 
           {/* BACKGROUND GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0f1208] via-[#161510] to-[#1e1a12]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3a3120] via-[#2c2618] to-[#241f12]" />
 
           {/* SUBTLE GOLD GLOW */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(212,175,55,0.06)_0%,transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(212,175,55,0.10)_0%,transparent_60%)]" />
 
           {/* BOTTOM FADE INTO PAGE BG */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#f3efe6] via-transparent to-transparent" />
@@ -275,88 +275,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
             </div>
 
 
-            {/* ////////////////////////////////////////////////////// */}
-            {/* // 🏷 PARTNER PROFILE CARD */}
-            {/* ////////////////////////////////////////////////////// */}
-
-            <div className="w-screen left-1/2 -translate-x-1/2 relative mt-2">
-              <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
-
-                <div className="relative bg-[#f3eee6]">
-
-                  <div
-                    className="
-                      relative
-                      bg-[#f3eee6]
-
-                      border-2 border-[#bfae92]
-                      rounded-2xl
-
-                      px-10 py-8
-
-                      flex items-center
-                      gap-10
-
-                      min-h-[140px]
-                      overflow-visible
-
-                      shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.05)]
-                      transition-all duration-300
-                    "
-                  >
-
-                    {/* LEFT: CONTENT */}
-                    <div className="max-w-xl">
-
-                      <p className="text-[12px] tracking-[0.2em] text-[#a08b6b] uppercase">
-                        Partner Profile
-                      </p>
-
-                      <p className="text-[20px] font-semibold text-[#2f2418] mt-2">
-                        Complete your lab and export credentials
-                      </p>
-
-                      <p className="text-[14px] text-[#6b5a45] mt-3 leading-relaxed">
-                        Add your certifications, processing capacities and export details so producers and buyers can trust your operations.
-                      </p>
-
-                    </div>
-
-                    {/* CTA */}
-                    <div className="flex-1 flex justify-end">
-                      <button
-                        className="
-                          bg-[#8b5e34] text-white
-                          px-7 py-3 rounded-full text-sm font-medium
-                          border border-[#d4af37]/50
-                          hover:bg-[#6f4726]
-                          hover:scale-[1.05]
-                          transition-all duration-200
-                          cursor-pointer
-                        "
-                      >
-                        Edit profile
-                      </button>
-                    </div>
-
-                    {/* RIGHT: VISUAL PLACEHOLDER */}
-                    <div className="hidden md:block w-[260px] h-[120px] relative">
-
-                      <div className="
-                        absolute inset-0 rounded-xl
-                        bg-gradient-to-br from-[#e8dfd1] to-[#d6c7b2]
-                        opacity-60
-                      " />
-
-                      <div className="absolute top-3 left-3 w-20 h-14 bg-white/40 rounded-md" />
-                      <div className="absolute bottom-3 right-4 w-24 h-16 bg-white/30 rounded-md" />
-
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Future: operations summary or lab alerts */}
 
 
           </div>

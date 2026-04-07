@@ -441,8 +441,8 @@ useEffect(() => {
           alignItems: "center",
           color: "white",
           overflow: "hidden",
-          background:
-            "radial-gradient(circle at 20% 20%, rgba(212,175,55,0.08), transparent 28%), radial-gradient(circle at 80% 30%, rgba(14,70,70,0.22), transparent 34%), linear-gradient(180deg, #050606 0%, #081010 46%, #0a1515 100%)",
+         background:
+  "radial-gradient(circle at 20% 20%, rgba(198,168,90,0.06), transparent 30%), radial-gradient(circle at 80% 30%, rgba(255,255,255,0.03), transparent 40%), linear-gradient(180deg, #050607 0%, #07090A 55%, #0A0D0E 100%)",
         }}
       >
         {/* SOFT ATMOSPHERE */}
@@ -478,7 +478,7 @@ useEffect(() => {
             width: "360px",
             height: "360px",
             borderRadius: "999px",
-            background: "rgba(20,90,80,0.10)",
+            background: "rgba(255,255,255,0.04)",
             filter: "blur(80px)",
             pointerEvents: "none",
           }}
@@ -533,7 +533,7 @@ useEffect(() => {
                 fontWeight: 300,
                 letterSpacing: "-0.05em",
                 maxWidth: "900px",
-                color: "#f7f2e8",
+                color: "#EDE8DF",
                 opacity: loaded ? 1 : 0,
                 transform: loaded ? "translateY(0px)" : "translateY(16px)",
                 transition:
