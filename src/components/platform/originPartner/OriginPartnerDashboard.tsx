@@ -1,6 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import React from "react"
+
+type ColumnVariant = "incoming" | "review" | "verified" | "orders" | "preparing" | "ready" | "default"
+
+const variants: Record<ColumnVariant, string> = {
+  incoming:  "bg-[#f3eee6] border-[#bfae92] hover:border-[#a89574]",
+  review:    "bg-[#f2efe9] border-[#d8cebb] hover:border-[#cfc4ad]",
+  verified:  "bg-[#f6f9f5] border-[#dbe6d7] hover:border-[#b7cbb0]",
+  orders:    "bg-[#f3eee6] border-[#bfae92] hover:border-[#a89574]",
+  preparing: "bg-[#f2efe9] border-[#d8cebb] hover:border-[#cfc4ad]",
+  ready:     "bg-[#f6f9f5] border-[#dbe6d7] hover:border-[#b7cbb0]",
+  default:   "bg-[#f3eee6] border-[#bfae92]",
+}
 
 export default function PartnerDashboard() {
   const [data, setData] = useState<any>(null)
@@ -28,93 +41,191 @@ export default function PartnerDashboard() {
   }
 
   return (
-    <div className="p-8 text-white space-y-10">
+    <>
 
-      <h1 className="text-2xl">Partner Operations ⚙️</h1>
+      {/* ////////////////////////////////////////////////////// */}
+      {/* // 🌄 HERO */}
+      {/* ////////////////////////////////////////////////////// */}
 
-      {/* ================= LAB ================= */}
-      <section>
-        <h2 className="text-lg mb-4">🧪 Lab</h2>
+      <div className="relative h-[320px] w-screen left-1/2 -translate-x-1/2 overflow-hidden">
 
-        <div className="grid grid-cols-3 gap-6">
+        {/* IMAGE BASE */}
+        <div className="absolute inset-0">
+          <div className="w-full h-full">
+            <img
+              src="/images/hero_producer.png"
+              alt="Partner operations"
+              loading="eager"
+              decoding="async"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
 
-          <Column title="Incoming" count={data.incoming.length}>
-            {data.incoming.map((lot: any) => (
-              <LotCard
-                key={lot.id}
-                lot={lot}
-                actionLabel="Analyze"
-                onAction={() => openAnalyze(lot.id)}
-              />
-            ))}
-          </Column>
+        {/* BLEND */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
 
-          <Column title="Ready to Verify" count={data.readyToVerify.length}>
-            {data.readyToVerify.map((lot: any) => (
-              <LotCard
-                key={lot.id}
-                lot={lot}
-                actionLabel="Create Lot"
-                onAction={() => verifyLot(lot.id)}
-              />
-            ))}
-          </Column>
+        {/* TITLE */}
+        <div className="absolute z-10 left-44 md:left-50 top-12 md:top-16 max-w-xl">
+          <h1 className="text-3xl md:text-4xl text-[#eae4d8]/95 font-semibold mb-3 tracking-tight drop-shadow-sm">
+            Partner Operations
+          </h1>
+          <p className="text-[#eae4d8]/70 text-[15px] tracking-wide">
+            Lab processing · Export preparation
+          </p>
+        </div>
 
-          <Column title="Verified" count={data.verified?.length || 0}>
-            {data.verified?.map((lot: any) => (
-              <LotCard
-                key={lot.id}
-                lot={lot}
-                status="Listed"
-              />
-            ))}
-          </Column>
+      </div>
+
+      {/* ////////////////////////////////////////////////////// */}
+      {/* // 📊 DASHBOARD */}
+      {/* ////////////////////////////////////////////////////// */}
+
+      <div className="relative z-20 -mt-16 pt-24 pb-16 w-screen left-1/2 -translate-x-1/2">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16 space-y-14">
+
+          {/* ================= LAB ================= */}
+          <section>
+
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-[18px]">🧪</span>
+              <h2 className="text-[18px] font-semibold text-[#2f2418] tracking-tight">
+                Lab
+              </h2>
+              <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+
+              <Column
+                title="📦 Incoming"
+                subtitle="Lots arriving for analysis"
+                count={data.incoming.length}
+                variant="incoming"
+                emptyText="No incoming lots"
+                moreCount={Math.max(data.incoming.length - 1, 0)}
+              >
+                {data.incoming.slice(0, 1).map((lot: any) => (
+                  <LotCard
+                    key={lot.id}
+                    lot={lot}
+                    actionLabel="Analyze"
+                    onAction={() => openAnalyze(lot.id)}
+                  />
+                ))}
+              </Column>
+
+              <Column
+                title="🔬 Ready to Verify"
+                subtitle="Analysis complete, pending verification"
+                count={data.readyToVerify.length}
+                variant="review"
+                emptyText="No lots ready to verify"
+                moreCount={Math.max(data.readyToVerify.length - 1, 0)}
+              >
+                {data.readyToVerify.slice(0, 1).map((lot: any) => (
+                  <LotCard
+                    key={lot.id}
+                    lot={lot}
+                    actionLabel="Create Lot"
+                    onAction={() => verifyLot(lot.id)}
+                  />
+                ))}
+              </Column>
+
+              <Column
+                title="🌿 Verified"
+                subtitle="Approved and listed"
+                count={data.verified?.length || 0}
+                variant="verified"
+                emptyText="No verified lots yet"
+                moreCount={Math.max((data.verified?.length || 0) - 1, 0)}
+              >
+                {data.verified?.slice(0, 1).map((lot: any) => (
+                  <LotCard
+                    key={lot.id}
+                    lot={lot}
+                    status="Listed"
+                  />
+                ))}
+              </Column>
+
+            </div>
+          </section>
+
+          {/* ================= EXPORT ================= */}
+          <section>
+
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-[18px]">📦</span>
+              <h2 className="text-[18px] font-semibold text-[#2f2418] tracking-tight">
+                Export Preparation
+              </h2>
+              <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+
+              <Column
+                title="📋 Orders"
+                subtitle="New orders to prepare"
+                count={data.orders.length}
+                variant="orders"
+                emptyText="No pending orders"
+                moreCount={Math.max(data.orders.length - 1, 0)}
+              >
+                {data.orders.slice(0, 1).map((order: any) => (
+                  <LotCard
+                    key={order.id}
+                    lot={order}
+                    actionLabel="Prepare"
+                    onAction={() => prepareOrder(order.id)}
+                  />
+                ))}
+              </Column>
+
+              <Column
+                title="⚙️ Preparing"
+                subtitle="Being packed and processed"
+                count={data.preparing.length}
+                variant="preparing"
+                emptyText="Nothing being prepared"
+                moreCount={Math.max(data.preparing.length - 1, 0)}
+              >
+                {data.preparing.slice(0, 1).map((order: any) => (
+                  <LotCard
+                    key={order.id}
+                    lot={order}
+                    actionLabel="Mark Ready"
+                    onAction={() => markReady(order.id)}
+                  />
+                ))}
+              </Column>
+
+              <Column
+                title="✅ Ready"
+                subtitle="Awaiting pickup"
+                count={data.ready.length}
+                variant="ready"
+                emptyText="No shipments ready"
+                moreCount={Math.max(data.ready.length - 1, 0)}
+              >
+                {data.ready.slice(0, 1).map((order: any) => (
+                  <LotCard
+                    key={order.id}
+                    lot={order}
+                    status="Waiting pickup"
+                  />
+                ))}
+              </Column>
+
+            </div>
+          </section>
 
         </div>
-      </section>
+      </div>
 
-      {/* ================= EXPORT ================= */}
-      <section>
-        <h2 className="text-lg mb-4">📦 Export Preparation</h2>
-
-        <div className="grid grid-cols-3 gap-6">
-
-          <Column title="Orders" count={data.orders.length}>
-            {data.orders.map((order: any) => (
-              <LotCard
-                key={order.id}
-                lot={order}
-                actionLabel="Prepare"
-                onAction={() => prepareOrder(order.id)}
-              />
-            ))}
-          </Column>
-
-          <Column title="Preparing" count={data.preparing.length}>
-            {data.preparing.map((order: any) => (
-              <LotCard
-                key={order.id}
-                lot={order}
-                actionLabel="Mark Ready"
-                onAction={() => markReady(order.id)}
-              />
-            ))}
-          </Column>
-
-          <Column title="Ready" count={data.ready.length}>
-            {data.ready.map((order: any) => (
-              <LotCard
-                key={order.id}
-                lot={order}
-                status="Waiting pickup"
-              />
-            ))}
-          </Column>
-
-        </div>
-      </section>
-
-    </div>
+    </>
   )
 }
 
@@ -122,21 +233,104 @@ export default function PartnerDashboard() {
 // COLUMN
 //////////////////////////////////////////////////////
 
-function Column({ title, count, children }: any) {
+function Column({
+  title,
+  subtitle,
+  count,
+  children,
+  variant = "default",
+  emptyText = "No items",
+  moreCount = 0,
+  ctaLabel,
+  ctaHref,
+}: {
+  title: string
+  subtitle: string
+  count: number
+  children?: React.ReactNode
+  variant?: ColumnVariant
+  emptyText?: string
+  moreCount?: number
+  ctaLabel?: string
+  ctaHref?: string
+}) {
+  const hasChildren = React.Children.count(children) > 0
+
   return (
-    <div className="bg-neutral-900 p-4 rounded-xl border border-white/10">
+    <div
+      className={`
+        relative
+        ${variants[variant]}
 
-      <div className="flex justify-between mb-4">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="text-sm text-white/40">{count}</span>
+        min-h-[238px]
+        p-6
+        rounded-2xl
+        border-2
+        overflow-hidden
+
+        before:absolute before:inset-0 before:rounded-2xl
+        before:pointer-events-none
+        before:border before:border-[#e6dccb]
+        before:opacity-60
+
+        after:absolute after:inset-0 after:rounded-2xl
+        after:pointer-events-none
+        after:bg-[linear-gradient(120deg,transparent_30%,rgba(255,255,255,0.25)_50%,transparent_70%)]
+        after:opacity-0
+        after:transition-opacity after:duration-500
+
+        hover:after:opacity-40
+
+        shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.05)]
+
+        hover:-translate-y-[4px]
+        hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)]
+
+        transition-all duration-300
+      `}
+    >
+      <div className="relative z-[1] flex h-full flex-col">
+
+        <div>
+          <h2 className="text-[16px] font-semibold tracking-tight text-[#2f2418]">
+            {title}
+          </h2>
+          <p className="mt-1 text-[13px] leading-relaxed text-[#6b5a45]">
+            {subtitle}
+          </p>
+          <div className="mt-4 text-[15px] font-semibold text-[#9a6f3e]">
+            {count} {count === 1 ? "lot" : "lots"}
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-1 flex-col justify-between">
+          <div className="flex flex-col gap-3">
+            {hasChildren ? (
+              children
+            ) : (
+              <p className="text-[12px] leading-relaxed text-[#8a7a65]">
+                {emptyText}
+              </p>
+            )}
+
+            {moreCount > 0 && (
+              <p className="text-[12px] font-medium text-[#8c6c47]">
+                + {moreCount} more {moreCount === 1 ? "lot" : "lots"}
+              </p>
+            )}
+          </div>
+
+          {ctaLabel && ctaHref && (
+            <a
+              href={ctaHref}
+              className="mt-5 inline-flex w-fit items-center rounded-full border border-[#cfb48a] bg-[#f7efdf] px-4 py-2 text-[12px] font-medium text-[#5f472f] transition-all duration-200 hover:bg-[#efe3ce] hover:text-[#3f2e1d]"
+            >
+              {ctaLabel}
+            </a>
+          )}
+        </div>
+
       </div>
-
-      <div className="flex flex-col gap-3">
-        {children.length > 0 ? children : (
-          <p className="text-white/30 text-sm">No items</p>
-        )}
-      </div>
-
     </div>
   )
 }
@@ -147,26 +341,50 @@ function Column({ title, count, children }: any) {
 
 function LotCard({ lot, actionLabel, onAction, status }: any) {
   return (
-    <div className="bg-black/40 p-4 rounded-lg border border-white/10">
+    <div
+      className="
+        rounded-[18px]
+        border border-[#dbcab2]
+        bg-[linear-gradient(180deg,rgba(255,251,244,0.88)_0%,rgba(247,239,223,0.92)_100%)]
+        px-4 py-4
+        shadow-[0_8px_18px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.55)]
+      "
+    >
+      <div className="mb-2">
+        <p className="text-[15px] font-semibold leading-tight text-[#2f2418]">
+          {lot.name || lot.lot?.name || "Unnamed"}
+        </p>
+      </div>
 
-      <p className="font-medium">
-        {lot.name || lot.lot?.name}
-      </p>
-
-      <p className="text-xs text-white/40">
+      <p className="text-[12px] leading-relaxed text-[#6b5a45]">
         {lot.variety || ""}
       </p>
 
       {status && (
-        <p className="text-xs text-white/50 mt-2">
-          {status}
-        </p>
+        <div className="mt-3">
+          <span className="inline-flex rounded-full bg-[#efe7da] px-2.5 py-1 text-[11px] font-medium text-[#7a5c2e]">
+            {status}
+          </span>
+        </div>
       )}
 
       {actionLabel && (
         <button
           onClick={onAction}
-          className="mt-3 w-full bg-white text-black py-2 rounded-md text-sm hover:bg-neutral-200"
+          className="
+            mt-4 inline-flex w-full items-center justify-center
+            rounded-xl
+            border border-[#8d6641]
+            bg-[#7a5230] text-white
+            py-2.5 text-[12px] font-medium
+
+            transition-all duration-200
+            cursor-pointer
+
+            hover:bg-[#6f4726]
+            hover:shadow-[0_6px_18px_rgba(139,94,52,0.22)]
+            active:scale-[0.98]
+          "
         >
           {actionLabel}
         </button>
