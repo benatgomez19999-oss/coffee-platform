@@ -10,7 +10,6 @@ import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/src/websocket/websocketClient"
 import OnboardingWizard from "@/src/components/shared/general/OnboardingWizard"
-import { getUserFromRequest } from "@/src/lib/auth"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 
