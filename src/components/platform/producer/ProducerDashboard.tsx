@@ -17,6 +17,7 @@ const variants: Record<ColumnVariant, string> = {
 export default function ProducerDashboard({ user }: any) {
 const [data, setData] = useState<any>(null)
 const [loading, setLoading] = useState(true)
+const isDev = process.env.NODE_ENV === "development"
 const isNew = true
 const [story, setStory] = useState<string | null>(null)
 const [storyReady, setStoryReady] = useState(false)
@@ -123,14 +124,45 @@ This story preview is only temporary so we can validate the parchment effect in 
   {/* // LOAD DATA */}
   {/* ////////////////////////////////////////////////////// */}
 
+  //////////////////////////////////////////////////////
+  // 🔥 LOAD DASHBOARD DATA
+  //////////////////////////////////////////////////////
+
+  const loadDashboard = async ({ silent = false }: { silent?: boolean } = {}) => {
+    try {
+      if (!silent) setLoading(true)
+
+      const res = await fetch("/api/producer/dashboard", {
+        credentials: "include",
+        cache: "no-store",
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to load dashboard")
+      }
+
+      const json = await res.json()
+      setData(json)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      if (!silent) setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    fetch("/api/producer/dashboard", {
-      credentials: "include",
-    })
-      .then(res => res.json())
-      .then(setData)
-      .finally(() => setLoading(false))
+    loadDashboard()
   }, [])
+
+  useEffect(() => {
+    if (!isDev) return
+
+    const interval = setInterval(() => {
+      loadDashboard({ silent: true })
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [isDev])
 
   if (loading) {
     return <div className="p-10 text-white">Loading...</div>
