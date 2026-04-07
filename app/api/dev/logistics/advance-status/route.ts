@@ -1,3 +1,4 @@
+import "@/src/events/server/registerEventHandlers"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
 import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
