@@ -69,15 +69,15 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
           <div className="absolute z-10 left-44 md:left-50 top-12 md:top-16 max-w-xl">
 
             <p className="text-[11px] tracking-[0.25em] text-[#d4af37]/70 uppercase mb-3">
-              Origin Partner
+              Origin Partner · Lab & Export
             </p>
 
             <h1 className="text-3xl md:text-4xl text-[#eae4d8]/95 font-semibold mb-3 tracking-tight drop-shadow-sm">
-              Partner Operations
+              Origin Operations
             </h1>
 
             <p className="text-[#eae4d8]/60 text-[15px] tracking-wide">
-              Lab processing · Export preparation
+              Lab · Market · Export
             </p>
 
           </div>
@@ -138,14 +138,14 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
               <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-20">
 
               <Column
-                title="📦 Incoming"
-                subtitle="Lots arriving for analysis"
+                title="📦 Incoming Samples"
+                subtitle="Sample collected · In transit to the lab"
                 count={data.incoming.length}
                 variant="incoming"
-                emptyText="No incoming lots"
+                emptyText="No samples currently in transit"
                 moreCount={Math.max(data.incoming.length - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -154,18 +154,16 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={lot.id}
                     lot={lot}
-                    actionLabel="Analyze"
-                    onAction={() => openAnalyze(lot.id)}
                   />
                 ))}
               </Column>
 
               <Column
                 title="🔬 Pending Analysis"
-                subtitle="Sample received, awaiting lab analysis"
+                subtitle="Sample received · Lab work not yet started"
                 count={data.readyToVerify.length}
                 variant="review"
-                emptyText="No samples pending analysis"
+                emptyText="No samples awaiting analysis"
                 moreCount={Math.max(data.readyToVerify.length - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -174,18 +172,18 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={lot.id}
                     lot={lot}
-                    actionLabel="Start Analysis"
+                    actionLabel="Open Analysis Wizard"
                     onAction={() => verifyLot(lot.id)}
                   />
                 ))}
               </Column>
 
               <Column
-                title="🌿 Verified"
-                subtitle="Approved and listed"
+                title="🌿 Live on Market"
+                subtitle="Published · Available for purchase"
                 count={data.verified?.length || 0}
                 variant="verified"
-                emptyText="No verified lots yet"
+                emptyText="No lots live on marketplace"
                 moreCount={Math.max((data.verified?.length || 0) - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -194,7 +192,8 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={lot.id}
                     lot={lot}
-                    status="Listed"
+                    status="Live"
+                    statusClass="bg-[#e8f0e6] text-[#3a6b35]"
                   />
                 ))}
               </Column>
@@ -207,16 +206,16 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
             <div className="flex items-center gap-3 mb-8">
               <span className="text-[18px]">📦</span>
               <h2 className="text-[18px] font-semibold text-[#2f2418] tracking-tight">
-                Export Preparation
+                Fulfilment & Export
               </h2>
               <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-20">
 
               <Column
-                title="📋 Orders"
-                subtitle="New orders to prepare"
+                title="📋 Orders to Fulfil"
+                subtitle="Client orders · Awaiting your confirmation"
                 count={data.orders.length}
                 variant="orders"
                 emptyText="No pending orders"
@@ -228,18 +227,18 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={order.id}
                     lot={order}
-                    actionLabel="Prepare"
+                    actionLabel="Confirm & Start"
                     onAction={() => prepareOrder(order.id)}
                   />
                 ))}
               </Column>
 
               <Column
-                title="⚙️ Preparing"
-                subtitle="Being packed and processed"
+                title="⚙️ In Preparation"
+                subtitle="Processing · Milling · Packing in progress"
                 count={data.preparing.length}
                 variant="preparing"
-                emptyText="Nothing being prepared"
+                emptyText="No orders in preparation"
                 moreCount={Math.max(data.preparing.length - 1, 0)}
                 ctaLabel="View orders"
                 ctaHref="/platform/partner/orders"
@@ -248,18 +247,18 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={order.id}
                     lot={order}
-                    actionLabel="Mark Ready"
+                    actionLabel="Mark as Ready"
                     onAction={() => markReady(order.id)}
                   />
                 ))}
               </Column>
 
               <Column
-                title="✅ Ready"
-                subtitle="Awaiting pickup"
+                title="🚚 Ready for Dispatch"
+                subtitle="Packed · Awaiting courier pickup"
                 count={data.ready.length}
                 variant="ready"
-                emptyText="No shipments ready"
+                emptyText="No shipments awaiting pickup"
                 moreCount={Math.max(data.ready.length - 1, 0)}
                 ctaLabel="View orders"
                 ctaHref="/platform/partner/orders"
@@ -268,7 +267,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={order.id}
                     lot={order}
-                    status="Waiting pickup"
+                    status="Awaiting pickup"
                   />
                 ))}
               </Column>
@@ -481,7 +480,7 @@ function Column({
 // LOT CARD
 // //////////////////////////////////////////////////////
 
-function LotCard({ lot, actionLabel, onAction, status }: any) {
+function LotCard({ lot, actionLabel, onAction, status, statusClass }: any) {
   return (
     <div
       className="
@@ -504,7 +503,7 @@ function LotCard({ lot, actionLabel, onAction, status }: any) {
 
       {status && (
         <div className="mt-3">
-          <span className="inline-flex rounded-full bg-[#efe7da] px-2.5 py-1 text-[11px] font-medium text-[#7a5c2e]">
+          <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${statusClass ?? "bg-[#efe7da] text-[#7a5c2e]"}`}>
             {status}
           </span>
         </div>
@@ -539,10 +538,6 @@ function LotCard({ lot, actionLabel, onAction, status }: any) {
 // //////////////////////////////////////////////////////
 // ACTIONS
 // //////////////////////////////////////////////////////
-
-function openAnalyze(id: string) {
-  window.location.href = `/platform/partner/lots/${id}`
-}
 
 async function verifyLot(id: string) {
   await fetch(`/api/partner/lots/${id}/verify`, {
