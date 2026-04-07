@@ -46,7 +46,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
       {/* // 🔝 SHARED HEADER */}
       {/* ////////////////////////////////////////////////////// */}
 
-      <PlatformHeader user={user ?? { role: "PARTNER", onboardingCompleted: true }} />
+      <PlatformHeader user={user ?? { role: "PARTNER", onboardingCompleted: true }} assistantContext="partner-dashboard" />
 
       <div className="pt-[70px]">
 

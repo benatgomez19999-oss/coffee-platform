@@ -6,7 +6,13 @@ import { useEffect } from "react"
 import "@/styles/themes/producer.css"
 import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
 
-export default function PlatformHeader({ user }: { user: any }) {
+export default function PlatformHeader({
+  user,
+  assistantContext,
+}: {
+  user: any
+  assistantContext?: "lot-wizard" | "dashboard" | "partner-dashboard"
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const isProducer = user?.role === "PRODUCER"
@@ -313,7 +319,7 @@ onMouseLeave={(e) => {
 {/* // 🌿 AI ASSISTANT */}
 {/* ////////////////////////////////////////////////////// */}
 
-<CoffeeAssistant iconSize={54} />
+<CoffeeAssistant iconSize={54} context={assistantContext ?? "dashboard"} />
 
     {/* SETTINGS ICON — premium interaction */}
 <div
