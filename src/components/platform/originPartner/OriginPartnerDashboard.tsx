@@ -161,11 +161,11 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
               </Column>
 
               <Column
-                title="🔬 Ready to Verify"
-                subtitle="Analysis complete, pending verification"
+                title="🔬 Pending Analysis"
+                subtitle="Sample received, awaiting lab analysis"
                 count={data.readyToVerify.length}
                 variant="review"
-                emptyText="No lots ready to verify"
+                emptyText="No samples pending analysis"
                 moreCount={Math.max(data.readyToVerify.length - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -174,7 +174,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                   <LotCard
                     key={lot.id}
                     lot={lot}
-                    actionLabel="Create Lot"
+                    actionLabel="Start Analysis"
                     onAction={() => verifyLot(lot.id)}
                   />
                 ))}

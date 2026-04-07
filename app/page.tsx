@@ -435,125 +435,301 @@ useEffect(() => {
       {/* ================= HERO SECTION ================= */}
       <section
         style={{
-          backgroundImage: `
-      linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.65) 0%,
-        rgba(0,0,0,0.45) 40%,
-        rgba(0,0,0,0.35) 70%,
-        rgba(0,0,0,0.55) 100%
-      ),
-      url('/images/hero.png')
-    `,
-          backgroundSize: "cover",
-          backgroundPosition: `center ${offset}%`,
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
+          position: "relative",
           minHeight: "100vh",
           display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-          textAlign: "left",
+          alignItems: "center",
           color: "white",
-          padding: "140px 80px 120px 140px",
+          overflow: "hidden",
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(212,175,55,0.08), transparent 28%), radial-gradient(circle at 80% 30%, rgba(14,70,70,0.22), transparent 34%), linear-gradient(180deg, #050606 0%, #081010 46%, #0a1515 100%)",
         }}
       >
+        {/* SOFT ATMOSPHERE */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.16) 45%, rgba(0,0,0,0.08) 100%)",
+            pointerEvents: "none",
+          }}
+        />
 
         <div
           style={{
-            maxWidth: "500px",
-            margin: "60px 0 0 0",
+            position: "absolute",
+            top: "22%",
+            right: "-120px",
+            width: "420px",
+            height: "420px",
+            borderRadius: "999px",
+            background: "rgba(212,175,55,0.05)",
+            filter: "blur(70px)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-120px",
+            left: "-80px",
+            width: "360px",
+            height: "360px",
+            borderRadius: "999px",
+            background: "rgba(20,90,80,0.10)",
+            filter: "blur(80px)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            width: "100%",
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: "150px 80px 110px 80px",
           }}
         >
-
           <div
             style={{
-              color: "rgba(255,255,255,0.85)",
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "translateY(0px)" : "translateY(15px)",
-              transition: "opacity 1.8s cubic-bezier(0.22,1,0.36,1) 0s, transform 1.4s cubic-bezier(0.22,1,0.36,1) 0s"
-
+              maxWidth: "760px",
             }}
           >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                color: "rgba(230,214,176,0.92)",
+                fontSize: "0.82rem",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                opacity: loaded ? 1 : 0,
+                transform: loaded ? "translateY(0px)" : "translateY(14px)",
+                transition:
+                  "opacity 1.1s cubic-bezier(0.22,1,0.36,1), transform 1.1s cubic-bezier(0.22,1,0.36,1)",
+              }}
+            >
+              <span
+                style={{
+                  width: "42px",
+                  height: "1px",
+                  background: "rgba(212,175,55,0.7)",
+                  display: "inline-block",
+                }}
+              />
+              Colombian Direct Trade
+            </div>
 
-            Colombian Direct Trade
+            <h1
+              style={{
+                marginTop: "28px",
+                fontSize: "clamp(3.8rem, 7vw, 6.6rem)",
+                lineHeight: "0.96",
+                fontWeight: 300,
+                letterSpacing: "-0.05em",
+                maxWidth: "900px",
+                color: "#f7f2e8",
+                opacity: loaded ? 1 : 0,
+                transform: loaded ? "translateY(0px)" : "translateY(16px)",
+                transition:
+                  "opacity 1.2s cubic-bezier(0.22,1,0.36,1) 0.08s, transform 1.2s cubic-bezier(0.22,1,0.36,1) 0.08s",
+              }}
+            >
+              Coffee sourcing
+              <br />
+              with structure,
+              <br />
+              not noise.
+            </h1>
+
+            <p
+              style={{
+                marginTop: "30px",
+                maxWidth: "650px",
+                fontSize: "1.12rem",
+                lineHeight: "1.9",
+                fontWeight: 300,
+                color: "rgba(255,255,255,0.78)",
+                opacity: loaded ? 1 : 0,
+                transform: loaded ? "translateY(0px)" : "translateY(16px)",
+                transition:
+                  "opacity 1.2s cubic-bezier(0.22,1,0.36,1) 0.18s, transform 1.2s cubic-bezier(0.22,1,0.36,1) 0.18s",
+              }}
+            >
+              We connect premium hospitality partners with Colombian specialty
+              farms through direct relationships, stable pricing and long-term
+              supply coordination.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                flexWrap: "wrap",
+                marginTop: "38px",
+                opacity: loaded ? 1 : 0,
+                transform: loaded ? "translateY(0px)" : "translateY(16px)",
+                transition:
+                  "opacity 1.2s cubic-bezier(0.22,1,0.36,1) 0.28s, transform 1.2s cubic-bezier(0.22,1,0.36,1) 0.28s",
+              }}
+            >
+              <a
+                href="#contact"
+                style={{
+                  padding: "14px 28px",
+                  borderRadius: "999px",
+                  background: "#d4af37",
+                  color: "#111",
+                  textDecoration: "none",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  border: "1px solid rgba(212,175,55,0.95)",
+                  boxShadow: "0 12px 30px rgba(212,175,55,0.18)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)"
+                  e.currentTarget.style.boxShadow =
+                    "0 18px 40px rgba(212,175,55,0.26)"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 30px rgba(212,175,55,0.18)"
+                }}
+              >
+                Request Sample
+              </a>
+
+              <a
+                href="#direct-trade"
+                style={{
+                  padding: "14px 28px",
+                  borderRadius: "999px",
+                  background: "rgba(255,255,255,0.03)",
+                  color: "#f5efe3",
+                  textDecoration: "none",
+                  fontSize: "0.95rem",
+                  fontWeight: 400,
+                  letterSpacing: "0.02em",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  backdropFilter: "blur(8px)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)"
+                  e.currentTarget.style.border =
+                    "1px solid rgba(212,175,55,0.45)"
+                  e.currentTarget.style.color = "#fff"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.14)"
+                  e.currentTarget.style.color = "#f5efe3"
+                }}
+              >
+                Discover the model
+              </a>
+            </div>
+
+            <div
+              style={{
+                marginTop: "58px",
+                paddingTop: "24px",
+                borderTop: "1px solid rgba(255,255,255,0.12)",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: "28px",
+                maxWidth: "860px",
+                opacity: loaded ? 1 : 0,
+                transform: loaded ? "translateY(0px)" : "translateY(16px)",
+                transition:
+                  "opacity 1.2s cubic-bezier(0.22,1,0.36,1) 0.38s, transform 1.2s cubic-bezier(0.22,1,0.36,1) 0.38s",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "rgba(212,175,55,0.88)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Direct Relationships
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.98rem",
+                    lineHeight: "1.7",
+                    color: "rgba(255,255,255,0.72)",
+                  }}
+                >
+                  Structured sourcing directly at origin.
+                </div>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "rgba(212,175,55,0.88)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Stable Pricing
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.98rem",
+                    lineHeight: "1.7",
+                    color: "rgba(255,255,255,0.72)",
+                  }}
+                >
+                  Clear pricing frameworks designed for continuity.
+                </div>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "rgba(212,175,55,0.88)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Hospitality Focus
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.98rem",
+                    lineHeight: "1.7",
+                    color: "rgba(255,255,255,0.72)",
+                  }}
+                >
+                  Built for premium hotels, restaurants and curated groups.
+                </div>
+              </div>
+            </div>
           </div>
-
-          <h1
-
-            className="fade-in-up fade-delay-2"
-
-
-
-            style={{
-              fontSize: "3.4rem",
-              fontWeight: "300",
-              letterSpacing: "-0.5px",
-              lineHeight: "1.1",
-              maxWidth: "800px",
-              textShadow: "0 2px rgba(0,0,0,0.25)",
-
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "translateY(0px)" : "translateY(15px)",
-              transition: "opacity 1.8s cubic-bezier(0.22,1,0.36,1) 0.15s, transform 1.4s cubic-bezier(0.22,1,0.36,1) 0.15s"
-
-
-
-            }}
-          >
-            Crafted at origin. <br />
-            Served at the highest level.
-          </h1>
-
-          <p
-            className="fade-in-up fade-delay-3"
-            style={{
-              marginTop: "28PX",
-              fontSize: "1.05rem",
-              fontWeight: "300",
-              lineHeight: "1.7",
-              maxWidth: "600px",
-              textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4)",
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "translateY(0px)" : "translateY(15px)",
-              transition: "opacity 1.8s cubic-bezier(0.2,1,0.36,1) 0.3s, transform 1.4s cubic-bezier(0.22,1,0.36,1) 0.3s"
-
-
-
-            }}
-          >
-            Direct contract with colombian speciality farms. <br />
-            Premium 86-88 SCA organic supply for luxury hospitality. <br />
-            Stable farm pricing.
-          </p>
-
-          <div
-            style={{
-              width: "40px",
-              height: "1px",
-              backgroundColor: "rgba(255,255,255,0.4)",
-              marginTop: "30px",
-              marginBottom: "30px",
-
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "translateY(0px)" : "translateY(15px)",
-              transition: "opacity 1.8s cubic-bezier(0.22,1,0.36,1) 0.45s, transform 1.4s cubic-bezier(0.22,1,0.36,1) 0.3s"
-
-
-
-            }}
-          />
-
-          <a href="#contact" className="cta-button fade-in-up fade-delay-3">
-
-            Request Sample
-          </a>
-
         </div>
       </section>
 
       {/* ================= DIRECT TRADE SECTION ================= */}
       <section
+        id="direct-trade"
         ref={directRef}
         style={{
           padding: "130px 80px",
