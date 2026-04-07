@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
 import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import { eventBus } from "@/src/events/core/eventBus"
+import { LOGISTICS_EVENTS } from "@/src/events/logistics/logistics.events"
 
 const SHIPPING_FLOW = [
   "PICKUP_REQUESTED",
@@ -100,21 +102,13 @@ export async function POST(req: NextRequest) {
     }
 
     //////////////////////////////////////////////////////
-    // 🔥 AUTO MOVE TO IN_REVIEW WHEN DELIVERED
-    //////////////////////////////////////////////////////
-
-    const nextLotStatus =
-      nextShippingStatus === "DELIVERED" ? "IN_REVIEW" : lot.status
-
-    //////////////////////////////////////////////////////
-    // 🔥 UPDATE LOT
+    // 🔥 UPDATE SHIPPING STATUS ONLY
     //////////////////////////////////////////////////////
 
     const updatedLot = await prisma.producerLotDraft.update({
       where: { id: lot.id },
       data: {
         sampleShippingStatus: nextShippingStatus,
-        status: nextLotStatus,
       },
       select: {
         id: true,
@@ -122,6 +116,16 @@ export async function POST(req: NextRequest) {
         sampleShippingStatus: true,
       },
     })
+
+    //////////////////////////////////////////////////////
+    // 🔥 EMIT LOGISTICS EVENT
+    //////////////////////////////////////////////////////
+
+    if (nextShippingStatus === "DELIVERED") {
+      eventBus.emit(LOGISTICS_EVENTS.SAMPLE_DELIVERED, {
+        lotId: lot.id,
+      })
+    }
 
     return NextResponse.json({
       success: true,

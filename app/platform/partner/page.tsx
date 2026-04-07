@@ -1,42 +1,44 @@
-export default function PartnerPage() {
+import { redirect } from "next/navigation"
+import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import OriginPartnerDashboard from "@/src/components/platform/originPartner/OriginPartnerDashboard"
+
+export const dynamic = "force-dynamic"
+
+export default async function PartnerPage() {
 
   //////////////////////////////////////////////////////
-  // 🧩 UI
+  // 🔐 GET USER
   //////////////////////////////////////////////////////
 
-  return (
-    <div className="min-h-screen bg-[#f5f1e6] px-6 py-12 pt-24">
+  const user = await getUserFromRequest()
 
-      <div className="max-w-4xl mx-auto">
+  //////////////////////////////////////////////////////
+  // 🚨 NO USER
+  //////////////////////////////////////////////////////
 
-        {/* HEADER */}
-        <div className="mb-10">
-          <p className="text-xs uppercase tracking-widest text-[#7a6a52] mb-2">
-            Partner
-          </p>
+  if (!user) {
+    redirect("/signup")
+  }
 
-          <h1 className="text-3xl font-semibold">
-            Partner Dashboard
-          </h1>
+  //////////////////////////////////////////////////////
+  // 🚨 WRONG ROLE
+  //////////////////////////////////////////////////////
 
-          <p className="text-sm text-black/60 mt-2">
-            Review and verify incoming coffee lots
-          </p>
-        </div>
+  if (user.role !== "PARTNER") {
+    redirect("/platform")
+  }
 
-        {/* ACTIONS */}
-        <div className="space-y-4">
+  //////////////////////////////////////////////////////
+  // 🚨 ONBOARDING NOT COMPLETED
+  //////////////////////////////////////////////////////
 
-          <a
-            href="/platform/partner/lots"
-            className="block bg-white border border-[#e5dccf] rounded-xl p-5 hover:bg-black/5 transition"
-          >
-            View Lot Drafts →
-          </a>
+  if (!user.onboardingCompleted) {
+    redirect("/onboarding/role")
+  }
 
-        </div>
+  //////////////////////////////////////////////////////
+  // ✅ SAFE RENDER
+  //////////////////////////////////////////////////////
 
-      </div>
-    </div>
-  )
+  return <OriginPartnerDashboard user={user} />
 }

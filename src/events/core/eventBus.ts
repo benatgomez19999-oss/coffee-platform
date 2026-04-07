@@ -13,6 +13,7 @@ import { EventEmitter } from "events"
 
 import { registerLotVerifiedHandler } from "@/src/events/handlers/lotVerified.handler"
 import { registerRoastBatchHandler } from "@/src/events/handlers/roastBatch.handler"
+import { registerSampleDeliveredHandler } from "@/src/events/handlers/sampleDelivered.handler"
 
 // =====================================================
 // GLOBAL EVENT BUS (SINGLETON)
@@ -34,6 +35,7 @@ eventBus.setMaxListeners(20)
 
 registerLotVerifiedHandler()
 registerRoastBatchHandler()
+registerSampleDeliveredHandler()
 
 // =====================================================
 // DEBUG 

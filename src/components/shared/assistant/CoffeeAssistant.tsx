@@ -27,7 +27,7 @@ type CoffeeAssistantProps = {
   iconSize?: number
   form?: LotDraftForm
   updateField?: (key: keyof LotDraftForm, value: string) => void
-  context?: "lot-wizard" | "dashboard"
+  context?: "lot-wizard" | "dashboard" | "partner-dashboard"
 }
 
 type AssistantMessage = {
@@ -110,6 +110,7 @@ export default function CoffeeAssistant({
 
   const hasLotIntegration = Boolean(form && updateField)
   const isLotWizard = context === "lot-wizard"
+  const isPartnerDashboard = context === "partner-dashboard"
 
   //////////////////////////////////////////////////////
   // 🧠 DERIVED STATE / estado derivado
@@ -1933,7 +1934,9 @@ if (validationError) {
                 >
                   {isLotWizard
                     ? "This assistant is focused on helping you complete this lot draft. You can also open a few guided actions below. For broader questions, please use the assistant from the dashboard."
-                    : "I can help you answer questions about coffee, your profile, and platform workflows."}
+                    : isPartnerDashboard
+                      ? "I can help you navigate lab workflows, lot verification, and export preparation."
+                      : "I can help you answer questions about coffee, your profile, and platform workflows."}
                 </span>
               </div>
 
@@ -1946,7 +1949,51 @@ if (validationError) {
                 }}
               >
 
-                                {!isLotWizard && (
+                {isPartnerDashboard && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => appendMessages(createMessage("assistant", "Incoming lot review is coming soon. This action will guide you through evaluating and accepting new lots from producers."))}
+                      style={{ padding: "7px 11px", borderRadius: "999px", border: "1px solid rgba(212,175,55,0.2)", background: "transparent", fontSize: "12px", color: "#cbb892", cursor: "pointer", transition: "all 0.2s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)" }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                    >
+                      Review incoming lot
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => appendMessages(createMessage("assistant", "Lab analysis guidance is coming soon. This action will walk you through the cupping and physical evaluation steps for each sample."))}
+                      style={{ padding: "7px 11px", borderRadius: "999px", border: "1px solid rgba(212,175,55,0.2)", background: "transparent", fontSize: "12px", color: "#cbb892", cursor: "pointer", transition: "all 0.2s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)" }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                    >
+                      Lab analysis guide
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => appendMessages(createMessage("assistant", "Lot verification and publication is coming soon. This action will guide you through the approval and listing steps for verified lots."))}
+                      style={{ padding: "7px 11px", borderRadius: "999px", border: "1px solid rgba(212,175,55,0.2)", background: "transparent", fontSize: "12px", color: "#cbb892", cursor: "pointer", transition: "all 0.2s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)" }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                    >
+                      Verify and publish lot
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => appendMessages(createMessage("assistant", "Export preparation guidance is coming soon. This action will help you prepare shipments, confirm weights, and coordinate logistics for approved lots."))}
+                      style={{ padding: "7px 11px", borderRadius: "999px", border: "1px solid rgba(212,175,55,0.2)", background: "transparent", fontSize: "12px", color: "#cbb892", cursor: "pointer", transition: "all 0.2s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.1)" }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                    >
+                      Export preparation
+                    </button>
+                  </>
+                )}
+
+                                {!isLotWizard && !isPartnerDashboard && (
                   <button
                     type="button"
                     onClick={startStoryFlow}
