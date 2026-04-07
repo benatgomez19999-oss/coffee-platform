@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       nextShippingStatus = "IN_TRANSIT"
     } else if (lotDraft.sampleShippingStatus === "IN_TRANSIT") {
       nextShippingStatus = "DELIVERED"
-      nextLotStatus = "IN_REVIEW"
+    //   nextLotStatus = "IN_REVIEW"
     }
 
     const updated = await prisma.producerLotDraft.update({
