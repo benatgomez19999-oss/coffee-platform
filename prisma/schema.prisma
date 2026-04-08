@@ -588,6 +588,45 @@ enum StorySource {
   MANUAL
 }
 
+enum MarketSignalSource {
+  MANUAL
+  API_FEED
+  INTERNAL_COMPUTE
+  AI_SYSTEM
+}
+
+//////////////////////////////////////////////////////
+// 📊 MARKET SIGNAL SNAPSHOT
+// Optional market context for producer pricing.
+// Read by verifyLotService at lot verification time.
+// Must never be a hard dependency — pricing works
+// without it (deterministic fallback).
+//////////////////////////////////////////////////////
+
+model MarketSignalSnapshot {
+  id          String            @id @default(uuid())
+
+  // C-market arabica reference price (ICE, cents/lb)
+  cPrice      Float
+
+  // Normalized demand pressure multiplier (0.8–1.2)
+  demandIndex Float
+
+  // Provenance of this snapshot
+  source      MarketSignalSource
+
+  // Only one snapshot should be active at a time
+  isActive    Boolean           @default(true)
+
+  // Optional operator note (e.g. "ICE July settlement")
+  note        String?
+
+  validFrom   DateTime          @default(now())
+  expiresAt   DateTime?
+
+  createdAt   DateTime          @default(now())
+}
+
 enum StoryStatus {
   DRAFT
   ACTIVE

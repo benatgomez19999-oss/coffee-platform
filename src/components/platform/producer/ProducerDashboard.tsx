@@ -309,6 +309,7 @@ return (
             key={lot.id}
             lot={lot}
             status={`${lot.availableKg} kg available`}
+            pricePerKg={lot.pricePerKg}
           />
         ))}
       </Column>
@@ -763,6 +764,7 @@ function LotCard({
   actionLabel,
   onAction,
   status,
+  pricePerKg,
   isNew = false,
 }: any) {
   return (
@@ -793,6 +795,12 @@ function LotCard({
       <p className="text-[12px] leading-relaxed text-[#6b5a45]">
         {lot.variety} · {lot.process}
       </p>
+
+      {pricePerKg != null && (
+        <p className="mt-1.5 text-[13px] font-semibold text-[#5a7a40]">
+          €{Number(pricePerKg).toFixed(2)} / kg green
+        </p>
+      )}
 
       {status && (
         <div className="mt-3">
