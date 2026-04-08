@@ -34,9 +34,7 @@ export async function GET(req: NextRequest) {
     const lots = await prisma.producerLotDraft.findMany({
       where: {
         producerId: producer.id,
-        status: {
-          in: ["SAMPLE_REQUESTED", "IN_REVIEW"],
-        },
+        status: "SAMPLE_REQUESTED",
       },
       orderBy: {
         createdAt: "desc",

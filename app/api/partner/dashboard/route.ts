@@ -47,7 +47,19 @@ export async function GET(req: NextRequest) {
     })
 
     //////////////////////////////////////////////////////
-    // 🌿 VERIFIED
+    // 🟡 READY TO PUBLISH
+    // Verification complete — GreenLot created but not yet
+    // published. Partner must explicitly publish to go live.
+    // GreenLot status: DRAFT
+    //////////////////////////////////////////////////////
+
+    const readyToPublish = await prisma.greenLot.findMany({
+      where: { status: "DRAFT" },
+      orderBy: { createdAt: "desc" },
+    })
+
+    //////////////////////////////////////////////////////
+    // 🌿 LIVE ON MARKET
     // Approved green lots published on the marketplace
     // GreenLot status: PUBLISHED
     //////////////////////////////////////////////////////
@@ -135,6 +147,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       incoming,
       readyToVerify,
+      readyToPublish,
       verified,
       orders: rawOrders.map(flattenOrder),
       preparing: rawPreparing.map(flattenOrder),

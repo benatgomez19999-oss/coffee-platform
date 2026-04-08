@@ -26,8 +26,9 @@ model Producer {
   //////////////////////////////////////////////////////
   // RELATIONS
   //////////////////////////////////////////////////////
-  farms     Farm[]
-  user      User     @relation(fields: [userId], references: [id])
+  farms       Farm[]
+  user        User                 @relation(fields: [userId], references: [id])
+  fulfilments ProducerFulfilment[]
 }
 
 model Farm {
@@ -170,6 +171,9 @@ model GreenLot {
 
   // 💰 PRICING SNAPSHOT (1:1)
   pricingSnapshot PricingSnapshot?
+
+  // 📦 PRODUCER FULFILMENT (1:1)
+  fulfilment    ProducerFulfilment?
 }
 
 enum LotStatus {
@@ -360,9 +364,10 @@ model Order {
   status     OrderStatus
   createdAt  DateTime    @default(now())
 
-  company    Company     @relation(fields: [companyId], references: [id])
-  contract   Contract?   @relation(fields: [contractId], references: [id])
-  items      OrderItem[]
+  company     Company              @relation(fields: [companyId], references: [id])
+  contract    Contract?            @relation(fields: [contractId], references: [id])
+  items       OrderItem[]
+  fulfilments ProducerFulfilment[]
 }
 
 model OrderItem {
@@ -631,5 +636,38 @@ enum StoryStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+//////////////////////////////////////////////////////
+// 📦 PRODUCER FULFILMENT
+// Tracks the physical dispatch lifecycle on the
+// producer side. Separate from GreenLot.status
+// (marketplace lifecycle) — these are independent
+// state machines.
+//////////////////////////////////////////////////////
+
+enum ProducerFulfilmentStatus {
+  AWAITING_CONFIRMATION
+  CONFIRMED
+  SACKS_MARKED_CONFIRMED
+  COURIER_VERIFIED
+}
+
+model ProducerFulfilment {
+  id         String                   @id @default(uuid())
+
+  // One fulfilment task per GreenLot
+  greenLotId String                   @unique
+  orderId    String
+  producerId String
+
+  status     ProducerFulfilmentStatus @default(AWAITING_CONFIRMATION)
+
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  greenLot   GreenLot                 @relation(fields: [greenLotId], references: [id])
+  order      Order                    @relation(fields: [orderId], references: [id])
+  producer   Producer                 @relation(fields: [producerId], references: [id])
 }
 

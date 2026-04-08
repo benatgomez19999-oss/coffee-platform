@@ -334,6 +334,34 @@ return (
       </Column>
     </div>
 
+  {/* ////////////////////////////////////////////////////// */}
+  {/* // 📦 PRODUCER FULFILMENT TASKS */}
+  {/* ////////////////////////////////////////////////////// */}
+
+  {data.fulfilmentTasks?.length > 0 && (
+    <div className="mt-12">
+      <div className="mb-5">
+        <h2 className="text-[17px] font-semibold text-[#2f2418]">
+          📦 Prepare to Ship
+        </h2>
+        <p className="text-[13px] text-[#6b5a45] mt-1">
+          Orders confirmed — mark and prepare each lot for courier pickup
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {data.fulfilmentTasks.map((task: any) => (
+          <FulfilmentTaskCard
+            key={task.id}
+            task={task}
+            onConfirm={() => confirmFulfilment(task.id)}
+            onConfirmSacks={() => confirmSacksMarked(task.id)}
+          />
+        ))}
+      </div>
+    </div>
+  )}
+
   {/* FULL WIDTH WRAPPER */}
 <div className="w-screen left-1/2 -translate-x-1/2 relative mt-14">
 
@@ -836,8 +864,150 @@ function LotCard({
 }
 
 {/* ////////////////////////////////////////////////////// */}
+{/* // FULFILMENT TASK CARD */}
+{/* ////////////////////////////////////////////////////// */}
+
+function FulfilmentTaskCard({
+  task,
+  onConfirm,
+  onConfirmSacks,
+}: {
+  task: any
+  onConfirm: () => void
+  onConfirmSacks: () => void
+}) {
+  const lot = task.greenLot
+  const status: string = task.status
+
+  const isSacksDone = status === "SACKS_MARKED_CONFIRMED"
+
+  return (
+    <div className="
+      rounded-2xl border-2 border-[#c5b08a]
+      bg-[linear-gradient(180deg,rgba(255,251,244,0.95)_0%,rgba(247,239,223,0.98)_100%)]
+      px-6 py-5
+      shadow-[0_4px_16px_rgba(0,0,0,0.06)]
+      flex items-start gap-6
+    ">
+      {/* LEFT — LOT CODE (prominent) */}
+      <div className="flex-shrink-0 flex flex-col items-center justify-center
+        bg-[#2f2418] rounded-xl px-5 py-4 min-w-[110px] text-center">
+        <p className="text-[10px] tracking-[0.18em] text-[#a08b6b] uppercase mb-1">
+          LOT CODE
+        </p>
+        <p className="text-[20px] font-bold text-white tracking-wide font-mono leading-tight">
+          {lot.lotNumber}
+        </p>
+      </div>
+
+      {/* CENTER — lot info + instruction */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] font-semibold text-[#2f2418] truncate">
+          {lot.name || "Unnamed Lot"}
+        </p>
+        <p className="text-[12px] text-[#6b5a45] mt-0.5">
+          {lot.variety} · {lot.process}
+        </p>
+
+        <p className="mt-3 text-[13px] text-[#4a3a2a] leading-relaxed">
+          {isSacksDone
+            ? "Awaiting courier verification"
+            : "Mark all sacks clearly with this code before pickup"}
+        </p>
+
+        {/* Status badge */}
+        <div className="mt-3">
+          <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${
+            status === "AWAITING_CONFIRMATION"
+              ? "bg-[#fef3c7] text-[#92400e]"
+              : status === "CONFIRMED"
+              ? "bg-[#dbeafe] text-[#1e40af]"
+              : "bg-[#dcfce7] text-[#166534]"
+          }`}>
+            {status === "AWAITING_CONFIRMATION" && "Awaiting confirmation"}
+            {status === "CONFIRMED" && "Confirmed — mark sacks"}
+            {status === "SACKS_MARKED_CONFIRMED" && "Sacks marked — courier pending"}
+          </span>
+        </div>
+      </div>
+
+      {/* RIGHT — action button */}
+      <div className="flex-shrink-0 flex items-center">
+        {status === "AWAITING_CONFIRMATION" && (
+          <button
+            onClick={onConfirm}
+            className="
+              bg-[#7a5230] text-white
+              px-5 py-2.5 rounded-xl text-[13px] font-medium
+              border border-[#8d6641]
+              hover:bg-[#6f4726]
+              transition-all duration-200 cursor-pointer
+              hover:shadow-[0_6px_18px_rgba(139,94,52,0.22)]
+              active:scale-[0.98]
+            "
+          >
+            Confirm preparation
+          </button>
+        )}
+
+        {status === "CONFIRMED" && (
+          <button
+            onClick={onConfirmSacks}
+            className="
+              bg-[#2f6b3e] text-white
+              px-5 py-2.5 rounded-xl text-[13px] font-medium
+              border border-[#3d8a50]
+              hover:bg-[#255a33]
+              transition-all duration-200 cursor-pointer
+              hover:shadow-[0_6px_18px_rgba(47,107,62,0.22)]
+              active:scale-[0.98]
+            "
+          >
+            Mark sacks confirmed
+          </button>
+        )}
+
+        {isSacksDone && (
+          <div className="text-[#166534] text-[13px] font-medium px-2">
+            ✓ Sacks marked
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+{/* ////////////////////////////////////////////////////// */}
 {/* // ACTION */}
 {/* ////////////////////////////////////////////////////// */}
+
+async function confirmFulfilment(taskId: string) {
+  try {
+    const res = await fetch(`/api/producer/fulfilment/${taskId}/confirm`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to confirm")
+    loadDashboard({ silent: true })
+  } catch (err) {
+    console.error(err)
+    alert("Error confirming task")
+  }
+}
+
+async function confirmSacksMarked(taskId: string) {
+  try {
+    const res = await fetch(`/api/producer/fulfilment/${taskId}/confirm-sacks-marked`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to confirm sacks")
+    loadDashboard({ silent: true })
+  } catch (err) {
+    console.error(err)
+    alert("Error marking sacks")
+  }
+}
 
 async function sendSample(lotId: string) {
   try {

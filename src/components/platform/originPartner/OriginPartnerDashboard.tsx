@@ -137,7 +137,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
               <div className="flex-1 h-[1px] bg-[#bfae92]/40 ml-2" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10 xl:gap-12 mb-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 md:gap-10 xl:gap-12 mb-20">
 
               <Column
                 title="📦 Incoming Samples"
@@ -175,6 +175,27 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                     lot={lot}
                     actionLabel="Open Analysis Wizard"
                     onAction={() => verifyLot(lot.id)}
+                  />
+                ))}
+              </Column>
+
+              <Column
+                title="✅ Ready to Publish"
+                subtitle="Verified · Awaiting your approval to go live"
+                count={data.readyToPublish?.length || 0}
+                variant="review"
+                signal={data.readyToPublish?.length > 0 ? "Action required" : undefined}
+                emptyText="No lots awaiting publication"
+                moreCount={Math.max((data.readyToPublish?.length || 0) - 1, 0)}
+                ctaLabel="View lots"
+                ctaHref="/platform/partner/lots"
+              >
+                {data.readyToPublish?.slice(0, 1).map((lot: any) => (
+                  <LotCard
+                    key={lot.id}
+                    lot={lot}
+                    actionLabel="Publish Lot"
+                    onAction={() => publishLot(lot.id)}
                   />
                 ))}
               </Column>
@@ -301,6 +322,7 @@ function SummaryStrip({ data }: { data: any }) {
   const metrics = [
     { label: "Samples in transit",      value: data.incoming.length },
     { label: "Pending analysis",        value: data.readyToVerify.length },
+    { label: "Ready to publish",        value: data.readyToPublish?.length || 0 },
     { label: "Live lots",               value: data.verified?.length || 0 },
     { label: "Orders awaiting action",  value: data.orders.length },
     { label: "Orders in preparation",   value: data.preparing.length },
@@ -502,10 +524,16 @@ function LotCard({ lot, actionLabel, onAction, status, statusClass }: any) {
 // ACTIONS
 // //////////////////////////////////////////////////////
 
-async function verifyLot(id: string) {
-  await fetch(`/api/partner/lots/${id}/verify`, {
+function verifyLot(id: string) {
+  window.location.href = `/platform/partner/lots/${id}`
+}
+
+async function publishLot(id: string) {
+  if (!confirm("Publish this lot? It will become visible on the marketplace.")) return
+
+  await fetch(`/api/partner/lots/${id}/publish`, {
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   })
 
   window.location.reload()

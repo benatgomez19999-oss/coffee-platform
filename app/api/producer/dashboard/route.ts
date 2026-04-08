@@ -79,6 +79,34 @@ export async function GET(req: NextRequest) {
     const sold = greenLots.filter(l => l.status === "SOLD")
 
     //////////////////////////////////////////////////////
+    // 📦 PRODUCER FULFILMENT TASKS
+    // Active tasks only — COURIER_VERIFIED is terminal,
+    // excluded so the task disappears after courier signs off.
+    //////////////////////////////////////////////////////
+
+    const fulfilmentTasks = await prisma.producerFulfilment.findMany({
+      where: {
+        producerId: producer.id,
+        status: { not: "COURIER_VERIFIED" },
+      },
+      include: {
+        greenLot: {
+          select: {
+            id: true,
+            name: true,
+            lotNumber: true,
+            variety: true,
+            process: true,
+          },
+        },
+        order: {
+          select: { id: true, createdAt: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    })
+
+    //////////////////////////////////////////////////////
     // ✅ RESPONSE
     //////////////////////////////////////////////////////
 
@@ -86,7 +114,8 @@ export async function GET(req: NextRequest) {
       sampleRequested,
       inReview,
       verified,
-      sold
+      sold,
+      fulfilmentTasks,
     })
 
   } catch (error) {
