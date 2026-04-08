@@ -174,6 +174,12 @@ model GreenLot {
 
   // 📦 PRODUCER FULFILMENT (1:1)
   fulfilment    ProducerFulfilment?
+
+  // 📄 CONTRACTS (reverse relation)
+  contracts     Contract[]
+
+  // 🧠 DEMAND INTENTS (reverse relation)
+  demandIntents DemandIntent[]
 }
 
 enum LotStatus {
@@ -314,9 +320,10 @@ model Company {
 
   createdAt DateTime   @default(now())
 
-  users     User[]
-  contracts Contract[]
-  orders    Order[]
+  users         User[]
+  contracts     Contract[]
+  orders        Order[]
+  demandIntents DemandIntent[]
 }
 
 //////////////////////////////////////////////////////
@@ -328,9 +335,16 @@ model Contract {
   companyId       String
   roastedBatchId  String?
 
+  // SUPPLY TARGET — direct link to the coffee this contract is for
+  greenLotId      String?
+
   monthlyVolumeKg Float
   durationMonths  Int
   remainingMonths Int
+
+  // LOCKED PRICING — clientPricePerKg frozen at contract creation
+  // Survives same-coffee amends. Replaced only on coffee switch.
+  lockedPricePerKg Float?
 
   pricePerBag     Float
   bagSizeKg       Float            @default(20)
@@ -352,9 +366,11 @@ model Contract {
 
   company         Company          @relation(fields: [companyId], references: [id])
   roastedBatch    RoastedBatch?    @relation(fields: [roastedBatchId], references: [id])
+  greenLot        GreenLot?        @relation(fields: [greenLotId], references: [id])
 
   orders          Order[]
   signatureTokens SignatureToken[]
+  demandIntents   DemandIntent[]
 }
 
 model Order {
@@ -379,6 +395,59 @@ model OrderItem {
 
   order          Order        @relation(fields: [orderId], references: [id])
   roastedBatch   RoastedBatch @relation(fields: [roastedBatchId], references: [id])
+}
+
+//////////////////////////////////////////////////////
+// 🧠 DEMAND INTENT
+// Persistent record of demand evaluation.
+// Created when a client requests volume (create or amend).
+// Consumed when a contract is created/amended against it.
+// Phase 1: schema exists but is not yet required by routes.
+//////////////////////////////////////////////////////
+
+model DemandIntent {
+  id              String              @id @default(uuid())
+  companyId       String
+
+  type            DemandIntentType
+  contractId      String?
+
+  greenLotId      String?
+  requestedKg     Float
+  deltaKg         Float
+  offeredKg       Float?
+
+  priceLocked     Boolean
+  previewPricePerKg Float?
+
+  semaphore       String
+  riskScore       Float
+  availableAtEval Float
+
+  status          DemandIntentStatus  @default(OPEN)
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  createdAt       DateTime            @default(now())
+
+  company         Company             @relation(fields: [companyId], references: [id])
+  contract        Contract?           @relation(fields: [contractId], references: [id])
+  greenLot        GreenLot?           @relation(fields: [greenLotId], references: [id])
+
+  @@index([companyId])
+  @@index([greenLotId, status])
+  @@index([status, expiresAt])
+}
+
+enum DemandIntentType {
+  CREATE
+  AMEND
+}
+
+enum DemandIntentStatus {
+  OPEN
+  CONSUMED
+  EXPIRED
+  REJECTED
 }
 
 //////////////////////////////////////////////////////

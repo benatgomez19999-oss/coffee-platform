@@ -1,7 +1,118 @@
 import { prisma } from "@/src/database/prisma"
+import { Prisma } from "@prisma/client"
 import {
   REGION_REGISTRY
 } from "@/src/spatialMarket/registries"
+
+// =====================================================
+// SAFETY BUFFER — minimum kg reserved from contracting
+// Matches the minimumReserve in semaphoreEvaluator.ts
+// =====================================================
+
+const SAFETY_BUFFER_KG = 400
+
+// =====================================================
+// CONTRACTABLE SUPPLY
+//
+// Returns the supply available for new contract commitments.
+// This is NOT the same as display supply (getRealSupply).
+//
+// contractableKg = grossAvailable
+//   - committedByContracts (monthly volume of active/pending contracts)
+//   - reservedByIntents (OPEN DemandIntents with positive delta)
+//   - safetyBuffer (400 kg structural reserve)
+//
+// Phase 1: reservedByIntents is included but will be 0
+// until the demand-intent route is live.
+//
+// Can optionally scope to a specific GreenLot.
+// Can accept a Prisma transaction client for atomic reads.
+// =====================================================
+
+export async function getContractableSupply(options?: {
+  greenLotId?: string
+  excludeIntentId?: string
+  tx?: Prisma.TransactionClient
+}) {
+
+  const db = options?.tx ?? prisma
+  const greenLotId = options?.greenLotId
+  const excludeIntentId = options?.excludeIntentId
+
+  // -------------------------------------------------
+  // 1. GROSS AVAILABLE — real published supply
+  // -------------------------------------------------
+
+  const lotWhere: Prisma.GreenLotWhereInput = {
+    status: "PUBLISHED",
+    availableKg: { gt: 0 },
+    ...(greenLotId ? { id: greenLotId } : {})
+  }
+
+  const grossResult = await db.greenLot.aggregate({
+    where: lotWhere,
+    _sum: { availableKg: true }
+  })
+
+  const grossAvailableKg = grossResult._sum.availableKg ?? 0
+
+  // -------------------------------------------------
+  // 2. COMMITTED BY CONTRACTS — monthly volume of
+  //    contracts that are pending, signed, or active.
+  //    Conservative: we count monthly commitment, not
+  //    lifetime volume, because supply is replenished.
+  // -------------------------------------------------
+
+  const contractWhere: Prisma.ContractWhereInput = {
+    status: { in: ["AWAITING_SIGNATURE", "SIGNED", "ACTIVE"] },
+    ...(greenLotId ? { greenLotId } : {})
+  }
+
+  const committedResult = await db.contract.aggregate({
+    where: contractWhere,
+    _sum: { monthlyVolumeKg: true }
+  })
+
+  const committedKg = committedResult._sum.monthlyVolumeKg ?? 0
+
+  // -------------------------------------------------
+  // 3. RESERVED BY OPEN INTENTS — positive deltaKg
+  //    from intents not yet consumed or expired.
+  //    Phase 1: this will return 0 until demand-intent
+  //    route is live. Included for correctness.
+  // -------------------------------------------------
+
+  const intentWhere: Prisma.DemandIntentWhereInput = {
+    status: "OPEN",
+    expiresAt: { gt: new Date() },
+    deltaKg: { gt: 0 },
+    ...(greenLotId ? { greenLotId } : {}),
+    ...(excludeIntentId ? { id: { not: excludeIntentId } } : {})
+  }
+
+  const intentResult = await db.demandIntent.aggregate({
+    where: intentWhere,
+    _sum: { deltaKg: true }
+  })
+
+  const reservedByIntentsKg = intentResult._sum.deltaKg ?? 0
+
+  // -------------------------------------------------
+  // 4. FINAL CALCULATION
+  // -------------------------------------------------
+
+  const contractableKg = Math.max(
+    0,
+    grossAvailableKg - committedKg - reservedByIntentsKg - SAFETY_BUFFER_KG
+  )
+
+  return {
+    contractableKg,
+    grossAvailableKg,
+    committedKg,
+    reservedByIntentsKg
+  }
+}
 
 type RegionAgg = {
   name: string

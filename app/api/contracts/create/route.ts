@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/src/database/prisma"
 import { requireAuth } from "@/src/lib/requireAuth"
+import {
+  createContractWithSupplyValidation,
+  ContractServiceError
+} from "@/src/services/clients/contracts.service"
 
 // ======================================================
 // CREATE CONTRACT — USER SCOPED (MULTI-TENANT SAFE)
+//
+// Phase 1: requires greenLotId in contractDraft.supply
+// to resolve real pricing from PricingSnapshot.
+// Does NOT require demandIntentId yet (Phase 2+).
 // ======================================================
 
 export async function POST(req: Request) {
   try {
+
     // ======================================================
     // AUTH
     // ======================================================
@@ -39,56 +47,34 @@ export async function POST(req: Request) {
       )
     }
 
-    console.log("🟡 CREATE INPUT:", contractDraft)
-
     const monthlyVolumeKg = contractDraft.supply.monthlyVolume
     const durationMonths = contractDraft.supply.duration
+    const greenLotId = contractDraft.supply.greenLotId
 
     if (!monthlyVolumeKg || !durationMonths) {
       return NextResponse.json(
-        { error: "Missing supply fields" },
+        { error: "Missing supply fields (monthlyVolume, duration)" },
+        { status: 400 }
+      )
+    }
+
+    if (!greenLotId) {
+      return NextResponse.json(
+        { error: "Missing greenLotId — a target coffee lot is required" },
         { status: 400 }
       )
     }
 
     // ======================================================
-    // 💰 CALCULATE MONTHLY PRICE (🔥 NUEVO)
+    // CREATE VIA SERVICE (supply validation + pricing)
     // ======================================================
 
-    const pricePerBag = 10
-    const bagSizeKg = 20
-
-    const bagsPerDelivery = Math.round(monthlyVolumeKg / bagSizeKg)
-    const monthlyPrice = bagsPerDelivery * pricePerBag
-
-    // ======================================================
-    // CREATE CONTRACT
-    // ======================================================
-
-    const contract = await prisma.contract.create({
-      data: {
-        companyId: user.companyId,
-
-        // BUSINESS
-        monthlyVolumeKg,
-        durationMonths,
-        remainingMonths: durationMonths,
-
-        // PRICING
-        pricePerBag,
-        bagSizeKg,
-        bagsPerDelivery,
-        monthlyPrice, // 🔥 FIX CLAVE
-
-        // TIMELINE
-        startDate: new Date(),
-
-        // STATUS
-        status: "AWAITING_SIGNATURE",
-      }
+    const contract = await createContractWithSupplyValidation({
+      companyId: user.companyId,
+      monthlyVolumeKg,
+      durationMonths,
+      greenLotId,
     })
-
-    console.log("🟢 CONTRACT CREATED:", contract)
 
     return NextResponse.json({
       success: true,
@@ -104,13 +90,20 @@ export async function POST(req: Request) {
       )
     }
 
-    console.error("❌ CREATE CONTRACT ERROR:", error)
+    if (error instanceof ContractServiceError) {
+      const status = error.code === "FORBIDDEN" ? 403
+        : error.code === "INSUFFICIENT_SUPPLY" ? 409
+        : 400
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status }
+      )
+    }
+
+    console.error("CREATE CONTRACT ERROR:", error)
 
     return NextResponse.json(
-      {
-        error: "Internal error",
-        message: error?.message
-      },
+      { error: "Internal error", message: error?.message },
       { status: 500 }
     )
   }
