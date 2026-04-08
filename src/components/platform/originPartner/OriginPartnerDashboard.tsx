@@ -125,6 +125,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
 
           <div className="max-w-[1400px] mx-auto px-6 lg:px-10 xl:px-16">
 
+            <SummaryStrip data={data} />
 
             {/* ===== 🧪 LAB ===== */}
 
@@ -143,7 +144,8 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Sample collected · In transit to the lab"
                 count={data.incoming.length}
                 variant="incoming"
-                emptyText="No samples currently in transit"
+                signal={data.incoming.length > 0 ? "New samples in transit" : undefined}
+                emptyText="No samples in transit — new collections will appear here"
                 moreCount={Math.max(data.incoming.length - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -161,6 +163,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Sample received · Lab work not yet started"
                 count={data.readyToVerify.length}
                 variant="review"
+                signal={data.readyToVerify.length > 0 ? "Action required" : undefined}
                 emptyText="No samples awaiting analysis"
                 moreCount={Math.max(data.readyToVerify.length - 1, 0)}
                 ctaLabel="View lots"
@@ -181,7 +184,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Published · Available for purchase"
                 count={data.verified?.length || 0}
                 variant="verified"
-                emptyText="No lots live on marketplace"
+                emptyText="No live lots on marketplace"
                 moreCount={Math.max((data.verified?.length || 0) - 1, 0)}
                 ctaLabel="View lots"
                 ctaHref="/platform/partner/lots"
@@ -216,7 +219,9 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Client orders · Awaiting your confirmation"
                 count={data.orders.length}
                 variant="orders"
-                emptyText="No pending orders"
+                signal={data.orders.length > 0 ? "Needs confirmation" : undefined}
+                countUnit="order"
+                emptyText="No pending orders to confirm"
                 moreCount={Math.max(data.orders.length - 1, 0)}
                 ctaLabel="View orders"
                 ctaHref="/platform/partner/orders"
@@ -236,7 +241,8 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Processing · Milling · Packing in progress"
                 count={data.preparing.length}
                 variant="preparing"
-                emptyText="No orders in preparation"
+                countUnit="order"
+                emptyText="No orders currently in preparation"
                 moreCount={Math.max(data.preparing.length - 1, 0)}
                 ctaLabel="View orders"
                 ctaHref="/platform/partner/orders"
@@ -256,6 +262,7 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
                 subtitle="Packed · Awaiting courier pickup"
                 count={data.ready.length}
                 variant="ready"
+                countUnit="order"
                 emptyText="No shipments awaiting pickup"
                 moreCount={Math.max(data.ready.length - 1, 0)}
                 ctaLabel="View orders"
@@ -287,6 +294,35 @@ export default function PartnerDashboard({ user }: { user?: any } = {}) {
 
 
 // //////////////////////////////////////////////////////
+// SUMMARY STRIP
+// //////////////////////////////////////////////////////
+
+function SummaryStrip({ data }: { data: any }) {
+  const metrics = [
+    { label: "Samples in transit",      value: data.incoming.length },
+    { label: "Pending analysis",        value: data.readyToVerify.length },
+    { label: "Live lots",               value: data.verified?.length || 0 },
+    { label: "Orders awaiting action",  value: data.orders.length },
+    { label: "Orders in preparation",   value: data.preparing.length },
+  ]
+
+  return (
+    <div className="mb-10 flex flex-wrap gap-3">
+      {metrics.map(({ label, value }) => (
+        <div
+          key={label}
+          className="flex items-center gap-3 rounded-xl border border-[#d8cebb] bg-[#f7f3ed]/80 px-5 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+        >
+          <span className="text-[20px] font-semibold tabular-nums text-[#7a5230]">{value}</span>
+          <span className="text-[12px] text-[#6b5a45]">{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+
+// //////////////////////////////////////////////////////
 // COLUMN
 // //////////////////////////////////////////////////////
 
@@ -296,6 +332,8 @@ function Column({
   count,
   children,
   variant = "default",
+  signal,
+  countUnit = "lot",
   emptyText = "No items",
   moreCount = 0,
   ctaLabel,
@@ -306,6 +344,8 @@ function Column({
   count: number
   children?: React.ReactNode
   variant?: ColumnVariant
+  signal?: string
+  countUnit?: "lot" | "order"
   emptyText?: string
   moreCount?: number
   ctaLabel?: string
@@ -355,8 +395,14 @@ function Column({
           <p className="mt-1 text-[13px] leading-relaxed text-[#6b5a45]">
             {subtitle}
           </p>
+          {signal && (
+            <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#d4b896] bg-[#f3e9d7] px-2.5 py-1 text-[11px] font-medium text-[#7a5230]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#c07840]" />
+              {signal}
+            </span>
+          )}
           <div className="mt-4 text-[15px] font-semibold text-[#9a6f3e]">
-            {count} {count === 1 ? "lot" : "lots"}
+            {count} {count === 1 ? countUnit : `${countUnit}s`}
           </div>
         </div>
 
@@ -372,7 +418,7 @@ function Column({
 
             {moreCount > 0 && (
               <p className="text-[12px] font-medium text-[#8c6c47]">
-                + {moreCount} more {moreCount === 1 ? "lot" : "lots"}
+                + {moreCount} more {moreCount === 1 ? countUnit : `${countUnit}s`}
               </p>
             )}
           </div>
