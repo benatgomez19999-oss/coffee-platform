@@ -35,6 +35,7 @@ model Farm {
   id         String     @id @default(uuid())
   name       String
   altitude   Int?
+  region     String?
   producerId String
   producer   Producer   @relation(fields: [producerId], references: [id])
   lots       GreenLot[]
@@ -136,6 +137,14 @@ model GreenLot {
 
   scaScore     Float?
   altitude     Int?
+
+  // =====================================================
+  // ROAST YIELD ESTIMATE (green → roasted)
+  // Set by partner during lot evaluation.
+  // Fallback: process-based default in resolveRoastYield().
+  // =====================================================
+
+  estimatedRoastYield Float?
 
   // =====================================================
   // VOLUME
@@ -338,13 +347,18 @@ model Contract {
   // SUPPLY TARGET — direct link to the coffee this contract is for
   greenLotId      String?
 
+  // VOLUME — monthlyVolumeKg is in ROASTED kg (client commitment).
+  // monthlyGreenKg is the green equivalent for supply accounting.
   monthlyVolumeKg Float
+  monthlyGreenKg  Float?
   durationMonths  Int
   remainingMonths Int
 
-  // LOCKED PRICING — clientPricePerKg frozen at contract creation
+  // LOCKED PRICING — per ROASTED kg, frozen at contract creation.
+  // Derived: PricingSnapshot.clientPricePerKg / roastYieldAtCreation.
   // Survives same-coffee amends. Replaced only on coffee switch.
-  lockedPricePerKg Float?
+  lockedPricePerKg    Float?
+  roastYieldAtCreation Float?
 
   pricePerBag     Float
   bagSizeKg       Float            @default(20)
@@ -413,9 +427,15 @@ model DemandIntent {
   contractId      String?
 
   greenLotId      String?
+
+  // VOLUME — requestedKg and offeredKg are ROASTED (client-facing).
+  // deltaKg is GREEN (supply reservation, used by getContractableSupply).
   requestedKg     Float
   deltaKg         Float
   offeredKg       Float?
+
+  // CONVERSION SNAPSHOT — yield used to convert roasted↔green at eval time.
+  roastYieldAtEval Float?
 
   priceLocked     Boolean
   previewPricePerKg Float?
@@ -423,6 +443,11 @@ model DemandIntent {
   semaphore       String
   riskScore       Float
   availableAtEval Float
+
+  // DEFERRED FLOW — autoExecute enables WAITING → OPEN → contract
+  // when supply becomes available, without manual client confirmation.
+  autoExecute     Boolean             @default(false)
+  notifiedAt      DateTime?
 
   status          DemandIntentStatus  @default(OPEN)
   expiresAt       DateTime
@@ -445,9 +470,12 @@ enum DemandIntentType {
 
 enum DemandIntentStatus {
   OPEN
+  COUNTERED
+  WAITING
   CONSUMED
   EXPIRED
   REJECTED
+  CANCELLED
 }
 
 //////////////////////////////////////////////////////

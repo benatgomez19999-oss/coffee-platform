@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     const monthlyVolumeKg = contractDraft.supply.monthlyVolume
     const durationMonths = contractDraft.supply.duration
     const greenLotId = contractDraft.supply.greenLotId
+    const demandIntentId = contractDraft.demandIntentId ?? undefined
 
     if (!monthlyVolumeKg || !durationMonths) {
       return NextResponse.json(
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
       monthlyVolumeKg,
       durationMonths,
       greenLotId,
+      demandIntentId,
     })
 
     return NextResponse.json({

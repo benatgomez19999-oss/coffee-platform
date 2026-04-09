@@ -112,7 +112,6 @@ if (!contractDraft && !contractId) {
     // =====================================================
     // SAVE TOKEN (🔥 GUARANTEE EMAIL PERSISTENCE)
     // =====================================================
-    console.log("💾 SAVING TOKEN WITH EMAIL:", contractDraft?.client?.email)
     await prisma.signatureToken.create({
       data: {
         token: otp,
@@ -120,15 +119,17 @@ if (!contractDraft && !contractId) {
         mode: mode || "create",
         phone: phone || "no-phone",
 
-        // 🔥 CLAVE: GUARDAMOS EMAIL SIEMPRE
-    contractDraft: finalDraft
-  ? {
-      client: {
-        email: finalDraft.client?.email ?? null,
-        phone: finalDraft.client?.phone ?? null
-      }
-    }
-  : undefined,
+        // Store contact info for OTP resend recovery, and
+        // demandIntentId for amend-mode verify-otp to read.
+        contractDraft: finalDraft
+          ? {
+              client: {
+                email: finalDraft.client?.email ?? null,
+                phone: finalDraft.client?.phone ?? null,
+              },
+              demandIntentId: finalDraft.demandIntentId ?? null,
+            }
+          : undefined,
 
         expiresAt,
         verified: false,

@@ -1,10 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { EngineState } from "@/src/engine/core/runtime"
-import { submitOperationalRequest } from "@/src/engine/core/runtime"
-import { acceptSuggestedVolume } from "@/src/engine/core/runtime"
-import RegionsSupplyChart from "@/src/components/shared/general/RegionsSupplyChart"
 
 import {
   evaluateContractSuggestion
@@ -15,74 +11,17 @@ from "@/src/clientLayer/layer/contractController"
 
 
 type Props = {
-  engineState: EngineState
-  updateContext: (partial: any) => void
+  marketData?: any
 }
 
-export default function LeftPanel({ engineState, updateContext }: Props) {
-
-  const { liveDecision } = engineState
+export default function LeftPanel({ marketData }: Props) {
 
   // =====================================================
-  // REAL SUPPLY (BACKEND SOURCE OF TRUTH)
+  // TOTAL AVAILABLE (FROM MARKET API — ROASTED KG)
   // =====================================================
 
-  const [realSupply, setRealSupply] = useState(0)
-
-  useEffect(() => {
-
-    const loadSupply = async () => {
-      try {
-        const res = await fetch("/api/supply")
-
-        if (!res.ok) return
-
-        const data = await res.json()
-
-        setRealSupply(data.totalKg ?? 0)
-
-      } catch (err) {
-        console.error("Supply error", err)
-      }
-    }
-
-    loadSupply()
-
-  }, [])
-
-  // =====================================================
-  // TOTAL AVAILABLE (REAL, NO SIMULATION)
-  // =====================================================
-
-  const totalAvailable = realSupply
-
-  // =====================================================
-  // DECISION ZONES (ENGINE DRIVEN BUT REAL SCALE)
-  // =====================================================
-
-  const zones = liveDecision?.decisionZones
-
-  const greenLimit =
-    zones?.greenLimit && zones.greenLimit > 0
-      ? zones.greenLimit
-      : totalAvailable * 0.65
-
-  const yellowLimit =
-    zones?.yellowLimit && zones.yellowLimit > 0
-      ? zones.yellowLimit
-      : totalAvailable * 0.9
-
-  const scaleMax =
-    zones?.maxLimit && zones.maxLimit > 0
-      ? zones.maxLimit
-      : totalAvailable
-
-  // =====================================================
-  // CLAMPED ZONES (SAFETY BOUNDS)
-  // =====================================================
-
-  const g = Math.max(0, Math.min(greenLimit, scaleMax))
-  const y = Math.max(g, Math.min(yellowLimit, scaleMax))
+  const totalAvailable = marketData?.totals?.roastedAvailableKg ?? 0
+  const scaleMax = totalAvailable
 
   // =====================================================
   // VOLUME STATE
@@ -90,6 +29,26 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
 
   const [volume, setVolume] = useState(0)
   const [suggestion, setSuggestion] = useState<any>(null)
+  const [intentResult, setIntentResult] = useState<any>(null)
+  const [intentLoading, setIntentLoading] = useState(false)
+
+  // =====================================================
+  // MARKET LOTS (for greenLotId selection)
+  // =====================================================
+
+  const allLots = marketData
+    ? Object.values(marketData.regions as Record<string, any>).flatMap(
+        (r: any) => r.lots
+      )
+    : []
+
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedLotId && allLots.length > 0) {
+      setSelectedLotId(allLots[0].id)
+    }
+  }, [allLots.length])
 
   useEffect(() => {
 
@@ -104,16 +63,6 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
   }, [scaleMax])
 
   // =====================================================
-  // ENGINE SIGNAL (REQUESTED VOLUME → ENGINE)
-  // =====================================================
-
-  useEffect(() => {
-
-    updateContext({ requestedVolume: volume })
-
-  }, [volume])
-
-  // =====================================================
   // CONTRACT INTELLIGENCE
   // =====================================================
 
@@ -126,52 +75,10 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
   }, [volume])
 
   // =====================================================
-  // UI COLORS
+  // SELECTED LOT INFO
   // =====================================================
 
-  const isBoot = volume === 0
-
-  const semaphoreColor = isBoot
-    ? "#ffffff"
-    : liveDecision?.semaphore === "green"
-    ? "#4ade80"
-    : liveDecision?.semaphore === "yellow"
-    ? "#facc15"
-    : "#f87171"
-
-  // =====================================================
-  // ACTIVE REQUEST
-  // =====================================================
-
-  const activeRequest =
-    engineState.pending.requests[0] ?? null
-
-  const now = engineState.engineTime
-
-  const remainingTime =
-    activeRequest?.offerExpiry
-      ? Math.max(0, Math.floor((activeRequest.offerExpiry - now) / 1000))
-      : null
-
-  // =====================================================
-  // CONFIRM HANDLER (NEW ARCHITECTURE)
-  // =====================================================
-
-  function handleConfirm() {
-
-    // =====================================================
-    // OPERATIONAL REQUEST
-    // El sistema decide GREEN / YELLOW / RED
-    // =====================================================
-
-    submitOperationalRequest(
-      Math.round(volume),
-      "manual"
-    )
-
-  }
-
-    
+  const selectedLot = allLots.find((l: any) => l.id === selectedLotId)
 
   // =====================================================
   // RENDER
@@ -181,30 +88,33 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
     <div style={{ padding: 40 }}>
 
       <div style={{ opacity: 0.7, marginBottom: 20 }}>
-        Capacity Signal Simulation
+        Contract Request
       </div>
 
-      {/* STATUS */}
+      {/* SELECTED LOT SUMMARY */}
 
-      <div style={{
-        padding: 18,
-        borderRadius: 12,
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        marginBottom: 30
-      }}>
-        <div style={{ fontSize: 11, opacity: 0.6 }}>
-          SYSTEM STATUS
-        </div>
-
+      {selectedLot && (
         <div style={{
-          marginTop: 6,
-          fontSize: 14,
-          color: semaphoreColor
+          padding: 18,
+          borderRadius: 12,
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          marginBottom: 30
         }}>
-          {liveDecision?.semaphore?.toUpperCase()}
+          <div style={{ fontSize: 11, opacity: 0.6 }}>
+            SELECTED LOT
+          </div>
+          <div style={{ marginTop: 6, fontSize: 14 }}>
+            {selectedLot.name ?? selectedLot.coffee?.variety ?? "Lot"} — {selectedLot.origin?.farmName}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 12, opacity: 0.5 }}>
+            {selectedLot.volume?.roastedAvailableKg} kg available
+            {selectedLot.pricing?.roastedPricePerKg != null && (
+              <> · ${selectedLot.pricing.roastedPricePerKg}/kg</>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* REQUEST BOX */}
 
@@ -221,42 +131,24 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
           justifyContent: "space-between"
         }}>
 
-          <div style={{
-            fontSize: 20,
-            color: semaphoreColor
-          }}>
+          <div style={{ fontSize: 20 }}>
             {Math.round(volume)} kg / month
           </div>
 
-          <button
-            onClick={handleConfirm}
-            style={{
-              padding: "10px 24px",
-              borderRadius: 999,
-              background: "linear-gradient(90deg,#d4af37,#f3d27a)",
-              border: "none",
-              cursor: "pointer"
-            }}
-          >
-            Confirm
-          </button>
-
         </div>
 
-        <div style={{ marginTop: 8, opacity: 0.7 }}>
-          {liveDecision?.explanation?.[0]}
+        <div style={{ marginTop: 8, opacity: 0.5, fontSize: 12 }}>
+          Available: {Math.round(totalAvailable)} kg roasted
         </div>
 
       </div>
 
     {/* =====================================================
-   CAPACITY FRONTIER
-   Visual envelope de capacidad del sistema
-   Verde → zona segura
-   Amarillo → zona de presión
-   Rojo → zona de riesgo
+   VOLUME BAR — simple fill against totalAvailable
 ===================================================== */}
 
+{scaleMax > 0 && (
+<>
 <div style={{ position: "relative", marginBottom: 22 }}>
 
   {/* REQUEST MARKER */}
@@ -273,43 +165,23 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
     ▲
   </div>
 
-  {/* FRONTIER BAR */}
+  {/* FILL BAR */}
 
   <div style={{
-
     height: 10,
     borderRadius: 999,
     overflow: "hidden",
-    display: "flex",
-
+    background: "rgba(255,255,255,0.08)",
     boxShadow: "0 0 6px rgba(0,0,0,0.4)"
-
   }}>
-
-    {/* SAFE ZONE */}
-
     <div style={{
-      width: `${(g / scaleMax) * 100}%`,
-      background: "#4ade80",
-      transition: "width 0.25s ease"
+      width: `${(volume / scaleMax) * 100}%`,
+      height: "100%",
+      background: volume / scaleMax < 0.65 ? "#4ade80"
+        : volume / scaleMax < 0.9 ? "#facc15"
+        : "#f87171",
+      transition: "width 0.15s ease"
     }}/>
-
-    {/* PRESSURE ZONE */}
-
-    <div style={{
-      width: `${((y - g) / scaleMax) * 100}%`,
-      background: "#facc15",
-      transition: "width 0.25s ease"
-    }}/>
-
-    {/* RISK ZONE */}
-
-    <div style={{
-      width: `${((scaleMax - y) / scaleMax) * 100}%`,
-      background: "#f87171",
-      transition: "width 0.25s ease"
-    }}/>
-
   </div>
 
 </div>
@@ -324,14 +196,11 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
         marginBottom: 20
       }}>
         <span>0</span>
-        <span>{Math.round(g)}</span>
-        <span>{Math.round(y)}</span>
-        <span>{Math.round(scaleMax)}</span>
+        <span>{Math.round(scaleMax)} kg</span>
       </div>
 
       {/* SLIDER */}
 
-      {scaleMax > 0 && (
         <input
           type="range"
           min={0}
@@ -346,7 +215,8 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
             marginBottom: 30
           }}
         />
-      )}
+</>
+)}
 
       {/* CONTRACT INTELLIGENCE */}
 
@@ -369,173 +239,254 @@ export default function LeftPanel({ engineState, updateContext }: Props) {
     </div>
 
     <button
-     onClick={() => {
+     onClick={async () => {
+
+  if (!selectedLotId || intentLoading) return
 
   const contract = getSelectedContract()
   const v = Math.round(volume)
 
-  // =====================================================
-  // SAVE WIZARD INTENT (no abre todavía)
-  // =====================================================
-
-  sessionStorage.setItem(
-    "contractIntent",
-    JSON.stringify({
-      mode: contract ? "amend" : "create",
-      contractId: contract?.id ?? null,
-      volume: v
+  setIntentLoading(true)
+  try {
+    const res = await fetch("/api/demand-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        greenLotId: selectedLotId,
+        requestedKg: v,
+        type: contract ? "AMEND" : "CREATE",
+        contractId: contract?.id ?? undefined,
+      })
     })
-  )
 
-  // =====================================================
-  // SEND OPERATIONAL REQUEST
-  // =====================================================
+    const data = await res.json()
 
-  submitOperationalRequest(v, "manual")
+    if (!res.ok) {
+      console.error("Intent error:", data)
+      setIntentResult({ error: data.error })
+      return
+    }
+
+    setIntentResult(data)
+
+    // GREEN → go to contract wizard
+    if (data.semaphore?.status === "green") {
+      window.location.href =
+        `/contract/create?mode=${contract ? "amend" : "create"}&contractId=${contract?.id ?? ""}&volume=${v}&intentId=${data.intent.id}`
+    }
+
+  } catch (err) {
+    console.error("Intent request failed:", err)
+  } finally {
+    setIntentLoading(false)
+  }
 
 }}
+      disabled={intentLoading}
       style={{
         marginTop: 12,
         padding: "8px 18px",
         borderRadius: 999,
         border: "none",
-        background: "#4ade80",
+        background: intentLoading ? "#888" : "#4ade80",
         color: "#111",
-        cursor: "pointer"
+        cursor: intentLoading ? "not-allowed" : "pointer"
       }}
     >
-      Accept Upgrade
+      {intentLoading ? "Processing..." : "Request Contract"}
     </button>
 
   </div>
 
 )}
 
-{/* =====================================================
-   OPERATIONAL COUNTER OFFER
-===================================================== */}
+      {/* INTENT RESULT FEEDBACK */}
 
-{activeRequest?.offerOpen && (
-
-  <div style={{
-    marginTop: 20,
-    padding: 18,
-    borderRadius: 12,
-    background: "rgba(250,204,21,0.08)",
-    border: "1px solid rgba(250,204,21,0.4)"
-  }}>
-
-    <div style={{ fontSize: 13, opacity: 0.7 }}>
-      Partial Capacity Available
-    </div>
-
-    <div style={{ marginTop: 6 }}>
-      Requested: {activeRequest.remainingVolume} kg
-    </div>
-
-    <div>
-      Available now: {activeRequest.suggestedVolume} kg
-    </div>
-
-    <div style={{
-  display: "flex",
-  gap: 12,
-  marginTop: 14
-}}>
-
-{/* ACCEPT PARTIAL */}
-
-<button
-  onClick={() => {
-
-    if (!activeRequest) return
-
-    // =====================================================
-    // VOLUME ACCEPTED BY SYSTEM
-    // =====================================================
-
-    const executedVolume =
-      activeRequest.suggestedVolume
-
-    // =====================================================
-    // EXECUTE PARTIAL ALLOCATION
-    // =====================================================
-
-    acceptSuggestedVolume(activeRequest.id)
-
-    // =====================================================
-    // RETRIEVE CONTRACT INTENT
-    // =====================================================
-
-    const intent =
-      sessionStorage.getItem("contractIntent")
-
-    if (!intent) return
-
-    const data = JSON.parse(intent)
-
-    // =====================================================
-    // OPEN CONTRACT WIZARD
-    // Contract reflects real executed volume
-    // =====================================================
-
-    window.location.href =
-      `/contract/create?mode=${data.mode}&contractId=${data.contractId ?? ""}&volume=${executedVolume}`
-
-  }}
-
-  style={{
-    padding: "8px 18px",
-    borderRadius: 999,
-    border: "none",
-    background: "#facc15",
-    color: "#111",
-    cursor: "pointer"
-  }}
->
-  Accept Available
-</button>
-
-  {/* AUTO EXECUTE */}
-
-  <button
-    style={{
-      padding: "8px 18px",
-      borderRadius: 999,
-      border: "1px solid rgba(255,255,255,0.2)",
-      background: "transparent",
-      color: "white",
-      cursor: "pointer"
-    }}
-  >
-    Auto Execute
-  </button>
-
-</div>
-
-    {remainingTime && (
-      <div style={{ fontSize: 12, opacity: 0.6 }}>
-        Offer expires in {remainingTime}s
-      </div>
-    )}
-
-  </div>
-
-)}
-
-      {/* REGIONS */}
-
-      <div style={{ marginTop: 40 }}>
-
+      {intentResult?.semaphore?.status === "yellow" && intentResult.intent && (
         <div style={{
-          fontSize: 12,
-          opacity: 0.6,
-          marginBottom: 20
+          marginTop: 20,
+          padding: 18,
+          borderRadius: 12,
+          background: "rgba(250,204,21,0.08)",
+          border: "1px solid rgba(250,204,21,0.4)"
         }}>
-          Network Capacity Overview
+          <div style={{ fontSize: 13, opacity: 0.7 }}>Counteroffer</div>
+          <div style={{ marginTop: 6 }}>
+            Requested: {intentResult.intent.requestedKg} kg/month
+          </div>
+          <div>
+            Offered: {intentResult.intent.offeredKg} kg/month
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/demand-intent/${intentResult.intent.id}/accept`, { method: "POST" })
+                  if (res.ok) {
+                    const contract = getSelectedContract()
+                    window.location.href =
+                      `/contract/create?mode=${contract ? "amend" : "create"}&contractId=${contract?.id ?? ""}&volume=${intentResult.intent.offeredKg}&intentId=${intentResult.intent.id}`
+                  }
+                } catch (err) {
+                  console.error("Accept failed:", err)
+                }
+              }}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: "none",
+                background: "#facc15",
+                color: "#111",
+                cursor: "pointer"
+              }}
+            >
+              Accept Offer
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await fetch(`/api/demand-intent/${intentResult.intent.id}/cancel`, { method: "POST" })
+                  setIntentResult(null)
+                } catch (err) {
+                  console.error("Cancel failed:", err)
+                }
+              }}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent",
+                color: "white",
+                cursor: "pointer"
+              }}
+            >
+              Decline
+            </button>
+          </div>
         </div>
-    <RegionsSupplyChart engineState={engineState} />
-      </div>
+      )}
+
+      {intentResult?.semaphore?.status === "red" && intentResult.intent && (
+        <div style={{
+          marginTop: 20,
+          padding: 18,
+          borderRadius: 12,
+          background: "rgba(248,113,113,0.08)",
+          border: "1px solid rgba(248,113,113,0.4)"
+        }}>
+          <div style={{ fontSize: 13, opacity: 0.7 }}>Insufficient Supply</div>
+          <div style={{ marginTop: 6 }}>
+            Requested volume exceeds available capacity.
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+            <button
+              onClick={async () => {
+                try {
+                  await fetch(`/api/demand-intent/${intentResult.intent.id}/wait`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ autoExecute: false })
+                  })
+                  setIntentResult((prev: any) => ({
+                    ...prev,
+                    intent: { ...prev.intent, status: "WAITING" }
+                  }))
+                } catch (err) {
+                  console.error("Wait failed:", err)
+                }
+              }}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: "none",
+                background: "#f87171",
+                color: "#111",
+                cursor: "pointer"
+              }}
+            >
+              Wait for Supply
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await fetch(`/api/demand-intent/${intentResult.intent.id}/cancel`, { method: "POST" })
+                  setIntentResult(null)
+                } catch (err) {
+                  console.error("Cancel failed:", err)
+                }
+              }}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent",
+                color: "white",
+                cursor: "pointer"
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {intentResult?.intent?.status === "WAITING" && (
+        <div style={{
+          marginTop: 20,
+          padding: 18,
+          borderRadius: 12,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.12)"
+        }}>
+          <div style={{ fontSize: 13, opacity: 0.7 }}>Waiting for Supply</div>
+          <div style={{ marginTop: 6, opacity: 0.8 }}>
+            You will be notified when supply becomes available.
+          </div>
+        </div>
+      )}
+
+      {intentResult?.error && (
+        <div style={{
+          marginTop: 20,
+          padding: 14,
+          borderRadius: 12,
+          background: "rgba(248,113,113,0.08)",
+          border: "1px solid rgba(248,113,113,0.3)",
+          color: "#f87171",
+          fontSize: 13
+        }}>
+          {intentResult.error}
+        </div>
+      )}
+
+      {/* LOT SELECTOR */}
+
+      {allLots.length > 0 && (
+        <div style={{ marginTop: 30 }}>
+          <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 8 }}>
+            Select Coffee Lot
+          </div>
+          <select
+            value={selectedLotId ?? ""}
+            onChange={(e) => setSelectedLotId(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "white",
+              fontSize: 14
+            }}
+          >
+            {allLots.map((lot: any) => (
+              <option key={lot.id} value={lot.id} style={{ background: "#1a1a1a" }}>
+                {lot.name ?? lot.coffee?.variety ?? "Lot"} — {lot.origin?.farmName} ({lot.volume?.roastedAvailableKg} kg)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
     </div>
   )

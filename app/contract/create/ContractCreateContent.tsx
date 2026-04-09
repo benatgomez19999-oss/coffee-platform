@@ -27,7 +27,13 @@ export type ContractDraft = {
     origin: string
     monthlyVolume: number
     duration: number
+    greenLotId: string | null
+    lotName: string | null
+    farmName: string | null
+    pricePerKg: number | null
   }
+
+  demandIntentId: string | null
 }
 
 // =====================================================
@@ -48,10 +54,16 @@ export default function ContractCreatePage() {
       ? Number(volumeParam)
       : 400
 
+  const intentId = searchParams.get("intentId")
+
+  // When intentId is present, start in a loading state (step 0)
+  // to prevent rendering step 3 from stale volumeParam before
+  // the intent fetch resolves.
   const [step, setStep] = useState(
-    volumeParam ? 3 : 1
+    intentId ? 0 : (volumeParam ? 3 : 1)
   )
 
+  const [intentError, setIntentError] = useState<string | null>(null)
   const [company, setCompany] = useState<any | null>(null)
 
   const [draft, setDraft] = useState<ContractDraft>({
@@ -69,8 +81,14 @@ export default function ContractCreatePage() {
     supply: {
       origin: "Brazil",
       monthlyVolume: initialVolume,
-      duration: 9
-    }
+      duration: 9,
+      greenLotId: null,
+      lotName: null,
+      farmName: null,
+      pricePerKg: null,
+    },
+
+    demandIntentId: intentId,
   })
 
   // =====================================================
@@ -129,26 +147,91 @@ useEffect(() => {
 }, [])
 
   // =====================================================
-  // APPLY VOLUME PARAM FROM SLIDER
+  // FETCH DEMAND INTENT (if intentId in URL)
+  // Populates draft with lot info, volume, pricing.
   // =====================================================
 
   useEffect(() => {
 
-    if (!volumeParam) return
-
-    const volume = Number(volumeParam)
-
-    setDraft(prev => ({
-      ...prev,
-      supply: {
-        ...prev.supply,
-        monthlyVolume: volume
+    if (!intentId) {
+      // Fallback: apply volumeParam directly (no intent)
+      if (volumeParam) {
+        setDraft(prev => ({
+          ...prev,
+          supply: { ...prev.supply, monthlyVolume: Number(volumeParam) }
+        }))
+        setStep(3)
       }
-    }))
+      return
+    }
 
-    setStep(3)
+    const fetchIntent = async () => {
+      try {
+        const res = await fetch(`/api/demand-intent/${intentId}`)
 
-  }, [volumeParam])
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          setIntentError(data.error ?? "Failed to load contract request")
+          return
+        }
+
+        const data = await res.json()
+        const intent = data.intent
+
+        // -------------------------------------------------
+        // STATUS GATING — only OPEN intents proceed
+        // -------------------------------------------------
+
+        if (intent.status !== "OPEN") {
+          const messages: Record<string, string> = {
+            COUNTERED: "This request received a counteroffer. Please respond in the trading panel before proceeding.",
+            WAITING: "This request is waiting for supply. You will be notified when it becomes available.",
+            CONSUMED: "This request has already been used to create a contract.",
+            EXPIRED: "This request has expired. Please create a new request from the trading panel.",
+            REJECTED: "This request was rejected due to insufficient supply.",
+            CANCELLED: "This request was cancelled.",
+          }
+          setIntentError(messages[intent.status] ?? `Request status is ${intent.status} — cannot proceed.`)
+          return
+        }
+
+        // -------------------------------------------------
+        // EXPIRY CHECK — intent must not be past expiresAt
+        // -------------------------------------------------
+
+        if (intent.expiresAt && new Date(intent.expiresAt) <= new Date()) {
+          setIntentError("This request has expired. Please create a new request from the trading panel.")
+          return
+        }
+
+        // -------------------------------------------------
+        // VALID — populate draft and proceed to step 3
+        // -------------------------------------------------
+
+        setDraft(prev => ({
+          ...prev,
+          supply: {
+            ...prev.supply,
+            monthlyVolume: intent.requestedKg,
+            greenLotId: intent.greenLotId,
+            lotName: intent.greenLot?.name ?? intent.greenLot?.variety ?? null,
+            farmName: intent.greenLot?.farm?.name ?? null,
+            origin: intent.greenLot?.farm?.region ?? prev.supply.origin,
+            pricePerKg: intent.previewPricePerKg ?? null,
+          },
+          demandIntentId: intentId,
+        }))
+
+        setStep(3)
+      } catch (err) {
+        console.error("Intent fetch error:", err)
+        setIntentError("Failed to load contract request. Please try again.")
+      }
+    }
+
+    fetchIntent()
+
+  }, [intentId])
 
   // =====================================================
   // LOAD CONTRACT
@@ -227,21 +310,54 @@ useEffect(() => {
           Coffee Supply Contract
         </h1>
 
-        {step === 1 && (
+        {step === 0 && !intentError && (
+          <div style={{ textAlign: "center", padding: 40, opacity: 0.6 }}>
+            Loading contract request...
+          </div>
+        )}
+
+        {intentError && (
+          <div style={{
+            padding: 24,
+            borderRadius: 12,
+            border: "1px solid #e0e0e0",
+            background: "#fafafa",
+          }}>
+            <div style={{ fontSize: 15, marginBottom: 12 }}>
+              {intentError}
+            </div>
+            <a
+              href="/platform"
+              style={{
+                display: "inline-block",
+                padding: "10px 20px",
+                borderRadius: 8,
+                background: "#000",
+                color: "#fff",
+                textDecoration: "none",
+                fontSize: 14,
+              }}
+            >
+              Back to Platform
+            </a>
+          </div>
+        )}
+
+        {step === 1 && !intentError && (
           <Step1Client
             client={draft.client}
             onNext={updateClient}
           />
         )}
 
-        {step === 2 && (
+        {step === 2 && !intentError && (
           <Step2Supply
             supply={draft.supply}
             onNext={updateSupply}
           />
         )}
 
-        {step === 3 && (
+        {step === 3 && !intentError && (
           <Step3Preview
             draft={draft}
           />

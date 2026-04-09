@@ -66,6 +66,9 @@ type ContractData = {
   product: string
   monthlyVolumeKg: number
   durationMonths: number
+  lotName?: string
+  farmName?: string
+  pricePerKg?: number
 
 }
 
@@ -115,8 +118,20 @@ export async function generateContractPDF(contract: ContractData) {
             Product: {contract.product}
           </Text>
 
+          {contract.lotName && (
+            <Text style={styles.paragraph}>
+              Coffee Lot: {contract.lotName}
+            </Text>
+          )}
+
+          {contract.farmName && (
+            <Text style={styles.paragraph}>
+              Farm: {contract.farmName}
+            </Text>
+          )}
+
           <Text style={styles.paragraph}>
-            Monthly Volume: {contract.monthlyVolumeKg} kg
+            Monthly Volume: {contract.monthlyVolumeKg} kg (roasted)
           </Text>
 
           <Text style={styles.paragraph}>
@@ -126,6 +141,12 @@ export async function generateContractPDF(contract: ContractData) {
           <Text style={styles.paragraph}>
             Total Supply Commitment: {total} kg
           </Text>
+
+          {contract.pricePerKg != null && (
+            <Text style={styles.paragraph}>
+              Price: ${contract.pricePerKg}/kg (roasted)
+            </Text>
+          )}
 
         </View>
 

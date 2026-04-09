@@ -15,6 +15,9 @@ export async function POST(
 
     const conversionRate = Number(body.conversionRate);
     const scaScore = Number(body.scaScore);
+    const estimatedRoastYield = body.estimatedRoastYield != null
+      ? Number(body.estimatedRoastYield)
+      : undefined;
 
     //////////////////////////////////////////////////////
     // 🚀 DELEGATE TO SERVICE
@@ -25,6 +28,7 @@ export async function POST(
       lotId: params.id,
       conversionRate,
       scaScore,
+      estimatedRoastYield,
 
     });
 

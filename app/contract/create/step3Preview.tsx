@@ -31,7 +31,12 @@ type Draft = {
     origin: string
     monthlyVolume: number
     duration: number
+    greenLotId: string | null
+    lotName: string | null
+    farmName: string | null
+    pricePerKg: number | null
   }
+  demandIntentId: string | null
 }
 
 type Props = {
@@ -64,21 +69,24 @@ export default function Step3Preview({ draft }: Props) {
           version: 1,
           product: draft.supply.origin,
           monthlyVolumeKg: monthly,
-          durationMonths: duration
+          durationMonths: duration,
+          lotName: draft.supply.lotName ?? undefined,
+          farmName: draft.supply.farmName ?? undefined,
+          pricePerKg: draft.supply.pricePerKg ?? undefined,
         })
 
         setPdfUrl(url)
       } catch (err) {
-        console.error("🔥 PDF ERROR:", err)
+        console.error("PDF ERROR:", err)
       }
     }
 
     buildPDF()
-  }, [monthly, duration, draft.supply.origin])
+  }, [monthly, duration, draft.supply.origin, draft.supply.lotName, draft.supply.farmName, draft.supply.pricePerKg])
 
 
   // =====================================================
-  // SIGN CONTRACT → OTP FLOW (FINAL ARCHITECTURE)
+  // SIGN CONTRACT → OTP FLOW
   // =====================================================
 
  async function signContract() {
@@ -89,12 +97,6 @@ export default function Step3Preview({ draft }: Props) {
   try {
 
     const phone = draft.client.phone?.trim()
-
-    // =====================================================
-    // DEBUG + VALIDATION
-    // =====================================================
-
-    console.log("📤 SENDING DRAFT:", draft)
 
     if (!draft.client.email?.trim()) {
       alert("Email is required before signing")
@@ -112,10 +114,22 @@ export default function Step3Preview({ draft }: Props) {
 
 
     // =====================================================
-    // 🟡 AMEND EXISTING CONTRACT
+    // AMEND EXISTING CONTRACT
+    //
+    // No contract mutation here. The amend is a proposal:
+    // 1. Send OTP with demandIntentId + contractId
+    // 2. verify-otp gates final apply behind OTP
+    // 3. Only after OTP: amendContractWithSupplyValidation
+    //    + intent consumption + status → SIGNED
     // =====================================================
 
     if (selectedContract) {
+
+      if (!draft.demandIntentId) {
+        alert("No demand intent — cannot amend without a validated request")
+        setLoading(false)
+        return
+      }
 
       await fetch("/api/contracts/send-otp", {
         method: "POST",
@@ -123,7 +137,13 @@ export default function Step3Preview({ draft }: Props) {
         body: JSON.stringify({
           mode: "amend",
           contractId: selectedContract.id,
-          contractDraft: draft
+          contractDraft: {
+            client: {
+              email: draft.client.email,
+              phone: draft.client.phone,
+            },
+            demandIntentId: draft.demandIntentId,
+          }
         })
       })
 
@@ -133,38 +153,45 @@ export default function Step3Preview({ draft }: Props) {
 
 
     // =====================================================
-    // 🟢 NEW CONTRACT (FINAL FLOW)
-    // 1. CREATE CONTRACT
+    // NEW CONTRACT
+    // 1. CREATE CONTRACT (with greenLotId + intentId)
     // 2. SEND OTP
     // 3. REDIRECT
     // =====================================================
 
-    // -----------------------------------------------
-    // 1. CREATE CONTRACT
-    // -----------------------------------------------
+    if (!draft.supply.greenLotId) {
+      alert("No coffee lot selected — cannot create contract")
+      setLoading(false)
+      return
+    }
 
     const createRes = await fetch("/api/contracts/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contractDraft: draft
+        contractDraft: {
+          ...draft,
+          supply: {
+            ...draft.supply,
+            greenLotId: draft.supply.greenLotId,
+          },
+          demandIntentId: draft.demandIntentId,
+        }
       })
     })
 
     const createData = await createRes.json()
 
     if (!createData.success || !createData.contractId) {
-      throw new Error("Failed to create contract")
+      const msg = createData.error ?? "Failed to create contract"
+      alert(msg)
+      setLoading(false)
+      return
     }
 
     const contractId = createData.contractId
 
-    console.log("✅ CONTRACT CREATED:", contractId)
-
-
-    // -----------------------------------------------
-    // 2. SEND OTP
-    // -----------------------------------------------
+    // SEND OTP
 
     await fetch("/api/contracts/send-otp", {
       method: "POST",
@@ -176,16 +203,13 @@ export default function Step3Preview({ draft }: Props) {
       })
     })
 
-
-    // -----------------------------------------------
-    // 3. REDIRECT
-    // -----------------------------------------------
+    // REDIRECT TO OTP VERIFICATION
 
     router.replace(`/contract/verify-otp?contractId=${contractId}`)
 
   } catch (err) {
 
-    console.error("🔥 SIGN CONTRACT ERROR:", err)
+    console.error("SIGN CONTRACT ERROR:", err)
     alert("Error during signing process")
     setLoading(false)
 
@@ -200,7 +224,32 @@ export default function Step3Preview({ draft }: Props) {
   return (
     <div>
 
-      <h2>Contract Preview</h2>
+      <h2 style={{ marginBottom: 16 }}>Contract Preview</h2>
+
+      {/* INTENT SUMMARY */}
+
+      {draft.supply.greenLotId && (
+        <div style={{
+          padding: 16,
+          borderRadius: 10,
+          border: "1px solid #e0e0e0",
+          marginBottom: 20,
+          background: "#fafafa",
+        }}>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>
+            CONTRACT DETAILS
+          </div>
+          <div style={{ fontSize: 14 }}>
+            {draft.supply.lotName ?? "Coffee Lot"} — {draft.supply.farmName ?? draft.supply.origin}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 13, color: "#555" }}>
+            {monthly} kg/month for {duration} months
+            {draft.supply.pricePerKg != null && (
+              <> · ${draft.supply.pricePerKg}/kg</>
+            )}
+          </div>
+        </div>
+      )}
 
       {pdfUrl && (
         <iframe

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client"
 import { eventBus } from "@/src/events/core/eventBus"
 import { EVENTS } from "@/src/events/core/eventTypes"
 import { getContractableSupply } from "@/src/services/system/supply.service"
+import { resolveRoastYield, roastedToGreen, computeRoastedPrice } from "@/src/lib/roastYield"
 
 // =====================================================
 // CONTRACT SERVICE — UNIFIED BACKEND OWNER
@@ -12,8 +13,14 @@ import { getContractableSupply } from "@/src/services/system/supply.service"
 //   - contract amendment (same-coffee / switch-coffee)
 //   - pricing derivation from lockedPricePerKg
 //
-// Phase 1: called directly by routes.
-// Phase 2+: called via DemandIntent consumption.
+// UNIT SEMANTICS:
+//   - Contract.monthlyVolumeKg = ROASTED (client commitment)
+//   - Contract.monthlyGreenKg = GREEN (supply accounting)
+//   - Contract.lockedPricePerKg = per ROASTED kg
+//   - Supply validation uses GREEN internally
+//
+// Phase 2: called directly by routes.
+// Phase 3+: called via DemandIntent consumption.
 // =====================================================
 
 const DEFAULT_BAG_SIZE_KG = 20
@@ -70,9 +77,10 @@ export class ContractServiceError extends Error {
 
 export async function createContractWithSupplyValidation(input: {
   companyId: string
-  monthlyVolumeKg: number
+  monthlyVolumeKg: number  // ROASTED kg — what the client commits to
   durationMonths: number
   greenLotId: string
+  demandIntentId?: string
 }) {
 
   const { companyId, monthlyVolumeKg, durationMonths, greenLotId } = input
@@ -80,37 +88,76 @@ export async function createContractWithSupplyValidation(input: {
   const contract = await prisma.$transaction(async (tx) => {
 
     // -------------------------------------------------
-    // 1. RESOLVE LOT + PRICING
+    // 1. RESOLVE LOT + PRICING + YIELD
     // -------------------------------------------------
 
     const lot = await fetchGreenLotWithPricing(greenLotId, tx)
-    const lockedPricePerKg = lot.pricingSnapshot!.clientPricePerKg
+    const roastYield = resolveRoastYield(lot)
+    const greenPricePerKg = lot.pricingSnapshot!.clientPricePerKg
+    const lockedPricePerKg = computeRoastedPrice(greenPricePerKg, roastYield)
 
     // -------------------------------------------------
-    // 2. VALIDATE CONTRACTABLE SUPPLY
+    // 2. CONVERT ROASTED → GREEN FOR VALIDATION
+    // -------------------------------------------------
+
+    const monthlyGreenKg = roastedToGreen(monthlyVolumeKg, roastYield)
+
+    // -------------------------------------------------
+    // 3. VALIDATE CONTRACTABLE SUPPLY (GREEN)
     // -------------------------------------------------
 
     const supply = await getContractableSupply({
       greenLotId,
+      excludeIntentId: input.demandIntentId,
       tx
     })
 
-    if (monthlyVolumeKg > supply.contractableKg) {
+    if (monthlyGreenKg > supply.contractableKg) {
       throw new ContractServiceError(
-        `Requested ${monthlyVolumeKg}kg exceeds contractable supply of ${supply.contractableKg}kg`,
+        `Requested ${monthlyVolumeKg}kg roasted (${monthlyGreenKg.toFixed(1)}kg green) exceeds contractable supply of ${supply.contractableKg}kg green`,
         "INSUFFICIENT_SUPPLY"
       )
     }
 
     // -------------------------------------------------
-    // 3. DERIVE PRICING FROM LOCKED PRICE
+    // 4. CONSUME DEMAND INTENT (if provided)
+    // -------------------------------------------------
+
+    if (input.demandIntentId) {
+      const intent = await tx.demandIntent.findUnique({
+        where: { id: input.demandIntentId },
+        select: { status: true, expiresAt: true }
+      })
+      if (!intent) {
+        throw new ContractServiceError("DemandIntent not found", "INTENT_NOT_FOUND")
+      }
+      if (intent.status !== "OPEN") {
+        throw new ContractServiceError(
+          `DemandIntent status is ${intent.status}, expected OPEN`,
+          "INTENT_NOT_OPEN"
+        )
+      }
+      if (intent.expiresAt && intent.expiresAt <= new Date()) {
+        throw new ContractServiceError(
+          "DemandIntent has expired",
+          "INTENT_EXPIRED"
+        )
+      }
+      await tx.demandIntent.update({
+        where: { id: input.demandIntentId },
+        data: { status: "CONSUMED", consumedAt: new Date() }
+      })
+    }
+
+    // -------------------------------------------------
+    // 5. DERIVE PRICING FROM LOCKED PRICE
     // -------------------------------------------------
 
     const bagSizeKg = DEFAULT_BAG_SIZE_KG
     const pricing = derivePricing(lockedPricePerKg, monthlyVolumeKg, bagSizeKg)
 
     // -------------------------------------------------
-    // 4. CREATE CONTRACT
+    // 6. CREATE CONTRACT
     // -------------------------------------------------
 
     return tx.contract.create({
@@ -118,8 +165,10 @@ export async function createContractWithSupplyValidation(input: {
         companyId,
         greenLotId,
         lockedPricePerKg,
+        roastYieldAtCreation: roastYield,
 
         monthlyVolumeKg,
+        monthlyGreenKg,
         durationMonths,
         remainingMonths: durationMonths,
 
@@ -165,6 +214,7 @@ export async function amendContractWithSupplyValidation(input: {
   companyId: string
   monthlyVolumeKg: number
   greenLotId?: string | null
+  excludeIntentId?: string
 }) {
 
   const { contractId, companyId, monthlyVolumeKg, greenLotId: newGreenLotId } = input
@@ -201,20 +251,26 @@ export async function amendContractWithSupplyValidation(input: {
       // -------------------------------------------------
       // CASE C: SWITCH COFFEE
       // Validate full volume against new lot.
-      // Reprice from new lot's PricingSnapshot.
+      // Reprice from new lot's PricingSnapshot + new yield.
       // -------------------------------------------------
 
       const lot = await fetchGreenLotWithPricing(newGreenLotId!, tx)
-      const newLockedPrice = lot.pricingSnapshot!.clientPricePerKg
+      const newYield = resolveRoastYield(lot)
+      const newLockedPrice = computeRoastedPrice(
+        lot.pricingSnapshot!.clientPricePerKg,
+        newYield
+      )
+      const newMonthlyGreenKg = roastedToGreen(monthlyVolumeKg, newYield)
 
       const supply = await getContractableSupply({
         greenLotId: newGreenLotId!,
+        excludeIntentId: input.excludeIntentId,
         tx
       })
 
-      if (monthlyVolumeKg > supply.contractableKg) {
+      if (newMonthlyGreenKg > supply.contractableKg) {
         throw new ContractServiceError(
-          `Requested ${monthlyVolumeKg}kg exceeds contractable supply of ${supply.contractableKg}kg for target lot`,
+          `Requested ${monthlyVolumeKg}kg roasted (${newMonthlyGreenKg.toFixed(1)}kg green) exceeds contractable supply of ${supply.contractableKg}kg green for target lot`,
           "INSUFFICIENT_SUPPLY"
         )
       }
@@ -226,7 +282,9 @@ export async function amendContractWithSupplyValidation(input: {
         data: {
           greenLotId: newGreenLotId,
           lockedPricePerKg: newLockedPrice,
+          roastYieldAtCreation: newYield,
           monthlyVolumeKg,
+          monthlyGreenKg: newMonthlyGreenKg,
           pricePerBag: pricing.pricePerBag,
           bagsPerDelivery: pricing.bagsPerDelivery,
           monthlyPrice: pricing.monthlyPrice,
@@ -236,21 +294,37 @@ export async function amendContractWithSupplyValidation(input: {
     } else {
       // -------------------------------------------------
       // CASE A/B: SAME COFFEE (increase or decrease)
-      // Price stays locked. Only volume + derived totals change.
+      // Price + yield stay locked. Only volume changes.
       // -------------------------------------------------
 
-      const delta = monthlyVolumeKg - contract.monthlyVolumeKg
+      // Resolve yield: contract snapshot → linked lot → fixed default
+      let yieldForCalc = contract.roastYieldAtCreation
+      if (yieldForCalc == null && contract.greenLotId) {
+        const linkedLot = await tx.greenLot.findUnique({
+          where: { id: contract.greenLotId },
+          select: { estimatedRoastYield: true, process: true }
+        })
+        if (linkedLot) {
+          yieldForCalc = resolveRoastYield(linkedLot)
+        }
+      }
+      yieldForCalc ??= 0.84
+      const newMonthlyGreenKg = roastedToGreen(monthlyVolumeKg, yieldForCalc)
+      const oldMonthlyGreenKg = contract.monthlyGreenKg ?? contract.monthlyVolumeKg
 
-      // CASE A: Increase — validate that the delta is available
-      if (delta > 0) {
+      const greenDelta = newMonthlyGreenKg - oldMonthlyGreenKg
+
+      // CASE A: Increase — validate that the green delta is available
+      if (greenDelta > 0) {
         const supply = await getContractableSupply({
           greenLotId: contract.greenLotId ?? undefined,
+          excludeIntentId: input.excludeIntentId,
           tx
         })
 
-        if (delta > supply.contractableKg) {
+        if (greenDelta > supply.contractableKg) {
           throw new ContractServiceError(
-            `Volume increase of ${delta}kg exceeds contractable supply of ${supply.contractableKg}kg`,
+            `Volume increase of ${greenDelta.toFixed(1)}kg green exceeds contractable supply of ${supply.contractableKg}kg`,
             "INSUFFICIENT_SUPPLY"
           )
         }
@@ -268,6 +342,7 @@ export async function amendContractWithSupplyValidation(input: {
         where: { id: contractId },
         data: {
           monthlyVolumeKg,
+          monthlyGreenKg: newMonthlyGreenKg,
           pricePerBag: pricing.pricePerBag,
           bagsPerDelivery: pricing.bagsPerDelivery,
           monthlyPrice: pricing.monthlyPrice,

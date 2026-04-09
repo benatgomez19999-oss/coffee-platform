@@ -5,8 +5,14 @@ import {
 } from "@/src/spatialMarket/registries"
 
 // =====================================================
-// SAFETY BUFFER — minimum kg reserved from contracting
-// Matches the minimumReserve in semaphoreEvaluator.ts
+// SAFETY BUFFER — single authoritative reserve (400 kg)
+//
+// This is the ONLY place the structural reserve is applied.
+// Callers passing contractableKg to evaluateSemaphore must
+// set safetyBuffer = 0 to avoid double-deduction.
+// The semaphore's internal minimumReserve (400) provides an
+// additional post-trade floor — that is a separate check,
+// not a duplicate of this buffer.
 // =====================================================
 
 const SAFETY_BUFFER_KG = 400
@@ -57,10 +63,10 @@ export async function getContractableSupply(options?: {
   const grossAvailableKg = grossResult._sum.availableKg ?? 0
 
   // -------------------------------------------------
-  // 2. COMMITTED BY CONTRACTS — monthly volume of
+  // 2. COMMITTED BY CONTRACTS — green equivalent of
   //    contracts that are pending, signed, or active.
-  //    Conservative: we count monthly commitment, not
-  //    lifetime volume, because supply is replenished.
+  //    Uses monthlyGreenKg (green). Falls back to
+  //    monthlyVolumeKg for legacy contracts (was green).
   // -------------------------------------------------
 
   const contractWhere: Prisma.ContractWhereInput = {
@@ -68,18 +74,20 @@ export async function getContractableSupply(options?: {
     ...(greenLotId ? { greenLotId } : {})
   }
 
-  const committedResult = await db.contract.aggregate({
+  const contracts = await db.contract.findMany({
     where: contractWhere,
-    _sum: { monthlyVolumeKg: true }
+    select: { monthlyGreenKg: true, monthlyVolumeKg: true }
   })
 
-  const committedKg = committedResult._sum.monthlyVolumeKg ?? 0
+  const committedKg = contracts.reduce((sum, c) => {
+    return sum + (c.monthlyGreenKg ?? c.monthlyVolumeKg)
+  }, 0)
 
   // -------------------------------------------------
   // 3. RESERVED BY OPEN INTENTS — positive deltaKg
   //    from intents not yet consumed or expired.
-  //    Phase 1: this will return 0 until demand-intent
-  //    route is live. Included for correctness.
+  //    Only OPEN intents reserve supply.
+  //    COUNTERED intents do NOT reserve.
   // -------------------------------------------------
 
   const intentWhere: Prisma.DemandIntentWhereInput = {
@@ -111,6 +119,45 @@ export async function getContractableSupply(options?: {
     grossAvailableKg,
     committedKg,
     reservedByIntentsKg
+  }
+}
+
+// =====================================================
+// DISPLAYABLE SUPPLY — MARKET VIEW ONLY
+//
+// Wraps getContractableSupply() with a conservative
+// adjustment factor for display purposes.
+// NEVER used for transactional validation (contract
+// creation, intent reservation). Only for market view.
+//
+// adjustmentFactor is server-side deterministic:
+// derived from committed/gross ratio. No engine coupling.
+// =====================================================
+
+export async function getDisplayableSupply(options?: {
+  greenLotId?: string
+}) {
+  const supply = await getContractableSupply(options)
+
+  const committedRatio = supply.grossAvailableKg > 0
+    ? supply.committedKg / supply.grossAvailableKg
+    : 0
+
+  const reservedRatio = supply.grossAvailableKg > 0
+    ? supply.reservedByIntentsKg / supply.grossAvailableKg
+    : 0
+
+  const adjustmentFactor = Math.max(
+    0.70,
+    Math.min(1.00, 1.0 - committedRatio * 0.15 - reservedRatio * 0.10)
+  )
+
+  const displayableKg = supply.contractableKg * adjustmentFactor
+
+  return {
+    ...supply,
+    displayableKg,
+    adjustmentFactor,
   }
 }
 

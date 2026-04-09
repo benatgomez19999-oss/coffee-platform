@@ -1,27 +1,15 @@
 "use client"
 
-import type { EngineState } from "@/src/engine/core/runtime"
 import { useSearchParams, useRouter } from "next/navigation"
-
-
-
-
-import { computeSupplySecurityIndex }
-from "@/src/decision/computeSupplySecurityIndex"
-
 import { useEffect, useState } from "react"
 
 type Props = {
-  engineState: EngineState
+  marketData?: any
 }
 
-import { getEngineContext } from "@/src/engine/core/runtime"
-
 export default function ClientOverviewPanel({
-  engineState
+  marketData
 }: Props) {
-
-  const { liveDecision, regions } = engineState
 
   // ======================================================
   // ACTIVE CONTRACTS SOURCE OF TRUTH
@@ -51,8 +39,6 @@ useEffect(() => {
 
       setLoading(false)
 
-      
-
     }
 
   }
@@ -62,6 +48,30 @@ useEffect(() => {
 }, [])
 
  // ======================================================
+// PENDING INTENTS
+// ======================================================
+
+const [intents, setIntents] = useState<any[]>([])
+
+useEffect(() => {
+  async function loadIntents() {
+    try {
+      const res = await fetch("/api/demand-intent")
+      if (!res.ok) return
+      const data = await res.json()
+      setIntents(data.intents ?? [])
+    } catch (err) {
+      console.error("LOAD INTENTS ERROR", err)
+    }
+  }
+  loadIntents()
+}, [])
+
+const pendingIntents = intents.filter(
+  i => i.status === "OPEN" || i.status === "COUNTERED" || i.status === "WAITING"
+)
+
+ // ======================================================
 // SUCCESS PAYMENT MESSAGE
 // ======================================================
 useEffect(() => {
@@ -69,15 +79,13 @@ useEffect(() => {
 
   if (!isSuccess) return
 
- alert("✅ Payment successful")
+ alert("Payment successful")
 
-  // limpiar URL primero
   router.replace("/platform")
-
-  // refrescar datos
   router.refresh()
 
 }, [])
+
  // ======================================================
 // CONTRACT METRICS (SAFE)
 // ======================================================
@@ -114,7 +122,6 @@ const pendingPaymentContract = safeContracts.find(
     c.status === "PAYMENT_PENDING"
 )
 
-// 👇 solo volumen activo REAL
 const monthlyVolume =
   safeContracts
     .filter(c => c.status === "ACTIVE")
@@ -124,53 +131,11 @@ const monthlyVolume =
     )
 
   // ======================================================
-  // AVAILABLE SUPPLY
+  // AVAILABLE SUPPLY (FROM MARKET API — ROASTED)
   // ======================================================
 
-  const totalAvailable =
-    regions?.reduce(
-      (sum, r) => sum + r.availableKg,
-      0
-    ) ?? 0
-
-// ======================================================
-// SYSTEM STATUS
-// Neutral boot state when no request is active
-// ======================================================
-
-const context = getEngineContext()
-
-const requestedVolume =
-  context?.requestedVolume ?? 0
-
-const semaphore =
-  requestedVolume === 0
-    ? "green"
-    : liveDecision?.semaphore ?? "green"
-
-const statusColor =
-  semaphore === "green"
-    ? "#4ade80"
-    : semaphore === "yellow"
-    ? "#facc15"
-    : "#f87171"
-
-  // ======================================================
-  // RISK + HEALTH
-  // ======================================================
-
-  const riskScore =
-    liveDecision?.riskScore ?? 0
-
-  const coverageRatio =
-    liveDecision?.coverageRatio ?? 1
-
-  const contractHealth =
-    coverageRatio > 1
-      ? "Strong"
-      : coverageRatio > 0.8
-      ? "Stable"
-      : "At Risk"
+  const totalAvailable = marketData?.totals?.roastedAvailableKg ?? 0
+  const lotCount = marketData?.totals?.lotCount ?? 0
 
   // ======================================================
   // NEXT SHIPMENT
@@ -188,7 +153,7 @@ const statusColor =
  async function resetContracts() {
 
   const confirmReset = confirm(
-    "⚠️ This will delete ALL contracts. Continue?"
+    "This will delete ALL contracts. Continue?"
   )
 
   if (!confirmReset) return
@@ -207,9 +172,8 @@ const statusColor =
       return
     }
 
-    console.log("🔥 DB RESET DONE")
+    console.log("DB RESET DONE")
 
-    // recargar datos reales
     location.reload()
 
   } catch (err) {
@@ -220,25 +184,6 @@ const statusColor =
   }
 
 }
-
-  // ======================================================
-  // SECURITY INDEX
-  // ======================================================
-
-  const supplySecurityIndex =
-    computeSupplySecurityIndex(
-      coverageRatio,
-      riskScore,
-      totalAvailable,
-      monthlyVolume
-    )
-
-  const ssiColor =
-    supplySecurityIndex > 80
-      ? "#4ade80"
-      : supplySecurityIndex > 60
-      ? "#facc15"
-      : "#f87171"
 
   // ======================================================
   // RENDER
@@ -277,9 +222,9 @@ const statusColor =
       }}>
         Client Overview
       </div>
+
 {/* ======================================================
-   CLIENT METRICS GRID
-   Convierte métricas en panel analítico (2 columnas)
+   CLIENT METRICS GRID (REAL DATA ONLY)
 ====================================================== */}
 
 <div style={{
@@ -344,19 +289,18 @@ const statusColor =
     value={`${Math.round(monthlyVolume)} kg`}
   />
 
-  {/* AVAILABLE UPSIDE */}
+  {/* AVAILABLE SUPPLY */}
 
   <Metric
-    label="Available Upside"
-    value={`+${Math.round(totalAvailable)} kg`}
+    label="Available Supply"
+    value={`${Math.round(totalAvailable)} kg`}
   />
 
-  {/* SUPPLY STATUS */}
+  {/* PUBLISHED LOTS */}
 
   <Metric
-    label="Supply Status"
-    value={semaphore.toUpperCase()}
-    color={statusColor}
+    label="Published Lots"
+    value={lotCount}
   />
 
   {/* NEXT SHIPMENT */}
@@ -366,66 +310,54 @@ const statusColor =
     value={nextShipment}
   />
 
-  {/* CONTRACT HEALTH */}
+  {/* PENDING INTENTS */}
 
   <Metric
-    label="Contract Health"
-    value={contractHealth}
+    label="Pending Intents"
+    value={pendingIntents.length}
   />
-
-  {/* NETWORK RISK */}
-
-  <Metric
-    label="Network Risk"
-    value={riskScore.toFixed(2)}
-  />
-
-  {/* ======================================================
-   SUPPLY SECURITY INDEX
-   Señal visual de seguridad de suministro
-====================================================== */}
-
-<div>
-
-  <div style={{
-    opacity: 0.6,
-    fontSize: 13
-  }}>
-    Supply Security Index
-  </div>
-
-  <div style={{
-    fontSize: 22,
-    marginTop: 4,
-    color: ssiColor
-  }}>
-    {supplySecurityIndex}/100
-  </div>
-
-  {/* BAR VISUAL */}
-
-  <div style={{
-    marginTop: 8,
-    height: 6,
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.08)",
-    overflow: "hidden"
-  }}>
-
-    <div style={{
-      width: `${supplySecurityIndex}%`,
-      height: "100%",
-      background: ssiColor,
-      transition: "width 0.25s ease"
-    }}/>
-
-  </div>
 
 </div>
 
- 
+{/* INTENT LIST */}
 
-</div>
+{pendingIntents.length > 0 && (
+  <div style={{ marginTop: 24 }}>
+    <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 12 }}>
+      Active Demand Intents
+    </div>
+    {pendingIntents.map((intent: any) => (
+      <div key={intent.id} style={{
+        padding: "12px 16px",
+        marginBottom: 8,
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.03)",
+        border: `1px solid ${
+          intent.status === "OPEN" ? "rgba(74,222,128,0.3)"
+          : intent.status === "COUNTERED" ? "rgba(250,204,21,0.3)"
+          : "rgba(255,255,255,0.1)"
+        }`
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+          <span>{intent.requestedKg} kg/mo</span>
+          <span style={{
+            color: intent.status === "OPEN" ? "#4ade80"
+              : intent.status === "COUNTERED" ? "#facc15"
+              : "#aaa"
+          }}>
+            {intent.status}
+          </span>
+        </div>
+        {intent.greenLot?.farm?.name && (
+          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
+            {intent.greenLot.farm.name}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
 </div>
   )
 

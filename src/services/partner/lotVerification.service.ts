@@ -22,6 +22,7 @@ export async function verifyLotService(input: {
   lotId: string
   scaScore: number
   conversionRate: number
+  estimatedRoastYield?: number
 
 }) {
 
@@ -170,6 +171,13 @@ export async function verifyLotService(input: {
       // 📊 QUALITY
       //////////////////////////////////////////////////////
       scaScore: input.scaScore,
+
+      //////////////////////////////////////////////////////
+      // 🔥 ROAST YIELD ESTIMATE (green → roasted)
+      //////////////////////////////////////////////////////
+      ...(input.estimatedRoastYield != null && {
+        estimatedRoastYield: input.estimatedRoastYield,
+      }),
 
       //////////////////////////////////////////////////////
       // 💰 PRICING
