@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type LotDraft = {
   id: string;
@@ -14,6 +15,7 @@ type LotDraft = {
 
 export default function PartnerLotDetail({ params }: { params: { id: string } }) {
 
+  const router = useRouter();
   const [lot, setLot] = useState<LotDraft | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,7 +65,7 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
 
     alert("Lot verified ✅");
 
-    window.location.reload(); // 🔥 CLAVE
+    router.push("/platform/partner/lots");
 
   } catch (err) {
     console.error(err);
