@@ -65,7 +65,7 @@ export default function PartnerLotDetail({ params }: { params: { id: string } })
 
     alert("Lot verified ✅");
 
-    router.push("/platform/partner/lots");
+    router.push("/platform/partner");
 
   } catch (err) {
     console.error(err);
