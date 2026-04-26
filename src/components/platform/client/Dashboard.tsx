@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ClientTradingPanel from "@/src/components/platform/client/ClientTradingPanel"
 import ClientContractsPanel from "@/src/components/platform/client/ClientContractsPanel"
 import ClientOverviewPanel from "@/src/components/platform/client/ClientOverviewPanel"
 import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
+import CoffeeLoader from "@/src/components/shared/general/CoffeeLoader"
 import { hideNavOverlay } from "@/src/lib/navigationOverlay"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
@@ -133,9 +134,38 @@ useEffect(() => {
   hideNavOverlay()
 }, [])
 
+// ======================================================
+// 🎬 LOADER ANIMATION
+// Mismo patrón que ProducerView: CoffeeLoader corre la
+// secuencia completa (cherry → green → roasted → fade)
+// y al terminar hace fade-in del dashboard. Funciona
+// igual desde landing, login y F5.
+// ======================================================
+
+const hasEnteredRef = useRef(false)
+const [entered, setEntered] = useState(false)
+
+const handleFinish = () => {
+  if (hasEnteredRef.current) return
+  hasEnteredRef.current = true
+  setEntered(true)
+}
+
 
 return (
   <>
+
+{/* ====================================================== */}
+{/* ☕ COFFEE LOADER (cherry → green → roasted → fade) */}
+{/* ====================================================== */}
+{!entered && <CoffeeLoader onFinish={handleFinish} />}
+
+{/* ====================================================== */}
+{/* 🎬 DASHBOARD (fade-in al terminar el loader) */}
+{/* ====================================================== */}
+<div
+  className={`transition-opacity duration-700 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
+>
 
 {/* ====================================================== */}
 {/* SHARED PLATFORM HEADER (role-aware — themes from user.role) */}
@@ -203,6 +233,8 @@ return (
     </div>
 
   </div>
+
+</div>
 
 </div>
 
