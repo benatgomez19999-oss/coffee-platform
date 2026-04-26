@@ -152,10 +152,10 @@ export default function ClientOverviewPanel({
     <div
       style={{
         padding: 30,
-        borderRadius: 18,
+        borderRadius: 22,
         background:
-          "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)",
-        border: "1px solid rgba(255,255,255,0.07)"
+          "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)",
+        border: "1px solid rgba(214,176,79,0.18)",
       }}
     >
 
@@ -163,24 +163,23 @@ export default function ClientOverviewPanel({
       <div style={{ marginBottom: 26 }}>
         <div
           style={{
-            fontSize: 11,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            color: "rgba(212,175,55,0.75)",
-            marginBottom: 8
+            fontSize: 18,
+            color: "#f4efe3",
+            fontWeight: 400,
+            letterSpacing: "-0.005em",
+            marginBottom: 4,
           }}
         >
           Contract Portfolio
         </div>
         <div
           style={{
-            fontSize: 16,
-            color: "#EDE8DF",
+            fontSize: 13,
+            color: "rgba(244,239,227,0.55)",
             fontWeight: 300,
-            letterSpacing: "-0.005em"
           }}
         >
-          Active commitments &amp; supply
+          Active commitments &amp; supply overview
         </div>
       </div>
 
@@ -193,30 +192,23 @@ export default function ClientOverviewPanel({
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           columnGap: 26,
-          rowGap: 24
+          rowGap: 22,
         }}
       >
 
         <Metric label="Active Contracts" value={activeContracts} />
-
         <Metric label="Pending Signature" value={pendingSignature} />
-
         <Metric label="Pending Payment" value={pendingPayment} />
-
         <Metric
           label="Monthly Volume"
           value={`${Math.round(monthlyVolume).toLocaleString("en-US")} kg`}
         />
-
         <Metric
           label="Available Supply"
           value={`${Math.round(totalAvailable).toLocaleString("en-US")} kg`}
         />
-
         <Metric label="Published Lots" value={lotCount} />
-
         <Metric label="Next Shipment" value={nextShipment} />
-
         <Metric label="Pending Intents" value={pendingIntents.length} />
 
       </div>
@@ -228,57 +220,60 @@ export default function ClientOverviewPanel({
       {(pendingSignature > 0 || pendingPayment > 0) && (
         <div
           style={{
-            marginTop: 22,
+            marginTop: 24,
             paddingTop: 22,
             borderTop: "1px solid rgba(255,255,255,0.06)",
             display: "flex",
-            gap: 10,
-            flexWrap: "wrap"
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap",
           }}
         >
-
-          {pendingSignature > 0 && pendingSignatureContract && (
-            <button
-              onClick={() => {
-                window.location.href = `/contract/verify-otp?contractId=${pendingSignatureContract.id}`
-              }}
+          <div style={{ minWidth: 0 }}>
+            <div
               style={{
-                padding: "10px 18px",
-                borderRadius: 10,
-                background: "#facc15",
-                color: "#111",
-                fontWeight: 500,
                 fontSize: 13,
-                border: "none",
-                cursor: "pointer",
-                letterSpacing: "0.02em"
+                color: "#f4efe3",
+                fontWeight: 400,
+                marginBottom: 2,
               }}
             >
-              Complete Signature
-            </button>
-          )}
-
-          {pendingPayment > 0 && pendingPaymentContract && (
-            <button
-              onClick={() => {
-                window.location.href = `/contract/payment?contractId=${pendingPaymentContract.id}`
-              }}
+              Actions required
+            </div>
+            <div
               style={{
-                padding: "10px 18px",
-                borderRadius: 10,
-                background: "#4ade80",
-                color: "#111",
-                fontWeight: 500,
-                fontSize: 13,
-                border: "none",
-                cursor: "pointer",
-                letterSpacing: "0.02em"
+                fontSize: 12,
+                color: "rgba(244,239,227,0.55)",
               }}
             >
-              Complete Payment
-            </button>
-          )}
+              Complete pending steps to keep your supply moving.
+            </div>
+          </div>
 
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {pendingSignature > 0 && pendingSignatureContract && (
+              <button
+                onClick={() => {
+                  window.location.href = `/contract/verify-otp?contractId=${pendingSignatureContract.id}`
+                }}
+                style={actionPill("rgba(250,204,21,0.85)")}
+              >
+                Complete Signature
+              </button>
+            )}
+
+            {pendingPayment > 0 && pendingPaymentContract && (
+              <button
+                onClick={() => {
+                  window.location.href = `/contract/payment?contractId=${pendingPaymentContract.id}`
+                }}
+                style={actionPill("rgba(74,222,128,0.85)")}
+              >
+                Complete Payment
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -291,7 +286,7 @@ export default function ClientOverviewPanel({
           style={{
             marginTop: 24,
             paddingTop: 22,
-            borderTop: "1px solid rgba(255,255,255,0.06)"
+            borderTop: "1px solid rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -299,8 +294,8 @@ export default function ClientOverviewPanel({
               fontSize: 11,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "rgba(237,232,223,0.5)",
-              marginBottom: 12
+              color: "rgba(244,239,227,0.45)",
+              marginBottom: 12,
             }}
           >
             Active Demand Intents
@@ -313,21 +308,21 @@ export default function ClientOverviewPanel({
                 padding: "12px 16px",
                 marginBottom: 8,
                 borderRadius: 10,
-                background: "rgba(255,255,255,0.03)",
+                background: "rgba(255,255,255,0.025)",
                 border: `1px solid ${
                   intent.status === "OPEN"
-                    ? "rgba(74,222,128,0.3)"
+                    ? "rgba(74,222,128,0.28)"
                     : intent.status === "COUNTERED"
-                    ? "rgba(250,204,21,0.3)"
+                    ? "rgba(250,204,21,0.28)"
                     : "rgba(255,255,255,0.1)"
-                }`
+                }`,
               }}
             >
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  fontSize: 13
+                  fontSize: 13,
                 }}
               >
                 <span>{intent.requestedKg} kg/mo</span>
@@ -335,12 +330,12 @@ export default function ClientOverviewPanel({
                   style={{
                     color:
                       intent.status === "OPEN"
-                        ? "#4ade80"
+                        ? "#7be09f"
                         : intent.status === "COUNTERED"
-                        ? "#facc15"
-                        : "#aaa",
+                        ? "#e2c15d"
+                        : "rgba(244,239,227,0.55)",
                     letterSpacing: "0.06em",
-                    fontSize: 11
+                    fontSize: 11,
                   }}
                 >
                   {intent.status}
@@ -351,7 +346,7 @@ export default function ClientOverviewPanel({
                   style={{
                     fontSize: 11,
                     opacity: 0.5,
-                    marginTop: 4
+                    marginTop: 4,
                   }}
                 >
                   {intent.greenLot.farm.name}
@@ -372,7 +367,7 @@ export default function ClientOverviewPanel({
           paddingTop: 18,
           borderTop: "1px solid rgba(255,255,255,0.04)",
           display: "flex",
-          justifyContent: "flex-end"
+          justifyContent: "flex-end",
         }}
       >
         <button
@@ -382,11 +377,11 @@ export default function ClientOverviewPanel({
             borderRadius: 999,
             border: "1px solid rgba(255,255,255,0.08)",
             background: "transparent",
-            color: "rgba(255,255,255,0.35)",
+            color: "rgba(255,255,255,0.32)",
             fontSize: 10,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            cursor: "pointer"
+            cursor: "pointer",
           }}
           title="Developer-only: deletes all contracts"
         >
@@ -406,22 +401,19 @@ export default function ClientOverviewPanel({
 function Metric({
   label,
   value,
-  color
 }: {
   label: string
   value: string | number
-  color?: string
 }) {
 
   return (
     <div>
       <div
         style={{
-          fontSize: 11,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: "rgba(237,232,223,0.5)",
-          marginBottom: 6
+          fontSize: 12,
+          color: "rgba(244,239,227,0.55)",
+          marginBottom: 6,
+          fontWeight: 300,
         }}
       >
         {label}
@@ -429,10 +421,10 @@ function Metric({
 
       <div
         style={{
-          fontSize: 20,
-          fontWeight: 300,
+          fontSize: 22,
+          fontWeight: 400,
           letterSpacing: "-0.01em",
-          color: color ?? "#EDE8DF"
+          color: "#f4efe3",
         }}
       >
         {value}
@@ -440,4 +432,19 @@ function Metric({
     </div>
   )
 
+}
+
+
+function actionPill(color: string): React.CSSProperties {
+  return {
+    padding: "9px 16px",
+    borderRadius: 999,
+    background: "transparent",
+    border: `1px solid ${color}`,
+    color,
+    fontSize: 12,
+    letterSpacing: "0.04em",
+    cursor: "pointer",
+    fontWeight: 400,
+  }
 }

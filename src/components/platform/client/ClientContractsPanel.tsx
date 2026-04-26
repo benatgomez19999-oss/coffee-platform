@@ -10,10 +10,16 @@ import {
   clearSelectedContract
 } from "@/src/clientLayer/layer/contractController"
 
-import { getRegisteredContracts } from "@/src/clientLayer/layer/contractRegistry"
-
 // ======================================================
-// CLIENT CONTRACTS PANEL — STATUS AWARE (PRO)
+// CLIENT CONTRACTS PANEL — STATUS AWARE
+//
+// CTA routing:
+//   - "Start Pilot Contract" / "+ New Contract" used to
+//     route to /contract/create directly. That route is a
+//     dead-end without a DemandIntent. They now scroll to
+//     the Supply Desk panel where the user picks a lot and
+//     submits a real intent — which is the only legitimate
+//     entry to /contract/create.
 // ======================================================
 
 export default function ClientContractsPanel({ contracts }: { contracts: any[] }) {
@@ -21,7 +27,6 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
   const router = useRouter()
   const searchParams = useSearchParams()!
 
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
   const [showTimeline, setShowTimeline] = useState(false)
   const [selectedContractId, setSelectedContractId] =
     useState<string | null>(null)
@@ -29,14 +34,14 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
   const safeContracts = Array.isArray(contracts) ? contracts : []
 
   // ======================================================
-  // CLEAN TEMPLATE WHEN REAL CONTRACT EXISTS
+  // SCROLL TO SUPPLY DESK — CTA replacement for dead-end
   // ======================================================
 
-  useEffect(() => {
-    if (safeContracts.length > 0) {
-      setSelectedTemplate(null)
-    }
-  }, [safeContracts.length])
+  function goToSupplyDesk() {
+    const el = document.getElementById("supply-desk")
+    if (!el) return
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   // ======================================================
   // HELPERS
@@ -61,16 +66,16 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
   function getStatusColor(status: string) {
     switch (status) {
       case "AWAITING_SIGNATURE":
-        return "#facc15"
+        return "#e2c15d"
       case "SIGNED":
       case "PAYMENT_PENDING":
-        return "#4ade80"
+        return "#7be09f"
       case "ACTIVE":
-        return "#4ade80"
+        return "#7be09f"
       case "COMPLETED":
-        return "#999"
+        return "rgba(244,239,227,0.5)"
       default:
-        return "#fff"
+        return "#f4efe3"
     }
   }
 
@@ -79,59 +84,108 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
   // ======================================================
 
   return (
-
     <div
       style={{
-        padding: "30px",
-        borderRadius: "16px",
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)"
+        padding: 30,
+        borderRadius: 22,
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)",
+        border: "1px solid rgba(214,176,79,0.18)",
       }}
     >
 
-      <div style={{ marginBottom: 20, fontSize: 18 }}>
+      <div
+        style={{
+          fontSize: 18,
+          color: "#f4efe3",
+          fontWeight: 400,
+          letterSpacing: "-0.005em",
+          marginBottom: 18,
+        }}
+      >
         Supply Contracts
       </div>
 
       {/* ======================================================
-         NO CONTRACT
+         NO CONTRACT — calm empty state
       ====================================================== */}
 
       {safeContracts.length === 0 && (
-
         <div
           style={{
-            padding: 18,
-            borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.1)",
-            marginBottom: 20,
-            background: "rgba(255,255,255,0.03)"
+            padding: 22,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.025)",
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+            justifyContent: "space-between",
+            flexWrap: "wrap",
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                background: "rgba(214,176,79,0.08)",
+                border: "1px solid rgba(214,176,79,0.22)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#d6b04f",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
+                stroke="currentColor" strokeWidth="1.4"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 2.5H12L17 7.5V17.5H5V2.5Z" />
+                <path d="M12 2.5V7.5H17" />
+                <path d="M7.5 11H14.5" />
+                <path d="M7.5 14H12.5" />
+              </svg>
+            </div>
 
-          <div style={{ marginBottom: 12, opacity: 0.7 }}>
-            No supply contract yet
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#f4efe3",
+                  fontWeight: 400,
+                  marginBottom: 4,
+                }}
+              >
+                No supply contract yet
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "rgba(244,239,227,0.55)",
+                  lineHeight: 1.6,
+                }}
+              >
+                Start your first pilot contract to secure roasted coffee supply.
+              </div>
+            </div>
           </div>
 
           <button
-            onClick={() => {
-              clearSelectedContract()
-              router.push("/contract/create")
-            }}
-            style={{
-              padding: "10px 22px",
-              borderRadius: 999,
-              border: "none",
-              background: "linear-gradient(90deg,#d4af37,#f3d27a)",
-              cursor: "pointer",
-              fontWeight: 500
-            }}
+            onClick={goToSupplyDesk}
+            style={primaryGoldPill}
           >
             Start Pilot Contract
           </button>
-
         </div>
-
       )}
 
       {/* ======================================================
@@ -143,7 +197,6 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
         const status = contract.status
 
         return (
-
           <div
             key={contract.id}
             onClick={() => {
@@ -159,13 +212,13 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
 
               border:
                 contract.id === selectedContractId
-                  ? "2px solid #facc15"
-                  : "1px solid rgba(255,255,255,0.15)",
+                  ? "1px solid rgba(226,193,93,0.55)"
+                  : "1px solid rgba(255,255,255,0.1)",
 
               background:
                 contract.id === selectedContractId
-                  ? "rgba(250,204,21,0.08)"
-                  : "rgba(255,255,255,0.03)"
+                  ? "rgba(214,176,79,0.05)"
+                  : "rgba(255,255,255,0.025)",
             }}
           >
 
@@ -173,33 +226,37 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center"
+                alignItems: "center",
+                gap: 14,
               }}
             >
 
               {/* LEFT SIDE */}
-
-              <div>
-
-                <div style={{
-                  fontSize: 13,
-                  opacity: 0.7,
-                  color: getStatusColor(status)
-                }}>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.08em",
+                    color: getStatusColor(status),
+                  }}
+                >
                   {getStatusLabel(status)}
                 </div>
 
-                <div style={{ fontSize: 18, marginTop: 2 }}>
+                <div
+                  style={{
+                    fontSize: 17,
+                    marginTop: 4,
+                    color: "#f4efe3",
+                    fontWeight: 400,
+                  }}
+                >
                   {contract.monthlyVolumeKg} kg / month
                 </div>
-
               </div>
 
               {/* RIGHT SIDE ACTIONS */}
-
-              <div style={{ display: "flex", gap: 8 }}>
-
-                {/* SIGN */}
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
 
                 {status === "AWAITING_SIGNATURE" && (
                   <button
@@ -207,13 +264,11 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
                       e.stopPropagation()
                       router.push(`/contract/verify-otp?contractId=${contract.id}`)
                     }}
-                    style={actionBtn("#facc15")}
+                    style={actionPill("rgba(226,193,93,0.85)")}
                   >
                     Sign
                   </button>
                 )}
-
-                {/* PAY */}
 
                 {(status === "SIGNED" || status === "PAYMENT_PENDING") && (
                   <button
@@ -221,13 +276,11 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
                       e.stopPropagation()
                       router.push(`/contract/payment?contractId=${contract.id}`)
                     }}
-                    style={actionBtn("#4ade80")}
+                    style={actionPill("rgba(123,224,159,0.85)")}
                   >
                     Pay
                   </button>
                 )}
-
-                {/* VIEW */}
 
                 <button
                   onClick={(e) => {
@@ -235,45 +288,31 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
                     setSelectedContractId(contract.id)
                     setShowTimeline(true)
                   }}
-                  style={secondaryBtn}
+                  style={secondaryPill}
                 >
                   View
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
         )
-
       })}
 
       {/* ======================================================
          NEW CONTRACT BUTTON
+         (Now routes to Supply Desk, not the dead-end wizard.)
       ====================================================== */}
 
       {safeContracts.length > 0 && (
-
         <button
-          onClick={() => {
-            clearSelectedContract()
-            router.push("/contract/create")
-          }}
+          onClick={goToSupplyDesk}
           style={{
+            ...primaryGoldPill,
             marginTop: 12,
-            padding: "8px 16px",
-            borderRadius: 999,
-            border: "1px solid rgba(212,175,55,0.6)",
-            background: "linear-gradient(90deg,#d4af37,#f3d27a)",
-            cursor: "pointer",
-            fontWeight: 500
           }}
         >
           + New Contract
         </button>
-
       )}
 
       {/* ======================================================
@@ -281,38 +320,55 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
       ====================================================== */}
 
       {showTimeline && selectedContractId && (
-
         <ContractTimelineModal
           contractId={selectedContractId}
           onClose={() => setShowTimeline(false)}
         />
-
       )}
 
     </div>
   )
 }
 
+
 // ======================================================
 // STYLES
 // ======================================================
 
-function actionBtn(color: string) {
-  return {
-    padding: "6px 12px",
-    borderRadius: 999,
-    border: "none",
-    background: color,
-    color: "#000",
-    cursor: "pointer",
-    fontWeight: 500
-  }
+const primaryGoldPill: React.CSSProperties = {
+  padding: "10px 22px",
+  borderRadius: 999,
+  border: "1px solid rgba(214,176,79,0.5)",
+  background: "linear-gradient(90deg, #d6b04f, #e2c15d)",
+  color: "#1a1409",
+  cursor: "pointer",
+  fontWeight: 500,
+  fontSize: 13,
+  letterSpacing: "0.02em",
+  flexShrink: 0,
 }
 
-const secondaryBtn = {
-  padding: "6px 12px",
+const secondaryPill: React.CSSProperties = {
+  padding: "6px 14px",
   borderRadius: 999,
-  border: "1px solid rgba(255,255,255,0.2)",
-  background: "rgba(255,255,255,0.06)",
-  cursor: "pointer"
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.05)",
+  color: "#f4efe3",
+  cursor: "pointer",
+  fontSize: 12,
+  letterSpacing: "0.02em",
+}
+
+function actionPill(color: string): React.CSSProperties {
+  return {
+    padding: "6px 14px",
+    borderRadius: 999,
+    border: `1px solid ${color}`,
+    background: "transparent",
+    color,
+    cursor: "pointer",
+    fontSize: 12,
+    letterSpacing: "0.04em",
+    fontWeight: 400,
+  }
 }

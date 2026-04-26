@@ -86,12 +86,14 @@ export default function LeftPanel({ marketData }: Props) {
 
   return (
     <div
+      id="supply-desk"
       style={{
+        scrollMarginTop: 110,
         padding: 36,
-        borderRadius: 18,
+        borderRadius: 22,
         background:
-          "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)",
-        border: "1px solid rgba(255,255,255,0.07)"
+          "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)",
+        border: "1px solid rgba(214,176,79,0.18)",
       }}
     >
 
@@ -104,7 +106,7 @@ export default function LeftPanel({ marketData }: Props) {
             fontSize: 11,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "rgba(212,175,55,0.75)",
+            color: "rgba(214,176,79,0.85)",
             marginBottom: 8
           }}
         >
@@ -113,8 +115,8 @@ export default function LeftPanel({ marketData }: Props) {
         <div
           style={{
             fontSize: 18,
-            color: "#EDE8DF",
-            fontWeight: 300,
+            color: "#f4efe3",
+            fontWeight: 400,
             letterSpacing: "-0.005em"
           }}
         >
@@ -124,56 +126,86 @@ export default function LeftPanel({ marketData }: Props) {
 
       {/* ============================================== */}
       {/* EMPTY STATE — no verified lots                  */}
+      {/* (No fake "marketplace" CTA — that route does    */}
+      {/*  not exist. Calm informational state with a     */}
+      {/*  Refresh action so the user can re-check.)     */}
       {/* ============================================== */}
       {allLots.length === 0 && (
         <div
           style={{
-            padding: "56px 32px",
-            borderRadius: 14,
+            padding: "60px 32px",
+            borderRadius: 18,
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01))",
-            border: "1px solid rgba(255,255,255,0.08)",
+              "linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008))",
+            border: "1px solid rgba(255,255,255,0.07)",
             textAlign: "center"
           }}
         >
           <div
             style={{
-              width: 56,
-              height: 56,
+              width: 60,
+              height: 60,
               margin: "0 auto 20px",
               borderRadius: "50%",
-              background: "rgba(212,175,55,0.08)",
-              border: "1px solid rgba(212,175,55,0.2)",
+              background: "rgba(214,176,79,0.08)",
+              border: "1px solid rgba(214,176,79,0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 22
+              color: "#d6b04f",
             }}
           >
-            ☕
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.4"
+              strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z" />
+              <path d="M6 1v3" />
+              <path d="M10 1v3" />
+              <path d="M14 1v3" />
+            </svg>
           </div>
           <div
             style={{
-              fontSize: 16,
-              color: "#EDE8DF",
-              letterSpacing: "-0.005em"
+              fontSize: 17,
+              color: "#f4efe3",
+              letterSpacing: "-0.005em",
+              fontWeight: 400,
             }}
           >
             No verified lots available right now
           </div>
           <div
             style={{
-              marginTop: 10,
+              marginTop: 12,
               fontSize: 13,
-              color: "rgba(237,232,223,0.55)",
-              maxWidth: 380,
-              margin: "10px auto 0",
+              color: "rgba(244,239,227,0.55)",
+              maxWidth: 400,
+              margin: "12px auto 0",
               lineHeight: 1.7
             }}
           >
             When new lots clear quality verification, they will appear here for
             direct supply requests.
           </div>
+
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: 24,
+              padding: "9px 20px",
+              borderRadius: 999,
+              border: "1px solid rgba(214,176,79,0.28)",
+              background: "transparent",
+              color: "#d6b04f",
+              fontSize: 12,
+              letterSpacing: "0.06em",
+              cursor: "pointer",
+            }}
+          >
+            Refresh
+          </button>
         </div>
       )}
 
@@ -188,10 +220,10 @@ export default function LeftPanel({ marketData }: Props) {
             <div
               style={{
                 padding: 24,
-                borderRadius: 14,
+                borderRadius: 16,
                 background:
-                  "linear-gradient(180deg, rgba(212,175,55,0.04) 0%, rgba(255,255,255,0.02) 100%)",
-                border: "1px solid rgba(212,175,55,0.18)",
+                  "linear-gradient(180deg, rgba(214,176,79,0.05) 0%, rgba(255,255,255,0.018) 100%)",
+                border: "1px solid rgba(214,176,79,0.22)",
                 marginBottom: 26
               }}
             >
@@ -200,7 +232,7 @@ export default function LeftPanel({ marketData }: Props) {
                   fontSize: 11,
                   letterSpacing: "0.18em",
                   textTransform: "uppercase",
-                  color: "rgba(212,175,55,0.75)"
+                  color: "rgba(214,176,79,0.85)"
                 }}
               >
                 Selected Lot
@@ -211,7 +243,7 @@ export default function LeftPanel({ marketData }: Props) {
                   marginTop: 12,
                   fontSize: 22,
                   fontWeight: 400,
-                  color: "#EDE8DF",
+                  color: "#f4efe3",
                   letterSpacing: "-0.01em",
                   lineHeight: 1.25
                 }}
@@ -223,7 +255,7 @@ export default function LeftPanel({ marketData }: Props) {
                 style={{
                   marginTop: 4,
                   fontSize: 13,
-                  color: "rgba(237,232,223,0.55)"
+                  color: "rgba(244,239,227,0.55)"
                 }}
               >
                 {selectedLot.origin?.farmName}
@@ -256,8 +288,8 @@ export default function LeftPanel({ marketData }: Props) {
                     style={{
                       fontSize: 18,
                       marginTop: 4,
-                      color: "#EDE8DF",
-                      fontWeight: 300
+                      color: "#f4efe3",
+                      fontWeight: 400
                     }}
                   >
                     {selectedLot.volume?.roastedAvailableKg} kg
@@ -280,8 +312,8 @@ export default function LeftPanel({ marketData }: Props) {
                       style={{
                         fontSize: 18,
                         marginTop: 4,
-                        color: "#EDE8DF",
-                        fontWeight: 300
+                        color: "#f4efe3",
+                        fontWeight: 400
                       }}
                     >
                       ${selectedLot.pricing.roastedPricePerKg}
@@ -309,7 +341,7 @@ export default function LeftPanel({ marketData }: Props) {
                         borderRadius: 999,
                         background: "rgba(255,255,255,0.04)",
                         border: "1px solid rgba(255,255,255,0.1)",
-                        color: "rgba(237,232,223,0.75)",
+                        color: "rgba(244,239,227,0.78)",
                         letterSpacing: "0.08em",
                         textTransform: "uppercase"
                       }}
@@ -323,9 +355,9 @@ export default function LeftPanel({ marketData }: Props) {
                         fontSize: 11,
                         padding: "5px 11px",
                         borderRadius: 999,
-                        background: "rgba(212,175,55,0.08)",
-                        border: "1px solid rgba(212,175,55,0.22)",
-                        color: "rgba(232,199,112,0.95)",
+                        background: "rgba(214,176,79,0.1)",
+                        border: "1px solid rgba(214,176,79,0.28)",
+                        color: "rgba(226,193,93,0.95)",
                         letterSpacing: "0.06em"
                       }}
                     >
@@ -341,8 +373,8 @@ export default function LeftPanel({ marketData }: Props) {
           <div
             style={{
               padding: 24,
-              borderRadius: 14,
-              background: "rgba(255,255,255,0.02)",
+              borderRadius: 16,
+              background: "rgba(255,255,255,0.025)",
               border: "1px solid rgba(255,255,255,0.08)",
               marginBottom: 22
             }}
@@ -357,8 +389,8 @@ export default function LeftPanel({ marketData }: Props) {
               <div
                 style={{
                   fontSize: 22,
-                  fontWeight: 300,
-                  color: "#EDE8DF",
+                  fontWeight: 400,
+                  color: "#f4efe3",
                   letterSpacing: "-0.01em"
                 }}
               >
