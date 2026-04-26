@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import ClientTradingPanel from "@/src/components/platform/client/ClientTradingPanel"
 import ClientContractsPanel from "@/src/components/platform/client/ClientContractsPanel"
 import ClientOverviewPanel from "@/src/components/platform/client/ClientOverviewPanel"
+import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/src/websocket/websocketClient"
@@ -121,6 +122,11 @@ useEffect(() => {
 
 return (
   <>
+
+{/* ====================================================== */}
+{/* SHARED PLATFORM HEADER (role-aware — themes from user.role) */}
+{/* ====================================================== */}
+<PlatformHeader user={user} />
 
 {/* ====================================================== */}
 {/* MAIN DASHBOARD */}

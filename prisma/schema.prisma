@@ -768,3 +768,65 @@ model ProducerFulfilment {
   producer   Producer                 @relation(fields: [producerId], references: [id])
 }
 
+//////////////////////////////////////////////////////
+// 🩺 COMMITMENT HEALTH SNAPSHOT
+//
+// Audit row for the Supply & Commitment Health Monitor
+// (src/internal/monitors/supplyCommitmentHealth).
+//
+// Append-only. Never updated. Never reused for any
+// other monitor. Each row is the full record of one
+// monitor run, including the deterministic
+// inputFingerprint that uniquely identifies the
+// snapshot of business data the run observed.
+//
+// DO NOT MERGE WITH MarketSignalSnapshot — that table
+// belongs to the synthetic AI system being phased out;
+// mixing the two would destroy the audit credibility
+// this monitor is designed to establish.
+//////////////////////////////////////////////////////
+
+enum HealthSeverity {
+  OK
+  WATCH
+  STRESSED
+  CRITICAL
+}
+
+model CommitmentHealthSnapshot {
+  id                String         @id @default(uuid())
+
+  runId             String         @unique
+  monitorVersion    String
+
+  runStartedAt      DateTime
+  runFinishedAt     DateTime
+  durationMs        Int
+
+  // Deterministic hash of the input snapshot used for this run.
+  // Two runs with the same fingerprint observed identical inputs.
+  inputFingerprint  String
+
+  // Conservative-max rollup across the four axes.
+  overallHealth     HealthSeverity
+  supplyHealth      HealthSeverity
+  demandHealth      HealthSeverity
+  commitmentHealth  HealthSeverity
+  fulfilmentHealth  HealthSeverity
+
+  // Full report payloads.
+  metrics           Json
+  detectors         Json
+  attribution       Json
+  inputCounts       Json
+
+  // Operator who invoked the run.
+  triggeredBy       String?
+
+  createdAt         DateTime       @default(now())
+
+  @@index([runStartedAt])
+  @@index([overallHealth])
+  @@index([inputFingerprint])
+}
+
