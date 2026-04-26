@@ -5,6 +5,7 @@ import ClientTradingPanel from "@/src/components/platform/client/ClientTradingPa
 import ClientContractsPanel from "@/src/components/platform/client/ClientContractsPanel"
 import ClientOverviewPanel from "@/src/components/platform/client/ClientOverviewPanel"
 import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
+import { hideNavOverlay } from "@/src/lib/navigationOverlay"
 import { useSearchParams } from "next/navigation"
 import { initWebsocketClient }
 from "@/src/websocket/websocketClient"
@@ -117,6 +118,19 @@ useEffect(() => {
 
 useEffect(() => {
   initWebsocketClient()
+}, [])
+
+// ======================================================
+// 🧹 NAV OVERLAY CLEANUP
+// La landing inyecta un overlay con la cherry en
+// #nav-overlay-root antes de hacer router.push("/platform").
+// El destino debe limpiarlo al montar — mismo patrón que
+// usa ProducerView. Sin esto, la cherry se queda visible
+// encima del dashboard cuando se entra desde la landing.
+// ======================================================
+
+useEffect(() => {
+  hideNavOverlay()
 }, [])
 
 
