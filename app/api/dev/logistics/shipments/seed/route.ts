@@ -5,6 +5,10 @@ import {
   createShipment,
   ShipmentServiceError,
 } from "@/src/services/logistics/shipment.service"
+import {
+  isDestinationStage,
+  type DestinationStage,
+} from "@/src/lib/logistics/destinationTracking"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -57,6 +61,9 @@ export async function POST(req: NextRequest) {
       carrier?: unknown
       vesselOrFlight?: unknown
       etaAt?: unknown
+      destinationCountry?: unknown
+      requiresDestinationCustoms?: unknown
+      currentStage?: unknown
     }
 
     //////////////////////////////////////////////////////
@@ -126,6 +133,41 @@ export async function POST(req: NextRequest) {
     }
 
     //////////////////////////////////////////////////////
+    // 📍 LOG-3A — destination defaults
+    //
+    // - destinationCountry: pass-through if string, else null
+    // - requiresDestinationCustoms:
+    //     explicit body wins; otherwise true iff country=Norway
+    // - currentStage: null by default (shipment is still
+    //   IN_TRANSIT macro). Body may override for testing.
+    //////////////////////////////////////////////////////
+
+    const destinationCountry =
+      typeof body.destinationCountry === "string" &&
+      body.destinationCountry.trim().length > 0
+        ? body.destinationCountry.trim()
+        : null
+
+    let requiresDestinationCustoms: boolean
+    if (typeof body.requiresDestinationCustoms === "boolean") {
+      requiresDestinationCustoms = body.requiresDestinationCustoms
+    } else {
+      requiresDestinationCustoms =
+        destinationCountry?.toLowerCase() === "norway"
+    }
+
+    let currentStage: DestinationStage | null = null
+    if (body.currentStage !== undefined && body.currentStage !== null) {
+      if (!isDestinationStage(body.currentStage)) {
+        return NextResponse.json(
+          { error: "Invalid currentStage" },
+          { status: 400 }
+        )
+      }
+      currentStage = body.currentStage
+    }
+
+    //////////////////////////////////////////////////////
     // 🚢 CREATE (real LOG-1 transaction)
     //////////////////////////////////////////////////////
 
@@ -135,6 +177,9 @@ export async function POST(req: NextRequest) {
       vesselOrFlight,
       etaAt,
       greenLotIds,
+      destinationCountry,
+      requiresDestinationCustoms,
+      currentStage,
     })
 
     return NextResponse.json({ shipment })

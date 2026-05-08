@@ -872,6 +872,37 @@ enum ShipmentStatus {
   DISCREPANCY
 }
 
+//////////////////////////////////////////////////////
+// 📍 DestinationTrackingStage (LOG-3A)
+//
+// Granular destination-side journey for Shipment. The
+// macro Shipment.status (IN_TRANSIT / ARRIVED / RECEIVED
+// / DISCREPANCY) stays as the high-level signal; this
+// enum tracks where the shipment is operationally,
+// from Rotterdam port up to client receipt.
+//
+// Customs after TO_CLIENT is conditional on
+// Shipment.requiresDestinationCustoms.
+//////////////////////////////////////////////////////
+
+enum DestinationTrackingStage {
+  ARRIVED_AT_ROTTERDAM_PORT
+  ROTTERDAM_CUSTOMS_CHECKING
+  ROTTERDAM_CUSTOMS_CLEARED
+  TO_PORT_WAREHOUSE
+  AT_PORT_WAREHOUSE
+  AWAITING_PORT_WAREHOUSE_PICKUP
+  TO_CO_ROASTER
+  AT_CO_ROASTER_WAREHOUSE
+  ROASTING_IN_PROGRESS
+  FINAL_PACKING_20KG
+  AWAITING_CO_ROASTER_PICKUP
+  TO_CLIENT
+  DESTINATION_CUSTOMS_CHECKING
+  DESTINATION_CUSTOMS_CLEARED
+  RECEIVED_BY_CLIENT
+}
+
 model Shipment {
   id             String         @id @default(uuid())
 
@@ -890,6 +921,17 @@ model Shipment {
   arrivedAt      DateTime?
   receivedAt     DateTime?
 
+  // ============================================
+  // 📍 LOG-3A — Destination journey
+  // currentStage is null while the shipment is
+  // still crossing origin → Rotterdam (macro
+  // status IN_TRANSIT). It is set when destination
+  // tracking begins (status ARRIVED).
+  // ============================================
+  currentStage               DestinationTrackingStage?
+  destinationCountry         String?
+  requiresDestinationCustoms Boolean                   @default(false)
+
   // Lots that travel in this shipment
   greenLots      GreenLot[]
 
@@ -898,5 +940,6 @@ model Shipment {
 
   @@index([status])
   @@index([createdAt])
+  @@index([currentStage])
 }
 

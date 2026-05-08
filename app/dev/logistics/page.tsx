@@ -5,6 +5,11 @@ import LogisticsTrackingPanel, {
   type TrackingSampleLot,
   type TrackingShipment,
 } from "@/src/components/dev/logistics/LogisticsTrackingPanel"
+import {
+  DESTINATION_STAGES,
+  DESTINATION_STAGE_LABELS,
+  type DestinationStage,
+} from "@/src/lib/logistics/destinationTracking"
 
 type SampleShippingStatus =
   | "PICKUP_REQUESTED"
@@ -88,6 +93,10 @@ type DevShipment = {
   receivedAt: string | null
   createdAt: string
   greenLots: DevShipmentLot[]
+  // LOG-3A — destination tracking
+  currentStage: DestinationStage | null
+  destinationCountry: string | null
+  requiresDestinationCustoms: boolean
 }
 
 const SHIPMENT_STATUSES: DevShipmentStatus[] = [
@@ -418,6 +427,86 @@ export default function DevLogisticsPage() {
     } catch (error) {
       console.error(error)
       alert(`Error forcing status ${status}`)
+    } finally {
+      setBusyShipmentId(null)
+    }
+  }
+
+  //////////////////////////////////////////////////////
+  // 🎛️ ACTIONS — Destination tracking stage (LOG-3A)
+  //////////////////////////////////////////////////////
+
+  const advanceShipmentStage = async (shipmentId: string) => {
+    try {
+      setBusyShipmentId(shipmentId)
+      const res = await fetch(
+        `/api/dev/logistics/shipments/${shipmentId}/advance-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ advanceStage: true }),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to advance destination stage")
+      await loadShipments()
+    } catch (error) {
+      console.error(error)
+      alert("Error advancing destination stage")
+    } finally {
+      setBusyShipmentId(null)
+    }
+  }
+
+  const forceShipmentStage = async (
+    shipmentId: string,
+    stage: DestinationStage
+  ) => {
+    try {
+      setBusyShipmentId(shipmentId)
+      const res = await fetch(
+        `/api/dev/logistics/shipments/${shipmentId}/advance-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ stage }),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to force destination stage")
+      await loadShipments()
+    } catch (error) {
+      console.error(error)
+      alert(`Error forcing stage ${stage}`)
+    } finally {
+      setBusyShipmentId(null)
+    }
+  }
+
+  const setShipmentDestination = async (
+    shipmentId: string,
+    destinationCountry: string,
+    requiresDestinationCustoms: boolean
+  ) => {
+    try {
+      setBusyShipmentId(shipmentId)
+      const res = await fetch(
+        `/api/dev/logistics/shipments/${shipmentId}/advance-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            destinationCountry,
+            requiresDestinationCustoms,
+          }),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to update destination")
+      await loadShipments()
+    } catch (error) {
+      console.error(error)
+      alert(`Error updating destination`)
     } finally {
       setBusyShipmentId(null)
     }
@@ -790,6 +879,11 @@ export default function DevLogisticsPage() {
               busy={busyShipmentId === s.id}
               onAdvance={() => advanceShipment(s.id)}
               onForce={(status) => forceShipmentStatus(s.id, status)}
+              onAdvanceStage={() => advanceShipmentStage(s.id)}
+              onForceStage={(stage) => forceShipmentStage(s.id, stage)}
+              onSetDestination={(country, customs) =>
+                setShipmentDestination(s.id, country, customs)
+              }
             />
           ))}
 
@@ -839,11 +933,20 @@ function ShipmentCard({
   busy,
   onAdvance,
   onForce,
+  onAdvanceStage,
+  onForceStage,
+  onSetDestination,
 }: {
   shipment: DevShipment
   busy: boolean
   onAdvance: () => void
   onForce: (status: DevShipmentStatus) => void
+  onAdvanceStage: () => void
+  onForceStage: (stage: DestinationStage) => void
+  onSetDestination: (
+    destinationCountry: string,
+    requiresDestinationCustoms: boolean
+  ) => void
 }) {
   const totalKg = shipment.greenLots.reduce(
     (sum, l) => sum + (l.totalKg ?? 0),
@@ -860,13 +963,22 @@ function ShipmentCard({
     shipment.status === "RECEIVED"    ? "bg-[#e8f0e6] text-[#3a6b35]" :
                                         "bg-[#fbe2da] text-[#8a3a25]"
 
+  const stageLabel = shipment.currentStage
+    ? DESTINATION_STAGE_LABELS[shipment.currentStage]
+    : "Not started (still IN_TRANSIT to Rotterdam)"
+
+  // Local select state for force-stage dropdown
+  const [selectedStage, setSelectedStage] = useState<DestinationStage>(
+    shipment.currentStage ?? "ARRIVED_AT_ROTTERDAM_PORT"
+  )
+
   return (
     <div className="rounded-2xl border-2 border-[#d8c5a8] bg-[#fbf7f0] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
 
         {/* LEFT — identity + meta */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-lg font-semibold text-[#2f2418] tabular-nums">
               {shipment.reference}
             </h2>
@@ -875,12 +987,25 @@ function ShipmentCard({
             >
               {shipment.status}
             </span>
+            {shipment.requiresDestinationCustoms && (
+              <span className="rounded-full bg-[#fbe2da] text-[#8a3a25] border border-[#d8a89a] px-2.5 py-1 text-[10.5px] font-medium tracking-wide">
+                Destination customs
+              </span>
+            )}
           </div>
 
           <p className="mt-1 text-sm text-[#6b5a45]">
             {shipment.carrier ?? "Carrier TBD"}
             {shipment.vesselOrFlight ? ` · ${shipment.vesselOrFlight}` : ""}
+            {shipment.destinationCountry
+              ? ` · → ${shipment.destinationCountry}`
+              : ""}
           </p>
+
+          {/* Destination stage line */}
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#f7efdf] border border-[#cfb48a] px-3 py-1 text-xs font-medium text-[#7a5230]">
+            📍 {stageLabel}
+          </div>
 
           <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-xs text-[#6b5a45] sm:grid-cols-3 lg:max-w-2xl">
             <Meta label="ETA"        value={fmtDate(shipment.etaAt)} />
@@ -889,33 +1014,101 @@ function ShipmentCard({
             <Meta label="Lots"        value={`${shipment.greenLots.length}`} />
             <Meta label="Total"       value={`${Math.round(totalKg).toLocaleString()} kg`} mono />
             <Meta label="Lot #s"      value={lotNumbers.length > 0 ? lotNumbers.join(", ") : "—"} />
+            <Meta label="Destination" value={shipment.destinationCountry ?? "—"} />
+            <Meta label="Customs"     value={shipment.requiresDestinationCustoms ? "Required" : "Not required"} />
           </div>
         </div>
 
         {/* RIGHT — controls */}
-        <div className="flex flex-col gap-3 lg:min-w-[420px]">
-          <button
-            type="button"
-            onClick={onAdvance}
-            disabled={busy}
-            className="rounded-xl border border-[#8d6641] bg-[#7a5230] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6f4726] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {busy ? "Updating..." : "Advance to next status"}
-          </button>
+        <div className="flex flex-col gap-4 lg:min-w-[440px]">
 
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {SHIPMENT_STATUSES.map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => onForce(status)}
-                disabled={busy}
-                className="rounded-xl border border-[#cfb48a] bg-[#f7efdf] px-3 py-2 text-xs font-medium text-[#5f472f] transition hover:bg-[#efe3ce] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {status}
-              </button>
-            ))}
+          {/* Macro status controls */}
+          <div className="flex flex-col gap-2">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[#9a8b73]">
+              Macro status
+            </div>
+            <button
+              type="button"
+              onClick={onAdvance}
+              disabled={busy}
+              className="rounded-xl border border-[#8d6641] bg-[#7a5230] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6f4726] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {busy ? "Updating..." : "Advance to next status"}
+            </button>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              {SHIPMENT_STATUSES.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => onForce(status)}
+                  disabled={busy}
+                  className="rounded-xl border border-[#cfb48a] bg-[#f7efdf] px-3 py-2 text-xs font-medium text-[#5f472f] transition hover:bg-[#efe3ce] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Destination stage controls */}
+          <div className="flex flex-col gap-2 border-t border-[#e2d6bd] pt-3">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[#9a8b73]">
+              Destination stage
+            </div>
+            <button
+              type="button"
+              onClick={onAdvanceStage}
+              disabled={busy}
+              className="rounded-xl border border-[#8d6641] bg-[#9b6b3f] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#7a5230] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {busy ? "Updating..." : "Advance destination stage  →"}
+            </button>
+
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={selectedStage}
+                onChange={(e) =>
+                  setSelectedStage(e.target.value as DestinationStage)
+                }
+                disabled={busy}
+                className="flex-1 min-w-[180px] rounded-lg border border-[#cfb48a] bg-[#fffaf2] px-3 py-2 text-xs text-[#2f2418] disabled:opacity-60"
+              >
+                {DESTINATION_STAGES.map((s) => (
+                  <option key={s} value={s}>
+                    {DESTINATION_STAGE_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => onForceStage(selectedStage)}
+                disabled={busy}
+                className="rounded-lg border border-[#cfb48a] bg-[#f7efdf] px-3 py-2 text-xs font-medium text-[#5f472f] transition hover:bg-[#efe3ce] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Force stage
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onSetDestination("Netherlands", false)}
+                disabled={busy}
+                className="rounded-full border border-[#b7cbb0] bg-[#f4f8f2] px-3 py-1.5 text-[11px] font-medium text-[#3a6b35] transition hover:bg-[#e8f0e6] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Set NL (no customs)
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetDestination("Norway", true)}
+                disabled={busy}
+                className="rounded-full border border-[#d8a89a] bg-[#fbf0eb] px-3 py-1.5 text-[11px] font-medium text-[#8a3a25] transition hover:bg-[#fbe2da] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Set Norway (customs)
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

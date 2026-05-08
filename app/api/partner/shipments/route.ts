@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
       vesselOrFlight,
       etaAt,
       greenLotIds,
+      destinationCountry,
+      requiresDestinationCustoms,
     } = body as Record<string, unknown>
 
     //////////////////////////////////////////////////////
@@ -127,6 +129,31 @@ export async function POST(req: NextRequest) {
     }
 
     //////////////////////////////////////////////////////
+    // 📍 LOG-3A — destination tracking (optional)
+    //////////////////////////////////////////////////////
+
+    if (
+      destinationCountry !== undefined &&
+      destinationCountry !== null &&
+      typeof destinationCountry !== "string"
+    ) {
+      return NextResponse.json(
+        { error: "destinationCountry must be a string" },
+        { status: 400 }
+      )
+    }
+
+    if (
+      requiresDestinationCustoms !== undefined &&
+      typeof requiresDestinationCustoms !== "boolean"
+    ) {
+      return NextResponse.json(
+        { error: "requiresDestinationCustoms must be a boolean" },
+        { status: 400 }
+      )
+    }
+
+    //////////////////////////////////////////////////////
     // 🚢 CREATE
     //////////////////////////////////////////////////////
 
@@ -136,6 +163,9 @@ export async function POST(req: NextRequest) {
       vesselOrFlight: (vesselOrFlight as string | undefined) ?? null,
       etaAt: parsedEta,
       greenLotIds: greenLotIds as string[],
+      destinationCountry: (destinationCountry as string | undefined) ?? null,
+      requiresDestinationCustoms:
+        (requiresDestinationCustoms as boolean | undefined) ?? false,
     })
 
     return NextResponse.json({ shipment })

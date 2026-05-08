@@ -127,6 +127,10 @@ type EuropeShipment = {
   receivedAt: string | null
   createdAt: string
   greenLots: ShipmentGreenLot[]
+  // LOG-3A — destination tracking (optional in payload)
+  currentStage?: string | null
+  destinationCountry?: string | null
+  requiresDestinationCustoms?: boolean
 }
 
 // ------------------------------------------------------
@@ -890,7 +894,23 @@ function ShipmentCard({
           >
             {shipment.carrier ?? "Carrier TBD"}
             {shipment.vesselOrFlight ? ` · ${shipment.vesselOrFlight}` : ""}
+            {shipment.destinationCountry
+              ? ` · ${shipment.destinationCountry}`
+              : ""}
           </div>
+          {shipment.currentStage && (
+            <div
+              style={{
+                fontSize: "10.5px",
+                color: T.gold,
+                marginTop: "4px",
+                letterSpacing: "0.3px",
+                opacity: 0.85,
+              }}
+            >
+              📍 {humanizeStage(shipment.currentStage)}
+            </div>
+          )}
         </div>
         <Pill tone={tone} label={statusLabel(shipment.status)} />
       </div>
@@ -1084,6 +1104,17 @@ function statusLabel(s: ShipmentStatus): string {
     case "RECEIVED":    return "Received"
     case "DISCREPANCY": return "Discrepancy"
   }
+}
+
+// LOG-3A — destination stage humanizer (kept inline to
+// keep the EU dashboard self-contained; the canonical
+// label map lives in src/lib/logistics/destinationTracking).
+function humanizeStage(stage: string): string {
+  return stage
+    .toLowerCase()
+    .split("_")
+    .map((w) => (w.length === 0 ? w : w[0].toUpperCase() + w.slice(1)))
+    .join(" ")
 }
 
 function formatEta(iso: string | null): string {

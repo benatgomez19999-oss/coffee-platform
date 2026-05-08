@@ -1,4 +1,5 @@
 import { prisma } from "@/src/database/prisma"
+import type { DestinationStage } from "@/src/lib/logistics/destinationTracking"
 
 // =====================================================
 // SHIPMENT SERVICE — LOG-1 (Origin → EU bridge)
@@ -45,6 +46,10 @@ export type CreateShipmentInput = {
   vesselOrFlight?: string | null
   etaAt?: Date | null
   greenLotIds: string[]
+  // LOG-3A — destination tracking metadata (all optional)
+  destinationCountry?: string | null
+  requiresDestinationCustoms?: boolean
+  currentStage?: DestinationStage | null
 }
 
 export type ReceiveShipmentInput = {
@@ -172,6 +177,9 @@ export async function createShipment(input: CreateShipmentInput) {
         vesselOrFlight,
         etaAt,
         status: "IN_TRANSIT",
+        destinationCountry: input.destinationCountry ?? null,
+        requiresDestinationCustoms: input.requiresDestinationCustoms ?? false,
+        currentStage: input.currentStage ?? null,
       },
     })
 
