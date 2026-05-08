@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
 import RoastControlPanel from "@/src/components/platform/eu-partner/RoastControlPanel"
 
@@ -89,6 +89,44 @@ type AlertItem = {
   detail: string
   tone: "warn" | "alert" | "info"
   icon: React.ReactNode
+}
+
+// ------------------------------------------------------
+// SHIPMENT TYPES (LOG-1 — wired to /api/eu-partner/shipments)
+// ------------------------------------------------------
+
+type ShipmentStatus = "IN_TRANSIT" | "ARRIVED" | "RECEIVED" | "DISCREPANCY"
+
+type ShipmentGreenLot = {
+  id: string
+  lotNumber: string
+  variety: string
+  process: string
+  harvestYear: number
+  totalKg: number
+  availableKg: number
+  status: string
+  farm: {
+    name: string
+    region: string | null
+    producer: {
+      name: string
+      country: string
+    }
+  }
+}
+
+type EuropeShipment = {
+  id: string
+  reference: string
+  status: ShipmentStatus
+  carrier: string | null
+  vesselOrFlight: string | null
+  etaAt: string | null
+  arrivedAt: string | null
+  receivedAt: string | null
+  createdAt: string
+  greenLots: ShipmentGreenLot[]
 }
 
 // ------------------------------------------------------
@@ -213,6 +251,112 @@ export default function EuropePartnerDashboard({ user }: { user?: DashboardUser 
     name: "aura-roast-partners",
   }
 
+  //////////////////////////////////////////////////////
+  // 🧠 STATE
+  //////////////////////////////////////////////////////
+
+  const [shipments, setShipments] = useState<EuropeShipment[]>([])
+  const [isLoadingShipments, setIsLoadingShipments] = useState<boolean>(true)
+  const [shipmentsError, setShipmentsError] = useState<string | null>(null)
+  const [receivingId, setReceivingId] = useState<string | null>(null)
+
+  //////////////////////////////////////////////////////
+  // 🚢 SHIPMENT DATA
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        setIsLoadingShipments(true)
+        setShipmentsError(null)
+
+        const res = await fetch("/api/eu-partner/shipments", {
+          credentials: "include",
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          throw new Error(`Request failed (${res.status})`)
+        }
+
+        const data = (await res.json()) as { shipments?: EuropeShipment[] }
+
+        if (cancelled) return
+
+        setShipments(Array.isArray(data.shipments) ? data.shipments : [])
+      } catch (err) {
+        if (cancelled) return
+        console.error("[EU_PARTNER_SHIPMENTS_FETCH]", err)
+        setShipmentsError("Could not load incoming shipments")
+        setShipments([])
+      } finally {
+        if (!cancelled) setIsLoadingShipments(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  //////////////////////////////////////////////////////
+  // 🎛️ ACTIONS
+  //////////////////////////////////////////////////////
+
+  const handleReceiveShipment = async (shipmentId: string) => {
+    if (receivingId) return
+
+    setReceivingId(shipmentId)
+
+    try {
+      const res = await fetch(
+        `/api/eu-partner/shipments/${shipmentId}/receive`,
+        { method: "POST", credentials: "include" }
+      )
+
+      if (!res.ok) {
+        throw new Error(`Receive failed (${res.status})`)
+      }
+
+      const data = (await res.json()) as {
+        shipment: { id: string; status: ShipmentStatus; receivedAt: string | null }
+      }
+
+      setShipments((prev) =>
+        prev.map((s) =>
+          s.id === data.shipment.id
+            ? { ...s, status: data.shipment.status, receivedAt: data.shipment.receivedAt }
+            : s
+        )
+      )
+    } catch (err) {
+      console.error("[EU_PARTNER_SHIPMENT_RECEIVE]", err)
+      setShipmentsError("Could not mark shipment as received")
+    } finally {
+      setReceivingId(null)
+    }
+  }
+
+  //////////////////////////////////////////////////////
+  // 📊 LIVE METRICS — only the "Incoming Shipments"
+  // metric is computed from real data. The rest stays
+  // visual/mock for this sprint.
+  //////////////////////////////////////////////////////
+
+  const liveMetrics = useMemo(() => {
+    const incomingCount = shipments.filter(
+      (s) => s.status === "IN_TRANSIT" || s.status === "ARRIVED"
+    ).length
+
+    return METRICS.map((m) =>
+      m.id === "incoming" ? { ...m, value: incomingCount } : m
+    )
+  }, [shipments])
+
   return (
     <>
       {/* ====================================================== */}
@@ -253,7 +397,7 @@ export default function EuropePartnerDashboard({ user }: { user?: DashboardUser 
           {/* HERO METRICS STRIP                            */}
           {/* ============================================ */}
 
-          <MetricsStrip metrics={METRICS} />
+          <MetricsStrip metrics={liveMetrics} />
 
           {/* ============================================ */}
           {/* PRIMARY GRID — 4 OPERATIONAL SECTIONS         */}
@@ -266,7 +410,13 @@ export default function EuropePartnerDashboard({ user }: { user?: DashboardUser 
               gap: "20px",
             }}
           >
-            <IncomingGreenSection />
+            <IncomingGreenSection
+              shipments={shipments}
+              isLoading={isLoadingShipments}
+              error={shipmentsError}
+              onReceive={handleReceiveShipment}
+              receivingId={receivingId}
+            />
             <RoastQueueSection />
             <ReadyForClientsSection />
             <MarketIntelligenceSection />
@@ -516,10 +666,44 @@ function SectionCard({
 }
 
 // ======================================================
-// PRIMARY SECTION 1 — INCOMING GREEN
+// PRIMARY SECTION 1 — INCOMING GREEN  (LIVE DATA)
+//
+// Wired to GET /api/eu-partner/shipments and POST
+// /api/eu-partner/shipments/:id/receive. Falls back to
+// elegant loading / empty / error states. Visual style
+// (warm bronze cards) is preserved from the mock.
 // ======================================================
 
-function IncomingGreenSection() {
+function IncomingGreenSection({
+  shipments,
+  isLoading,
+  error,
+  onReceive,
+  receivingId,
+}: {
+  shipments: EuropeShipment[]
+  isLoading: boolean
+  error: string | null
+  onReceive: (id: string) => void
+  receivingId: string | null
+}) {
+  const counts = useMemo(() => ({
+    inTransit: shipments.filter((s) => s.status === "IN_TRANSIT").length,
+    arrived:   shipments.filter((s) => s.status === "ARRIVED").length,
+    received:  shipments.filter((s) => s.status === "RECEIVED").length,
+  }), [shipments])
+
+  const sortedActive = useMemo(() => {
+    const order: Record<ShipmentStatus, number> = {
+      IN_TRANSIT: 0, ARRIVED: 1, DISCREPANCY: 2, RECEIVED: 3,
+    }
+    return [...shipments].sort((a, b) => {
+      const o = order[a.status] - order[b.status]
+      if (o !== 0) return o
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  }, [shipments])
+
   return (
     <SectionCard
       title="Incoming Green"
@@ -527,71 +711,401 @@ function IncomingGreenSection() {
       icon={<IconLeaf />}
       cta={{ label: "View inbound shipments" }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {INCOMING_LINES.map((line) => (
-          <div
-            key={line.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "14px",
-              padding: "12px 14px",
-              borderRadius: "12px",
-              background: "linear-gradient(180deg, rgba(192,133,82,0.05), rgba(0,0,0,0))",
-              border: `1px solid ${T.cardInnerLine}`,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "22px",
-                fontWeight: 600,
-                color: T.text,
-                width: 32,
-                textAlign: "center",
-                fontVariantNumeric: "tabular-nums",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              {line.count}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: "13px", color: T.text, fontWeight: 500 }}>
-                {line.primary}
-              </div>
-              <div style={{ fontSize: "11px", color: T.textMuted, marginTop: "2px" }}>
-                {line.secondary}
-              </div>
-            </div>
-          </div>
-        ))}
+
+      {/* SUMMARY ROW — three numeric chips */}
+      <div style={{ display: "flex", gap: "10px" }}>
+        <SummaryChip count={counts.inTransit} label="In transit" tone="info" />
+        <SummaryChip count={counts.arrived}   label="Arrived"    tone="warn" />
+        <SummaryChip count={counts.received}  label="Received"   tone="ok"   />
       </div>
 
-      {/* Featured shipment */}
-      <div
-        style={{
-          marginTop: "4px",
-          padding: "12px 14px",
-          borderRadius: "12px",
-          background: "linear-gradient(180deg, rgba(212,175,55,0.06), rgba(0,0,0,0))",
-          border: `1px solid ${T.cardBorder}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "10px",
-        }}
-      >
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: "12.5px", color: T.text, fontWeight: 500, letterSpacing: "0.1px" }}>
-            {INCOMING_FEATURED.origin}
-          </div>
-          <div style={{ fontSize: "10.5px", color: T.textMuted, marginTop: "2px", letterSpacing: "0.3px" }}>
-            {INCOMING_FEATURED.lotLabel}
-          </div>
+      {/* CONTENT */}
+      {isLoading && <IncomingLoading />}
+
+      {!isLoading && error && <IncomingError message={error} />}
+
+      {!isLoading && !error && shipments.length === 0 && <IncomingEmpty />}
+
+      {!isLoading && !error && shipments.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {sortedActive.slice(0, 3).map((s) => (
+            <ShipmentCard
+              key={s.id}
+              shipment={s}
+              onReceive={onReceive}
+              isReceiving={receivingId === s.id}
+              isAnyReceiving={receivingId !== null}
+            />
+          ))}
+
+          {shipments.length > 3 && (
+            <div
+              style={{
+                fontSize: "11px",
+                color: T.textFaint,
+                letterSpacing: "0.3px",
+                textAlign: "center",
+                padding: "4px 0",
+              }}
+            >
+              + {shipments.length - 3} more shipment{shipments.length - 3 === 1 ? "" : "s"}
+            </div>
+          )}
         </div>
-        <Pill tone="warn" label={INCOMING_FEATURED.status} />
-      </div>
+      )}
     </SectionCard>
   )
+}
+
+// ------------------------------------------------------
+// SUMMARY CHIP (compact "3 In transit" element)
+// ------------------------------------------------------
+
+function SummaryChip({ count, label, tone }: { count: number; label: string; tone: Tone }) {
+  const accent = toneColor(tone)
+  return (
+    <div
+      style={{
+        flex: 1,
+        padding: "10px 12px",
+        borderRadius: "12px",
+        background: `linear-gradient(180deg, ${accent}10, rgba(0,0,0,0))`,
+        border: `1px solid ${accent}28`,
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          fontSize: "20px",
+          fontWeight: 600,
+          color: T.text,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.5px",
+          minWidth: 22,
+          textAlign: "center",
+        }}
+      >
+        {count}
+      </div>
+      <div
+        style={{
+          fontSize: "10.5px",
+          color: T.textMuted,
+          letterSpacing: "0.3px",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  )
+}
+
+// ------------------------------------------------------
+// SHIPMENT CARD (single shipment row)
+// ------------------------------------------------------
+
+function ShipmentCard({
+  shipment,
+  onReceive,
+  isReceiving,
+  isAnyReceiving,
+}: {
+  shipment: EuropeShipment
+  onReceive: (id: string) => void
+  isReceiving: boolean
+  isAnyReceiving: boolean
+}) {
+  const tone: Tone =
+    shipment.status === "IN_TRANSIT"  ? "info" :
+    shipment.status === "ARRIVED"     ? "warn" :
+    shipment.status === "RECEIVED"    ? "ok"   :
+                                        "alert"
+
+  const accent = toneColor(tone)
+
+  const totalKg = shipment.greenLots.reduce((sum, l) => sum + (l.totalKg ?? 0), 0)
+
+  // Build a compact origin string from regions/farms/producers
+  const originParts = useMemo(() => {
+    const set = new Set<string>()
+    shipment.greenLots.forEach((l) => {
+      const region = l.farm.region?.trim()
+      const country = l.farm.producer.country?.trim()
+      if (region) set.add(region)
+      else if (country) set.add(country)
+    })
+    return Array.from(set).slice(0, 3)
+  }, [shipment.greenLots])
+
+  const canReceive =
+    shipment.status === "IN_TRANSIT" || shipment.status === "ARRIVED"
+
+  return (
+    <div
+      style={{
+        padding: "14px 14px 12px",
+        borderRadius: "14px",
+        background: "linear-gradient(180deg, rgba(212,175,55,0.05), rgba(0,0,0,0))",
+        border: `1px solid ${T.cardBorder}`,
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        transition: "all 0.25s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = T.cardBorderHv
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = T.cardBorder
+      }}
+    >
+      {/* TOP — reference + status */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: "13px",
+              color: T.text,
+              fontWeight: 600,
+              letterSpacing: "0.2px",
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {shipment.reference}
+          </div>
+          <div
+            style={{
+              fontSize: "10.5px",
+              color: T.textMuted,
+              marginTop: "2px",
+              letterSpacing: "0.3px",
+            }}
+          >
+            {shipment.carrier ?? "Carrier TBD"}
+            {shipment.vesselOrFlight ? ` · ${shipment.vesselOrFlight}` : ""}
+          </div>
+        </div>
+        <Pill tone={tone} label={statusLabel(shipment.status)} />
+      </div>
+
+      {/* META — lots, kg, eta, origin */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "8px 14px",
+          paddingTop: "8px",
+          borderTop: `1px solid ${T.divider}`,
+        }}
+      >
+        <ShipmentMeta label="Lots"   value={`${shipment.greenLots.length}`} />
+        <ShipmentMeta label="Total"  value={`${Math.round(totalKg).toLocaleString()} kg`} mono />
+        <ShipmentMeta label="ETA"    value={formatEta(shipment.etaAt)} />
+        <ShipmentMeta
+          label="Origin"
+          value={originParts.length > 0 ? originParts.join(", ") : "—"}
+        />
+      </div>
+
+      {/* ACTION */}
+      {canReceive && (
+        <button
+          onClick={() => onReceive(shipment.id)}
+          disabled={isAnyReceiving}
+          style={{
+            marginTop: "2px",
+            padding: "8px 0",
+            width: "100%",
+            background: isReceiving ? `${accent}18` : "transparent",
+            border: `1px solid ${accent}40`,
+            borderRadius: "10px",
+            color: accent,
+            fontSize: "12px",
+            letterSpacing: "0.4px",
+            cursor: isAnyReceiving ? "not-allowed" : "pointer",
+            opacity: isAnyReceiving && !isReceiving ? 0.55 : 1,
+            transition: "all 0.25s ease",
+          }}
+          onMouseEnter={(e) => {
+            if (isAnyReceiving) return
+            e.currentTarget.style.background = `${accent}14`
+            e.currentTarget.style.borderColor = `${accent}66`
+          }}
+          onMouseLeave={(e) => {
+            if (isReceiving) return
+            e.currentTarget.style.background = "transparent"
+            e.currentTarget.style.borderColor = `${accent}40`
+          }}
+        >
+          {isReceiving ? "Receiving…" : "Mark as received  →"}
+        </button>
+      )}
+
+      {shipment.status === "RECEIVED" && shipment.receivedAt && (
+        <div
+          style={{
+            fontSize: "10.5px",
+            color: T.textFaint,
+            letterSpacing: "0.3px",
+            textAlign: "right",
+            paddingTop: "2px",
+          }}
+        >
+          Received {formatRelative(shipment.receivedAt)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ShipmentMeta({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+      <span
+        style={{
+          fontSize: "9.5px",
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: T.textFaint,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: "12px",
+          color: T.text,
+          letterSpacing: "0.1px",
+          fontVariantNumeric: mono ? "tabular-nums" : "normal",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+// ------------------------------------------------------
+// LOADING / EMPTY / ERROR — calm placeholder states
+// ------------------------------------------------------
+
+function IncomingLoading() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      {[0, 1].map((i) => (
+        <div
+          key={i}
+          style={{
+            height: 78,
+            borderRadius: "14px",
+            border: `1px solid ${T.cardInnerLine}`,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05))",
+            opacity: 0.55,
+          }}
+        />
+      ))}
+      <div
+        style={{
+          fontSize: "10.5px",
+          color: T.textFaint,
+          letterSpacing: "0.3px",
+          textAlign: "center",
+          paddingTop: "2px",
+        }}
+      >
+        Loading shipments…
+      </div>
+    </div>
+  )
+}
+
+function IncomingEmpty() {
+  return (
+    <div
+      style={{
+        padding: "20px 16px",
+        borderRadius: "14px",
+        border: `1px dashed ${T.cardBorder}`,
+        background: "linear-gradient(180deg, rgba(212,175,55,0.03), rgba(0,0,0,0))",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: "13px", color: T.text, fontWeight: 500, marginBottom: "6px" }}>
+        No shipments yet
+      </div>
+      <div style={{ fontSize: "11px", color: T.textMuted, letterSpacing: "0.2px", lineHeight: 1.5 }}>
+        Inbound containers will appear here as Origin Partners create them.
+      </div>
+    </div>
+  )
+}
+
+function IncomingError({ message }: { message: string }) {
+  return (
+    <div
+      style={{
+        padding: "14px 14px",
+        borderRadius: "12px",
+        border: `1px solid ${T.amber}30`,
+        background: `linear-gradient(180deg, ${T.amber}10, rgba(0,0,0,0))`,
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+      }}
+    >
+      <span style={{ color: T.amber }}>
+        <IconAlert />
+      </span>
+      <div style={{ fontSize: "12px", color: T.text, letterSpacing: "0.1px" }}>
+        {message}
+      </div>
+    </div>
+  )
+}
+
+// ------------------------------------------------------
+// FORMATTERS
+// ------------------------------------------------------
+
+function statusLabel(s: ShipmentStatus): string {
+  switch (s) {
+    case "IN_TRANSIT":  return "In transit"
+    case "ARRIVED":     return "Arrived"
+    case "RECEIVED":    return "Received"
+    case "DISCREPANCY": return "Discrepancy"
+  }
+}
+
+function formatEta(iso: string | null): string {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "—"
+  return d.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
+
+function formatRelative(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  const diffMs = Date.now() - d.getTime()
+  const diffH = Math.round(diffMs / (1000 * 60 * 60))
+  if (diffH < 1) return "just now"
+  if (diffH < 24) return `${diffH}h ago`
+  const diffD = Math.round(diffH / 24)
+  return `${diffD}d ago`
 }
 
 // ======================================================

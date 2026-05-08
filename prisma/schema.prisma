@@ -169,6 +169,15 @@ model GreenLot {
   createdAt    DateTime     @default(now())
 
   // =====================================================
+  // 🚢 SHIPMENT (LOG-1 — origin → EU bridge)
+  // Set when an Origin Partner attaches the lot to a
+  // Shipment. While shipmentId is set, the lot is
+  // RESERVED for that shipment.
+  // =====================================================
+  shipmentId String?
+  shipment   Shipment? @relation(fields: [shipmentId], references: [id])
+
+  // =====================================================
   // RELATIONS
   // =====================================================
 
@@ -189,6 +198,8 @@ model GreenLot {
 
   // 🧠 DEMAND INTENTS (reverse relation)
   demandIntents DemandIntent[]
+
+  @@index([shipmentId])
 }
 
 enum LotStatus {
@@ -828,5 +839,64 @@ model CommitmentHealthSnapshot {
   @@index([runStartedAt])
   @@index([overallHealth])
   @@index([inputFingerprint])
+}
+
+//////////////////////////////////////////////////////
+// 🚢 SHIPMENT (LOG-1 — Origin → EU bridge)
+//
+// First operational bridge between Origin Partner and
+// EU Partner. A Shipment groups one or more PUBLISHED
+// GreenLots that travel together from origin to EU.
+//
+// Lifecycle:
+//   IN_TRANSIT  — created by Origin Partner; lots flip
+//                 from PUBLISHED to RESERVED.
+//   ARRIVED     — vessel arrived at destination port
+//                 (manual flag for now, no carrier feed).
+//   RECEIVED    — EU Partner confirmed warehouse intake.
+//   DISCREPANCY — weight/quality mismatch detected;
+//                 blocks RECEIVED until resolved.
+//
+// Intentionally minimal:
+//   - no container number, no AWB / B/L
+//   - no Incoterms
+//   - no shipment legs
+//   - no tracking webhook
+//   These are explicitly out of scope for LOG-1.
+//////////////////////////////////////////////////////
+
+enum ShipmentStatus {
+  IN_TRANSIT
+  ARRIVED
+  RECEIVED
+  DISCREPANCY
+}
+
+model Shipment {
+  id             String         @id @default(uuid())
+
+  // Operator-facing identifier (e.g. "ALT-EU-2026-001").
+  // Unique across the platform.
+  reference      String         @unique
+
+  status         ShipmentStatus @default(IN_TRANSIT)
+
+  // Optional logistics metadata
+  carrier        String?
+  vesselOrFlight String?
+
+  // Lifecycle timestamps
+  etaAt          DateTime?
+  arrivedAt      DateTime?
+  receivedAt     DateTime?
+
+  // Lots that travel in this shipment
+  greenLots      GreenLot[]
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
