@@ -265,18 +265,26 @@ return (
       }}
     >
 
-      {/* RIGHT — IMAGE + GRADIENT BLEND */}
+      {/* RIGHT — IMAGE + LAYERED BLEND
+          The image container overlaps deep into the text area
+          (70% wide) so there is no visible vertical seam. The
+          two overlay layers do all the masking:
+            1. Smooth horizontal multi-stop gradient — fades the
+               left edge of the image into the dark card.
+            2. Soft radial vignette — dims top/bottom/right
+               corners so the cup sits inside the card frame
+               instead of looking like a pasted photo. */}
       <div
         style={{
           position: "absolute",
           right: 0, top: 0, bottom: 0,
-          width: "55%",
+          width: "70%",
           overflow: "hidden",
           pointerEvents: "none",
         }}
       >
         <img
-          src="/images/hero_prod_dashboard.png"
+          src="/images/client_taza.png"
           alt=""
           style={{
             width: "100%",
@@ -289,15 +297,34 @@ return (
             ;(e.currentTarget as HTMLImageElement).style.display = "none"
           }}
         />
+
+        {/* Layer 1 — smooth horizontal fade into card background */}
         <div
           style={{
             position: "absolute", inset: 0,
             background:
               "linear-gradient(90deg, " +
               COLORS.bg + " 0%, " +
-              "rgba(8,16,13,0.85) 25%, " +
-              "rgba(8,16,13,0.35) 55%, " +
-              "rgba(8,16,13,0.05) 100%)",
+              COLORS.bg + " 14%, " +
+              "rgba(8,16,13,0.96) 30%, " +
+              "rgba(8,16,13,0.82) 44%, " +
+              "rgba(8,16,13,0.55) 58%, " +
+              "rgba(8,16,13,0.28) 72%, " +
+              "rgba(8,16,13,0.1) 86%, " +
+              "rgba(8,16,13,0) 100%)",
+          }}
+        />
+
+        {/* Layer 2 — radial vignette: focuses the cup, dims edges */}
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            background:
+              "radial-gradient(ellipse 75% 90% at 72% 52%, " +
+              "transparent 0%, " +
+              "transparent 38%, " +
+              "rgba(8,16,13,0.35) 72%, " +
+              "rgba(8,16,13,0.7) 100%)",
           }}
         />
       </div>
@@ -334,7 +361,7 @@ return (
             lineHeight: 1.05,
           }}
         >
-          Your Coffee Supply Desk
+          Your Coffee<br />Supply Desk
         </h1>
 
         <p
@@ -363,21 +390,31 @@ return (
           }}
         />
 
-        {/* HERO METRIC STRIP — REAL DATA */}
+        {/* HERO METRIC STRIP — REAL DATA
+            Three metrics with thin vertical dividers in between.
+            Explicit 1px divider columns keep spacing predictable
+            across viewports. */}
         <div
           style={{
             marginTop: 26,
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
+            gridTemplateColumns: "1fr 1px 1fr 1px 1fr",
             columnGap: 24,
             rowGap: 18,
           }}
         >
           <HeroMetric
             icon={<LeafIcon />}
-            label="Available Roasted Supply"
+            label="Roasted Supply"
             value={`${formatKg(roastedAvailableKg)} kg`}
             sub="Across all regions"
+          />
+          <div
+            style={{
+              alignSelf: "stretch",
+              width: 1,
+              background: "rgba(255,255,255,0.07)",
+            }}
           />
           <HeroMetric
             icon={<DocIcon />}
@@ -385,9 +422,16 @@ return (
             value={String(activeContractsCount)}
             sub="Current agreements"
           />
+          <div
+            style={{
+              alignSelf: "stretch",
+              width: 1,
+              background: "rgba(255,255,255,0.07)",
+            }}
+          />
           <HeroMetric
             icon={<ClockIcon />}
-            label="Pending Intents"
+            label="Pending Requests"
             value={String(pendingIntentsCount)}
             sub="Open, countered or waiting"
           />
@@ -469,7 +513,10 @@ return (
         contracts={contracts}
         intents={intents}
       />
-      <ClientContractsPanel contracts={contracts} />
+      <ClientContractsPanel
+        contracts={contracts}
+        hasLots={(marketData?.totals?.lotCount ?? 0) > 0}
+      />
       <NeedHelpCard />
     </div>
 

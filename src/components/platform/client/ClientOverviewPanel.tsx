@@ -185,32 +185,54 @@ export default function ClientOverviewPanel({
 
       {/* =====================================================
          CLIENT METRICS GRID (REAL DATA ONLY)
+         Internal dividers via per-cell paddings + 1px borders.
+         Same metrics, same values, same data sources.
       ===================================================== */}
 
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          columnGap: 26,
-          rowGap: 22,
         }}
       >
-
-        <Metric label="Active Contracts" value={activeContracts} />
-        <Metric label="Pending Signature" value={pendingSignature} />
-        <Metric label="Pending Payment" value={pendingPayment} />
-        <Metric
-          label="Monthly Volume"
-          value={`${Math.round(monthlyVolume).toLocaleString("en-US")} kg`}
-        />
-        <Metric
-          label="Available Supply"
-          value={`${Math.round(totalAvailable).toLocaleString("en-US")} kg`}
-        />
-        <Metric label="Published Lots" value={lotCount} />
-        <Metric label="Next Shipment" value={nextShipment} />
-        <Metric label="Pending Intents" value={pendingIntents.length} />
-
+        {(
+          [
+            { label: "Active Contracts", value: activeContracts },
+            { label: "Pending Signature", value: pendingSignature },
+            { label: "Pending Payment", value: pendingPayment },
+            {
+              label: "Monthly Volume",
+              value: `${Math.round(monthlyVolume).toLocaleString("en-US")} kg`,
+            },
+            {
+              label: "Available Supply",
+              value: `${Math.round(totalAvailable).toLocaleString("en-US")} kg`,
+            },
+            { label: "Published Lots", value: lotCount },
+            { label: "Next Shipment", value: nextShipment },
+            { label: "Pending Requests", value: pendingIntents.length },
+          ] as Array<{ label: string; value: string | number }>
+        ).map((m, i) => (
+          <div
+            key={m.label}
+            style={{
+              paddingTop: i >= 2 ? 16 : 0,
+              paddingBottom: i < 6 ? 16 : 0,
+              paddingLeft: i % 2 === 1 ? 18 : 0,
+              paddingRight: i % 2 === 0 ? 18 : 0,
+              borderTop:
+                i >= 2
+                  ? "1px solid rgba(255,255,255,0.05)"
+                  : "none",
+              borderLeft:
+                i % 2 === 1
+                  ? "1px solid rgba(255,255,255,0.05)"
+                  : "none",
+            }}
+          >
+            <Metric label={m.label} value={m.value} />
+          </div>
+        ))}
       </div>
 
       {/* =====================================================

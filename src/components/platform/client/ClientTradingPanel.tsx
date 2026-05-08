@@ -204,7 +204,7 @@ export default function LeftPanel({ marketData }: Props) {
               cursor: "pointer",
             }}
           >
-            Refresh
+            Check availability
           </button>
         </div>
       )}

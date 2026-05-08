@@ -22,7 +22,13 @@ import {
 //     entry to /contract/create.
 // ======================================================
 
-export default function ClientContractsPanel({ contracts }: { contracts: any[] }) {
+export default function ClientContractsPanel({
+  contracts,
+  hasLots = true,
+}: {
+  contracts: any[]
+  hasLots?: boolean
+}) {
 
   const router = useRouter()
   const searchParams = useSearchParams()!
@@ -108,6 +114,10 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
 
       {/* ======================================================
          NO CONTRACT — calm empty state
+         The CTA appears ONLY when there are verified lots in
+         the Supply Desk. Without lots, no contract can be
+         started, so we keep this purely informational rather
+         than offering an action that leads nowhere.
       ====================================================== */}
 
       {safeContracts.length === 0 && (
@@ -174,17 +184,21 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
                   lineHeight: 1.6,
                 }}
               >
-                Start your first pilot contract to secure roasted coffee supply.
+                {hasLots
+                  ? "Start your first pilot contract by selecting a verified lot in the Supply Desk."
+                  : "Verified lots will appear in the Supply Desk once they clear quality verification. A pilot contract can be started from there."}
               </div>
             </div>
           </div>
 
-          <button
-            onClick={goToSupplyDesk}
-            style={primaryGoldPill}
-          >
-            Start Pilot Contract
-          </button>
+          {hasLots && (
+            <button
+              onClick={goToSupplyDesk}
+              style={primaryGoldPill}
+            >
+              Start Pilot Contract
+            </button>
+          )}
         </div>
       )}
 
@@ -300,10 +314,12 @@ export default function ClientContractsPanel({ contracts }: { contracts: any[] }
 
       {/* ======================================================
          NEW CONTRACT BUTTON
-         (Now routes to Supply Desk, not the dead-end wizard.)
+         Routes to Supply Desk (the only legitimate entry to a
+         new contract is via lot selection + DemandIntent).
+         Hidden when no lots exist — there's nothing to start.
       ====================================================== */}
 
-      {safeContracts.length > 0 && (
+      {safeContracts.length > 0 && hasLots && (
         <button
           onClick={goToSupplyDesk}
           style={{
