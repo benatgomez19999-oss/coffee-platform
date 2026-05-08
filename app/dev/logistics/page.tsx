@@ -567,7 +567,7 @@ export default function DevLogisticsPage() {
 
         <div className="mb-10 flex gap-3">
           <a
-            href="/platform/partner/dashboard"
+            href="/platform/partner"
             target="_blank"
             rel="noreferrer"
             className="rounded-full border border-[#cfb48a] bg-[#f7efdf] px-4 py-2 text-sm font-medium text-[#5f472f] transition hover:bg-[#efe3ce]"
@@ -575,7 +575,7 @@ export default function DevLogisticsPage() {
             Open partner dashboard
           </a>
           <a
-            href="/platform/producer/dashboard"
+            href="/platform/producer"
             target="_blank"
             rel="noreferrer"
             className="rounded-full border border-[#cfb48a] bg-[#f7efdf] px-4 py-2 text-sm font-medium text-[#5f472f] transition hover:bg-[#efe3ce]"
