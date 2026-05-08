@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { signToken } from "@/src/lib/auth"
 import { prisma } from "@/src/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 const ROLE_EMAIL_MAP = {
   producer: process.env.DEV_PRODUCER_EMAIL,
@@ -15,7 +16,16 @@ const ROLE_EMAIL_MAP = {
 export async function POST(req: Request) {
   try {
     //////////////////////////////////////////////////////
-    // 🔐 DEV GUARD
+    // 🔐 DEV-ONLY GUARD — login-as opts out of the user
+    // requirement because it IS the route that creates
+    // the session. The route then runs its own secret check.
+    //////////////////////////////////////////////////////
+
+    const guard = await requireDevRoute({ requireUser: false })
+    if (!guard.ok) return guard.response
+
+    //////////////////////////////////////////////////////
+    // 🔐 DEV GUARD (secret-based, route-specific)
     //////////////////////////////////////////////////////
 
     const bypassEnabled = process.env.DEV_AUTH_BYPASS_ENABLED === "true"

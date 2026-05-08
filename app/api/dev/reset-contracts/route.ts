@@ -5,15 +5,12 @@
 
 import { NextResponse } from "next/server"
 import { prisma } from "@/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 export async function POST() {
 
-  if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json(
-      { error: "Not allowed" },
-      { status: 403 }
-    )
-  }
+  const guard = await requireDevRoute()
+  if (!guard.ok) return guard.response
 
   try {
 

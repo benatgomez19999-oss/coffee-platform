@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 //////////////////////////////////////////////////////
 // DEV — Partner lot states for simulation
@@ -9,6 +10,13 @@ import { prisma } from "@/src/database/prisma"
 
 export async function GET(_req: NextRequest) {
   try {
+    //////////////////////////////////////////////////////
+    // 🔐 DEV-ONLY GUARD
+    //////////////////////////////////////////////////////
+
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+
     const lots = await prisma.producerLotDraft.findMany({
       where: {
         status: { in: ["IN_REVIEW", "VERIFIED"] },

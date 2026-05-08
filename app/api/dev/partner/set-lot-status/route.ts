@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 //////////////////////////////////////////////////////
 // DEV BRIDGE — Force LotDraftStatus transition
@@ -8,8 +9,25 @@ import { prisma } from "@/src/database/prisma"
 // No equivalent real route exists.
 //////////////////////////////////////////////////////
 
+const VALID_LOT_DRAFT_STATUSES = [
+  "PENDING",
+  "SAMPLE_REQUESTED",
+  "IN_REVIEW",
+  "VERIFIED",
+  "REJECTED",
+] as const
+
+type LotDraftStatusValue = (typeof VALID_LOT_DRAFT_STATUSES)[number]
+
 export async function POST(req: NextRequest) {
   try {
+    //////////////////////////////////////////////////////
+    // 🔐 DEV-ONLY GUARD
+    //////////////////////////////////////////////////////
+
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+
     const { lotId, status } = await req.json()
 
     if (!lotId || !status) {
@@ -19,9 +37,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    //////////////////////////////////////////////////////
+    // 🛡️ ENUM VALIDATION
+    //////////////////////////////////////////////////////
+
+    if (!VALID_LOT_DRAFT_STATUSES.includes(status as LotDraftStatusValue)) {
+      return NextResponse.json(
+        { error: "Invalid lot draft status" },
+        { status: 400 }
+      )
+    }
+
     const updated = await prisma.producerLotDraft.update({
       where: { id: lotId },
-      data: { status },
+      data: { status: status as LotDraftStatusValue },
       select: { id: true, status: true },
     })
 

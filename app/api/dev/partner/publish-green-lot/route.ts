@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 //////////////////////////////////////////////////////
 // DEV BRIDGE — Publish a GreenLot (DRAFT → PUBLISHED)
@@ -10,6 +11,13 @@ import { prisma } from "@/src/database/prisma"
 
 export async function POST(req: NextRequest) {
   try {
+    //////////////////////////////////////////////////////
+    // 🔐 DEV-ONLY GUARD
+    //////////////////////////////////////////////////////
+
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+
     const { greenLotId } = await req.json()
 
     if (!greenLotId) {

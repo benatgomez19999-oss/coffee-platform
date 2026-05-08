@@ -1,7 +1,7 @@
 import "@/src/events/server/registerEventHandlers"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
-import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 import { eventBus } from "@/src/events/core/eventBus"
 import { LOGISTICS_EVENTS } from "@/src/events/logistics/logistics.events"
 
@@ -17,14 +17,12 @@ type SampleShippingStatus = (typeof SHIPPING_FLOW)[number]
 export async function POST(req: NextRequest) {
   try {
     //////////////////////////////////////////////////////
-    // 🔥 AUTH
+    // 🔐 DEV-ONLY GUARD
     //////////////////////////////////////////////////////
 
-    const user = await getUserFromRequest(req)
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+    const user = guard.user
 
     //////////////////////////////////////////////////////
     // 🔥 GET PRODUCER

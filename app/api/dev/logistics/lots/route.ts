@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
-import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     //////////////////////////////////////////////////////
-    // 🔥 AUTH
+    // 🔐 DEV-ONLY GUARD
     //////////////////////////////////////////////////////
 
-    const user = await getUserFromRequest(req)
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+    const user = guard.user
 
     //////////////////////////////////////////////////////
     // 🔥 GET PRODUCER

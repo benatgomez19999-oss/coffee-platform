@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
+import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 
 //////////////////////////////////////////////////////
 // DEV BRIDGE — Seed a fake Order in PENDING status
@@ -14,6 +15,13 @@ import { prisma } from "@/src/database/prisma"
 
 export async function POST(_req: NextRequest) {
   try {
+    //////////////////////////////////////////////////////
+    // 🔐 DEV-ONLY GUARD
+    //////////////////////////////////////////////////////
+
+    const guard = await requireDevRoute()
+    if (!guard.ok) return guard.response
+
     //////////////////////////////////////////////////////
     // 1. FIND A ROASTED BATCH
     //////////////////////////////////////////////////////
