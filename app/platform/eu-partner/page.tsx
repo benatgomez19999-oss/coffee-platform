@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation"
 import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import EuropePartnerDashboard from "@/src/components/platform/eu-partner/EuropePartnerDashboard"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
-export default async function PlatformPage() {
+export default async function EuPartnerPage() {
 
   //////////////////////////////////////////////////////
-  // 🔐 GET USER (SSR SAFE)
+  // 🔐 GET USER
   //////////////////////////////////////////////////////
 
   const user = await getUserFromRequest()
 
   //////////////////////////////////////////////////////
-  // 🚨 NO USER → REDIRECT
+  // 🚨 NO USER
   //////////////////////////////////////////////////////
 
   if (!user) {
@@ -20,7 +21,15 @@ export default async function PlatformPage() {
   }
 
   //////////////////////////////////////////////////////
-  // 🚨 ONBOARDING GUARD (CRÍTICO 🔥)
+  // 🚨 WRONG ROLE
+  //////////////////////////////////////////////////////
+
+  if (user.role !== "EU_PARTNER") {
+    redirect("/platform")
+  }
+
+  //////////////////////////////////////////////////////
+  // 🚨 ONBOARDING NOT COMPLETED
   //////////////////////////////////////////////////////
 
   if (!user.onboardingCompleted) {
@@ -28,25 +37,8 @@ export default async function PlatformPage() {
   }
 
   //////////////////////////////////////////////////////
-  // 🧠 ROLE ROUTING
+  // ✅ SAFE RENDER
   //////////////////////////////////////////////////////
 
-  if (user.role === "PARTNER") {
-    redirect("/platform/partner")
-  }
-
-  if (user.role === "EU_PARTNER") {
-    redirect("/platform/eu-partner")
-  }
-
-  if (user.role === "PRODUCER") {
-    redirect("/platform/producer")
-  }
-
-  //////////////////////////////////////////////////////
-  // 👇 DEFAULT → CLIENT
-  //////////////////////////////////////////////////////
-
-  redirect("/platform/client")
+  return <EuropePartnerDashboard user={user} />
 }
-

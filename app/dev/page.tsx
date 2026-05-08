@@ -8,7 +8,7 @@ export default function DevAccessPage() {
   const [loadingRole, setLoadingRole] = useState<string | null>(null)
   const [error, setError] = useState("")
 
-  const loginAs = async (role: "producer" | "partner" | "client") => {
+  const loginAs = async (role: "producer" | "partner" | "client" | "eu-partner") => {
     try {
       setLoadingRole(role)
       setError("")
@@ -42,6 +42,11 @@ export default function DevAccessPage() {
 
       if (role === "client") {
         window.location.href = "/platform/client"
+        return
+      }
+
+      if (role === "eu-partner") {
+        window.location.href = "/platform/eu-partner"
         return
       }
     } catch (err: any) {
@@ -118,11 +123,12 @@ export default function DevAccessPage() {
             ["producer", "Enter as Producer"],
             ["partner", "Enter as Partner"],
             ["client", "Enter as Client"],
+            ["eu-partner", "Enter as EU Partner"],
           ].map(([role, label]) => (
             <button
               key={role}
               onClick={() =>
-                loginAs(role as "producer" | "partner" | "client")
+                loginAs(role as "producer" | "partner" | "client" | "eu-partner")
               }
               disabled={loadingRole !== null}
               style={{

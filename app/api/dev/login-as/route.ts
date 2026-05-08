@@ -9,6 +9,7 @@ const ROLE_EMAIL_MAP = {
   producer: process.env.DEV_PRODUCER_EMAIL,
   partner: process.env.DEV_PARTNER_EMAIL,
   client: process.env.DEV_CLIENT_EMAIL,
+  "eu-partner": process.env.DEV_EU_PARTNER_EMAIL,
 } as const
 
 export async function POST(req: Request) {
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { role, secret: providedSecret } = body
 
-    if (!role || !["producer", "partner", "client"].includes(role)) {
+    if (!role || !["producer", "partner", "client", "eu-partner"].includes(role)) {
       return NextResponse.json(
         { error: "Invalid role" },
         { status: 400 }
