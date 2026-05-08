@@ -1,16 +1,29 @@
 "use client"
 
 import React, { useMemo } from "react"
+import {
+  DESTINATION_STAGE_LABELS,
+  type DestinationStage,
+} from "@/src/lib/logistics/destinationTracking"
 
 // ======================================================
-// LOGISTICS TRACKING PANEL (LOG-3)
+// LOGISTICS TRACKING PANEL (LOG-3 / LOG-3B)
 //
-// Read-only visualization of the operational journey
-// from origin sample movement to EU receipt, plus a
-// locked placeholder for future destination operations.
+// Read-only visualization of the operational journey:
 //
-// No writes. No mutations. No carrier integrations.
-// Pure presentation — fed by the props.
+//   Sample logistics
+//     → Export readiness  (verified GreenLots)
+//     → International + Destination shipment
+//     → Future destination operations (placeholder)
+//
+// LOG-3B extends LOG-3 with:
+//   - separate "Export Readiness" card group
+//   - full LOG-3A destination stage flow on Shipment
+//     cards, with conditional customs steps
+//   - "Awaiting customs" summary metric
+//
+// No writes. Pure presentation. Builders are pure
+// functions feeding the render.
 // ======================================================
 
 // ------------------------------------------------------
@@ -94,6 +107,10 @@ export type TrackingShipment = {
   receivedAt: string | null
   createdAt: string
   greenLots: TrackingShipmentLot[]
+  // LOG-3A — destination tracking
+  currentStage: DestinationStage | null
+  destinationCountry: string | null
+  requiresDestinationCustoms: boolean
 }
 
 export type LogisticsTrackingPanelProps = {
@@ -117,24 +134,27 @@ type TrackingStage = {
   id: string
   label: string
   state: TrackingStageState
-  timestamp?: string | null
+  detail?: string
 }
 
-type TrackingTone = "neutral" | "amber" | "olive" | "red"
+type TrackingTone = "neutral" | "amber" | "olive" | "red" | "bronze"
+
+type TrackingCardKind = "sample" | "partner_review" | "shipment" | "future"
 
 type TrackingCard = {
   id: string
+  kind: TrackingCardKind
   title: string
   subtitle: string
-  kind: "sample" | "shipment" | "future"
   currentStage: string
-  statusTone: TrackingTone
+  tone: TrackingTone
   metadata: { label: string; value: string }[]
   stages: TrackingStage[]
+  nextStep: string
 }
 
 // ------------------------------------------------------
-// STAGE DEFINITIONS
+// STAGE DEFINITIONS — sample journey
 // ------------------------------------------------------
 
 const SAMPLE_STAGE_IDS = [
@@ -149,36 +169,103 @@ const SAMPLE_STAGE_IDS = [
 type SampleStageId = (typeof SAMPLE_STAGE_IDS)[number]
 
 const SAMPLE_STAGE_LABELS: Record<SampleStageId, string> = {
-  "draft":            "Draft",
+  "draft":            "Draft created",
   "sample-requested": "Sample requested",
   "pickup-scheduled": "Pickup scheduled",
-  "in-transit":       "In transit",
-  "lab-delivered":    "Lab delivered",
-  "lab-review":       "Lab review",
+  "in-transit":       "In transit to lab",
+  "lab-delivered":    "Delivered to lab",
+  "lab-review":       "Partner review",
   "verified":         "Verified",
 }
 
-const SHIPMENT_STAGE_IDS = ["created", "arrived", "received"] as const
-type ShipmentStageId = (typeof SHIPMENT_STAGE_IDS)[number]
+// ------------------------------------------------------
+// STAGE DEFINITIONS — export readiness (post-verification)
+// ------------------------------------------------------
 
-const SHIPMENT_STAGE_LABELS: Record<ShipmentStageId, string> = {
-  "created":  "Ocean / air transit",
-  "arrived":  "European port arrival",
-  "received": "EU warehouse received",
+const EXPORT_STAGE_IDS = [
+  "verified",
+  "greenlot-draft",
+  "published",
+  "reserved",
+  "sold",
+] as const
+type ExportStageId = (typeof EXPORT_STAGE_IDS)[number]
+
+const EXPORT_STAGE_LABELS: Record<ExportStageId, string> = {
+  "verified":       "Verified",
+  "greenlot-draft": "GreenLot created",
+  "published":      "Published to market",
+  "reserved":       "Reserved for shipment",
+  "sold":           "Sold",
 }
 
 // ------------------------------------------------------
-// CARD BUILDERS — pure functions
+// STAGE DEFINITIONS — shipment journey
+// (head + destination flow, customs is conditional)
+// ------------------------------------------------------
+
+type ShipmentStageId =
+  | "shipment-created"
+  | "in-transit-rotterdam"
+  | DestinationStage
+
+const SHIPMENT_HEAD_LABELS: Record<
+  "shipment-created" | "in-transit-rotterdam",
+  string
+> = {
+  "shipment-created":     "Shipment created",
+  "in-transit-rotterdam": "In transit to Rotterdam",
+}
+
+const DESTINATION_FLOW_BASE: readonly DestinationStage[] = [
+  "ARRIVED_AT_ROTTERDAM_PORT",
+  "ROTTERDAM_CUSTOMS_CHECKING",
+  "ROTTERDAM_CUSTOMS_CLEARED",
+  "TO_PORT_WAREHOUSE",
+  "AT_PORT_WAREHOUSE",
+  "AWAITING_PORT_WAREHOUSE_PICKUP",
+  "TO_CO_ROASTER",
+  "AT_CO_ROASTER_WAREHOUSE",
+  "ROASTING_IN_PROGRESS",
+  "FINAL_PACKING_20KG",
+  "AWAITING_CO_ROASTER_PICKUP",
+  "TO_CLIENT",
+]
+
+const DESTINATION_CUSTOMS_STAGES: readonly DestinationStage[] = [
+  "DESTINATION_CUSTOMS_CHECKING",
+  "DESTINATION_CUSTOMS_CLEARED",
+]
+
+function getShipmentStageIds(
+  requiresDestinationCustoms: boolean
+): ShipmentStageId[] {
+  return [
+    "shipment-created",
+    "in-transit-rotterdam",
+    ...DESTINATION_FLOW_BASE,
+    ...(requiresDestinationCustoms ? DESTINATION_CUSTOMS_STAGES : []),
+    "RECEIVED_BY_CLIENT",
+  ]
+}
+
+function getShipmentStageLabel(id: ShipmentStageId): string {
+  if (id === "shipment-created" || id === "in-transit-rotterdam") {
+    return SHIPMENT_HEAD_LABELS[id]
+  }
+  return DESTINATION_STAGE_LABELS[id]
+}
+
+// ------------------------------------------------------
+// SAMPLE CARDS
 // ------------------------------------------------------
 
 function computeSampleCurrentStage(lot: TrackingSampleLot): SampleStageId {
-  // REJECTED is treated as attention on the lab-review stage
   if (lot.status === "REJECTED")  return "lab-review"
   if (lot.status === "VERIFIED")  return "verified"
   if (lot.status === "IN_REVIEW") return "lab-review"
   if (lot.status === "PENDING")   return "draft"
 
-  // SAMPLE_REQUESTED → look at sampleShippingStatus
   switch (lot.sampleShippingStatus) {
     case "PICKUP_REQUESTED": return "sample-requested"
     case "PICKUP_SCHEDULED": return "pickup-scheduled"
@@ -199,9 +286,23 @@ function buildSampleStages(lot: TrackingSampleLot): TrackingStage[] {
       idx <  currentIndex                 ? "completed" :
       idx === currentIndex                ? "current"   :
                                             "pending"
-
     return { id: stageId, label: SAMPLE_STAGE_LABELS[stageId], state }
   })
+}
+
+function buildSampleNextStep(lot: TrackingSampleLot): string {
+  if (lot.status === "REJECTED")        return "Review rejection / create new draft"
+  if (lot.status === "VERIFIED")        return "Verified — see export readiness card"
+  if (lot.status === "IN_REVIEW")       return "Verify lot"
+  if (lot.status === "PENDING")         return "Send sample to lab"
+  // SAMPLE_REQUESTED variants
+  switch (lot.sampleShippingStatus) {
+    case "PICKUP_REQUESTED": return "Schedule pickup"
+    case "PICKUP_SCHEDULED": return "Sample in transit"
+    case "IN_TRANSIT":       return "Awaiting lab delivery"
+    case "DELIVERED":        return "Begin lab review"
+    default:                 return "Schedule pickup"
+  }
 }
 
 function buildSampleMetadata(lot: TrackingSampleLot): { label: string; value: string }[] {
@@ -209,16 +310,10 @@ function buildSampleMetadata(lot: TrackingSampleLot): { label: string; value: st
     { label: "Lot #", value: lot.lotNumber },
     { label: "Status", value: lot.status },
   ]
-
   if (lot.sampleShippingStatus) {
     meta.push({ label: "Shipping", value: lot.sampleShippingStatus })
   }
-
   if (lot.greenLot) {
-    meta.push({ label: "GreenLot", value: lot.greenLot.status })
-    if (lot.greenLot.scaScore !== null) {
-      meta.push({ label: "SCA", value: String(lot.greenLot.scaScore) })
-    }
     if (lot.greenLot.farm.region) {
       meta.push({ label: "Region", value: lot.greenLot.farm.region })
     }
@@ -226,56 +321,189 @@ function buildSampleMetadata(lot: TrackingSampleLot): { label: string; value: st
       label: "Producer",
       value: `${lot.greenLot.farm.producer.name} · ${lot.greenLot.farm.producer.country}`,
     })
-    if (lot.greenLot.shipment) {
-      meta.push({ label: "Shipment", value: lot.greenLot.shipment.reference })
-    }
   }
-
   return meta
 }
 
-function buildSampleTrackingCards(lots: TrackingSampleLot[]): TrackingCard[] {
-  return lots.map((lot) => {
+function buildSampleCards(lots: TrackingSampleLot[]): TrackingCard[] {
+  // LOG-3B: Verified lots move to the Export Readiness group.
+  // They no longer clutter the Sample Logistics group.
+  const samplePhase = lots.filter((l) => l.status !== "VERIFIED")
+
+  return samplePhase.map((lot) => {
     const stages = buildSampleStages(lot)
     const isAttention = lot.status === "REJECTED"
-    const isVerified = lot.status === "VERIFIED"
-
     const currentStageId = computeSampleCurrentStage(lot)
     const currentLabel = isAttention
       ? "Rejected"
       : SAMPLE_STAGE_LABELS[currentStageId]
 
-    const statusTone: TrackingTone = isAttention
-      ? "red"
-      : isVerified
-        ? "olive"
-        : "amber"
+    const tone: TrackingTone = isAttention ? "red" : "amber"
 
-    const subtitleParts = [lot.variety, lot.process, `Harvest ${lot.harvestYear}`]
+    const subtitle = [lot.variety, lot.process, `Harvest ${lot.harvestYear}`]
       .filter(Boolean)
       .join(" · ")
 
     return {
       id: `sample-${lot.id}`,
-      title: lot.name || lot.lotNumber || "Unnamed lot",
-      subtitle: subtitleParts,
       kind: "sample",
+      title: lot.name || lot.lotNumber || "Unnamed lot",
+      subtitle,
       currentStage: currentLabel,
-      statusTone,
+      tone,
       metadata: buildSampleMetadata(lot),
       stages,
+      nextStep: buildSampleNextStep(lot),
     }
   })
 }
 
-function buildShipmentStages(s: TrackingShipment): TrackingStage[] {
-  const isDiscrepancy = s.status === "DISCREPANCY"
-  const currentIndex =
-    s.status === "RECEIVED" ? 2 :
-    s.status === "ARRIVED"  ? 1 :
-                              0
+// ------------------------------------------------------
+// EXPORT READINESS CARDS  (LOG-3B)
+// Built from VERIFIED sample lots that have a GreenLot.
+// ------------------------------------------------------
 
-  return SHIPMENT_STAGE_IDS.map((stageId, idx) => {
+function computeExportCurrentStage(
+  greenLotStatus: GreenLotStatus
+): ExportStageId {
+  switch (greenLotStatus) {
+    case "DRAFT":     return "greenlot-draft"
+    case "PUBLISHED": return "published"
+    case "RESERVED":  return "reserved"
+    case "SOLD":      return "sold"
+  }
+}
+
+function buildExportStages(greenLotStatus: GreenLotStatus): TrackingStage[] {
+  const currentId = computeExportCurrentStage(greenLotStatus)
+  const currentIndex = EXPORT_STAGE_IDS.indexOf(currentId)
+
+  return EXPORT_STAGE_IDS.map((stageId, idx) => {
+    const state: TrackingStageState =
+      idx <  currentIndex ? "completed" :
+      idx === currentIndex ? "current"  :
+                             "pending"
+    return { id: stageId, label: EXPORT_STAGE_LABELS[stageId], state }
+  })
+}
+
+function buildExportNextStep(greenLotStatus: GreenLotStatus): string {
+  switch (greenLotStatus) {
+    case "DRAFT":     return "Publish to market"
+    case "PUBLISHED": return "Awaiting shipment assignment"
+    case "RESERVED":  return "Tracked under shipment"
+    case "SOLD":      return "Cycle complete"
+  }
+}
+
+function buildExportMetadata(lot: TrackingSampleLot): { label: string; value: string }[] {
+  const gl = lot.greenLot
+  if (!gl) return []
+
+  const meta: { label: string; value: string }[] = [
+    { label: "Lot #", value: lot.lotNumber },
+    { label: "GreenLot", value: gl.status },
+  ]
+  if (gl.scaScore !== null) {
+    meta.push({ label: "SCA", value: String(gl.scaScore) })
+  }
+  meta.push({
+    label: "Available",
+    value: `${Math.round(gl.availableKg).toLocaleString()} kg`,
+  })
+  if (gl.farm.region) {
+    meta.push({ label: "Region", value: gl.farm.region })
+  }
+  meta.push({
+    label: "Producer",
+    value: `${gl.farm.producer.name} · ${gl.farm.producer.country}`,
+  })
+  if (gl.shipment) {
+    meta.push({ label: "Shipment", value: gl.shipment.reference })
+  }
+  return meta
+}
+
+function buildExportReadinessCards(lots: TrackingSampleLot[]): TrackingCard[] {
+  const verified = lots.filter(
+    (l) => l.status === "VERIFIED" && l.greenLot !== null
+  )
+
+  return verified.map((lot) => {
+    // greenLot is non-null by filter; assert for TS happiness via local narrow
+    const gl = lot.greenLot
+    if (!gl) return null as never
+
+    const stages = buildExportStages(gl.status)
+    const currentLabel = EXPORT_STAGE_LABELS[computeExportCurrentStage(gl.status)]
+
+    const tone: TrackingTone =
+      gl.status === "SOLD"     ? "olive"  :
+      gl.status === "RESERVED" ? "bronze" :
+                                 "amber"
+
+    const subtitle = [lot.variety, lot.process, `Harvest ${lot.harvestYear}`]
+      .filter(Boolean)
+      .join(" · ")
+
+    return {
+      id: `export-${gl.id}`,
+      kind: "partner_review",
+      title: lot.name || lot.lotNumber || "Unnamed lot",
+      subtitle,
+      currentStage: currentLabel,
+      tone,
+      metadata: buildExportMetadata(lot),
+      stages,
+      nextStep: buildExportNextStep(gl.status),
+    }
+  })
+}
+
+// ------------------------------------------------------
+// SHIPMENT CARDS  (LOG-3B — full destination flow)
+// ------------------------------------------------------
+
+function isDestinationStageId(
+  id: ShipmentStageId
+): id is DestinationStage {
+  return id !== "shipment-created" && id !== "in-transit-rotterdam"
+}
+
+function computeShipmentCurrentStageIndex(
+  s: TrackingShipment,
+  stageIds: ShipmentStageId[]
+): number {
+  // Discrepancy: paint the in-transit-rotterdam slot as the locus
+  // of attention (or current stage if known)
+  if (s.status === "DISCREPANCY") {
+    if (s.currentStage) {
+      const idx = stageIds.indexOf(s.currentStage)
+      if (idx >= 0) return idx
+    }
+    return stageIds.indexOf("in-transit-rotterdam")
+  }
+
+  // currentStage drives the timeline once destination tracking starts
+  if (s.currentStage) {
+    const idx = stageIds.indexOf(s.currentStage)
+    if (idx >= 0) return idx
+  }
+
+  // No currentStage yet — derive from macro status
+  if (s.status === "IN_TRANSIT")  return stageIds.indexOf("in-transit-rotterdam")
+  if (s.status === "ARRIVED")     return stageIds.indexOf("ARRIVED_AT_ROTTERDAM_PORT")
+  if (s.status === "RECEIVED")    return stageIds.indexOf("RECEIVED_BY_CLIENT")
+
+  return 0
+}
+
+function buildShipmentStages(s: TrackingShipment): TrackingStage[] {
+  const stageIds = getShipmentStageIds(s.requiresDestinationCustoms)
+  const currentIndex = computeShipmentCurrentStageIndex(s, stageIds)
+  const isDiscrepancy = s.status === "DISCREPANCY"
+
+  return stageIds.map((stageId, idx) => {
     const baseState: TrackingStageState =
       idx <  currentIndex ? "completed" :
       idx === currentIndex ? "current"  :
@@ -284,13 +512,63 @@ function buildShipmentStages(s: TrackingShipment): TrackingStage[] {
     const state: TrackingStageState =
       isDiscrepancy && idx === currentIndex ? "attention" : baseState
 
-    let timestamp: string | null = null
-    if (stageId === "created")  timestamp = s.createdAt
-    if (stageId === "arrived")  timestamp = s.arrivedAt
-    if (stageId === "received") timestamp = s.receivedAt
+    let detail: string | undefined
+    if (stageId === "shipment-created") {
+      detail = formatDate(s.createdAt)
+    } else if (stageId === "ARRIVED_AT_ROTTERDAM_PORT" && s.arrivedAt) {
+      detail = formatDate(s.arrivedAt)
+    } else if (stageId === "RECEIVED_BY_CLIENT" && s.receivedAt) {
+      detail = formatDate(s.receivedAt)
+    }
 
-    return { id: stageId, label: SHIPMENT_STAGE_LABELS[stageId], state, timestamp }
+    return {
+      id: stageId,
+      label: getShipmentStageLabel(stageId),
+      state,
+      detail,
+    }
   })
+}
+
+function buildShipmentCurrentLabel(s: TrackingShipment): string {
+  if (s.status === "DISCREPANCY") return "Discrepancy"
+
+  if (s.currentStage) {
+    return DESTINATION_STAGE_LABELS[s.currentStage]
+  }
+
+  if (s.status === "IN_TRANSIT") return "In transit to Rotterdam"
+  if (s.status === "ARRIVED")    return "Arrived — awaiting stage update"
+  if (s.status === "RECEIVED")   return "Received"
+
+  return "—"
+}
+
+function buildShipmentNextStep(s: TrackingShipment): string {
+  if (s.status === "DISCREPANCY") {
+    return "Resolve discrepancy before receiving"
+  }
+
+  // Use current stage to propose the next operational step
+  if (s.currentStage) {
+    if (s.currentStage === "RECEIVED_BY_CLIENT") return "Cycle complete"
+    if (s.currentStage === "TO_CLIENT") {
+      return s.requiresDestinationCustoms
+        ? "Awaiting destination customs"
+        : "Awaiting client receipt"
+    }
+    if (s.currentStage === "DESTINATION_CUSTOMS_CHECKING") return "Awaiting destination clearance"
+    if (s.currentStage === "DESTINATION_CUSTOMS_CLEARED")  return "Final delivery to client"
+    if (s.currentStage === "ROTTERDAM_CUSTOMS_CHECKING")   return "Awaiting Rotterdam clearance"
+    if (s.currentStage === "ROASTING_IN_PROGRESS")         return "Final packing"
+    return "Advance destination stage"
+  }
+
+  if (s.status === "IN_TRANSIT") return "Awaiting Rotterdam arrival"
+  if (s.status === "ARRIVED")    return "Begin destination tracking"
+  if (s.status === "RECEIVED")   return "Cycle complete"
+
+  return "—"
 }
 
 function buildShipmentMetadata(s: TrackingShipment): { label: string; value: string }[] {
@@ -310,11 +588,13 @@ function buildShipmentMetadata(s: TrackingShipment): { label: string; value: str
     .slice(0, 4)
 
   const meta: { label: string; value: string }[] = [
-    { label: "Carrier", value: s.carrier ?? "—" },
-    { label: "Vessel",  value: s.vesselOrFlight ?? "—" },
-    { label: "ETA",     value: formatDate(s.etaAt) },
-    { label: "Lots",    value: String(s.greenLots.length) },
-    { label: "Total",   value: `${Math.round(totalKg).toLocaleString()} kg` },
+    { label: "Carrier",     value: s.carrier ?? "—" },
+    { label: "Vessel",      value: s.vesselOrFlight ?? "—" },
+    { label: "Destination", value: s.destinationCountry ?? "—" },
+    { label: "Customs",     value: s.requiresDestinationCustoms ? "Required" : "Not required" },
+    { label: "ETA",         value: formatDate(s.etaAt) },
+    { label: "Lots",        value: String(s.greenLots.length) },
+    { label: "Total",       value: `${Math.round(totalKg).toLocaleString()} kg` },
   ]
 
   if (regions.length > 0) {
@@ -329,7 +609,9 @@ function buildShipmentMetadata(s: TrackingShipment): { label: string; value: str
       label: "Lot #s",
       value:
         lotNumbers.join(", ") +
-        (s.greenLots.length > lotNumbers.length ? ` +${s.greenLots.length - lotNumbers.length}` : ""),
+        (s.greenLots.length > lotNumbers.length
+          ? ` +${s.greenLots.length - lotNumbers.length}`
+          : ""),
     })
   }
 
@@ -340,55 +622,56 @@ function buildShipmentTrackingCards(shipments: TrackingShipment[]): TrackingCard
   return shipments.map((s) => {
     const stages = buildShipmentStages(s)
     const isDiscrepancy = s.status === "DISCREPANCY"
-    const isReceived = s.status === "RECEIVED"
+    const isComplete =
+      s.status === "RECEIVED" || s.currentStage === "RECEIVED_BY_CLIENT"
 
-    const currentLabel =
-      isDiscrepancy                ? "Discrepancy / attention" :
-      s.status === "RECEIVED"      ? SHIPMENT_STAGE_LABELS["received"] :
-      s.status === "ARRIVED"       ? SHIPMENT_STAGE_LABELS["arrived"] :
-                                     SHIPMENT_STAGE_LABELS["created"]
-
-    const statusTone: TrackingTone =
+    const tone: TrackingTone =
       isDiscrepancy ? "red"   :
-      isReceived    ? "olive" :
+      isComplete    ? "olive" :
                       "amber"
 
     return {
       id: `shipment-${s.id}`,
+      kind: "shipment",
       title: s.reference,
       subtitle: `${s.greenLots.length} lot${s.greenLots.length === 1 ? "" : "s"}`,
-      kind: "shipment",
-      currentStage: currentLabel,
-      statusTone,
+      currentStage: buildShipmentCurrentLabel(s),
+      tone,
       metadata: buildShipmentMetadata(s),
       stages,
+      nextStep: buildShipmentNextStep(s),
     }
   })
 }
 
-function buildFutureTrackingCards(): TrackingCard[] {
+// ------------------------------------------------------
+// FUTURE OPERATIONS CARD
+// ------------------------------------------------------
+
+function buildFutureCards(): TrackingCard[] {
   const stages: TrackingStage[] = [
-    { id: "warehouse",       label: "Warehouse intake",   state: "blocked" },
-    { id: "roast-queue",     label: "Roast queue",        state: "blocked" },
-    { id: "roasted-inv",     label: "Roasted inventory",  state: "blocked" },
-    { id: "client-dispatch", label: "Client dispatch",    state: "blocked" },
+    { id: "roast-batch",     label: "RoastBatch creation",   state: "blocked" },
+    { id: "roasted-inv",     label: "Roasted inventory",     state: "blocked" },
+    { id: "client-dispatch", label: "Client dispatch proof", state: "blocked" },
+    { id: "delivery-audit",  label: "Delivery audit",        state: "blocked" },
   ]
 
   return [
     {
       id: "future-destination",
-      title: "Destination operations",
-      subtitle: "Roadmap — not implemented yet",
       kind: "future",
+      title: "Future operations",
+      subtitle: "Roadmap — not implemented yet",
       currentStage: "Pending implementation",
-      statusTone: "neutral",
+      tone: "neutral",
       metadata: [
-        { label: "Warehouse",    value: "—" },
-        { label: "Roast queue",  value: "—" },
-        { label: "Inventory",    value: "—" },
+        { label: "RoastBatch",   value: "—" },
+        { label: "Roasted inv.", value: "—" },
         { label: "Dispatch",     value: "—" },
+        { label: "Audit",        value: "—" },
       ],
       stages,
+      nextStep: "—",
     },
   ]
 }
@@ -408,6 +691,17 @@ function formatDate(iso: string | null): string {
   })
 }
 
+const CUSTOMS_STAGES: readonly DestinationStage[] = [
+  "ROTTERDAM_CUSTOMS_CHECKING",
+  "DESTINATION_CUSTOMS_CHECKING",
+]
+
+const TRANSIT_STAGES: readonly DestinationStage[] = [
+  "TO_PORT_WAREHOUSE",
+  "TO_CO_ROASTER",
+  "TO_CLIENT",
+]
+
 // ======================================================
 // RENDER
 // ======================================================
@@ -419,24 +713,52 @@ export default function LogisticsTrackingPanel({
 }: LogisticsTrackingPanelProps) {
 
   const sampleCards = useMemo(
-    () => buildSampleTrackingCards(sampleLots),
+    () => buildSampleCards(sampleLots),
     [sampleLots]
   )
+
+  const exportCards = useMemo(
+    () => buildExportReadinessCards(sampleLots),
+    [sampleLots]
+  )
+
   const shipmentCards = useMemo(
     () => buildShipmentTrackingCards(shipments),
     [shipments]
   )
-  const futureCards = useMemo(() => buildFutureTrackingCards(), [])
+
+  const futureCards = useMemo(() => buildFutureCards(), [])
+
+  // ----------------------------------------------------
+  // Summary metrics
+  // ----------------------------------------------------
 
   const summary = useMemo(() => {
-    const sampleJourneys = sampleLots.length
-    const inTransit = shipments.filter((s) => s.status === "IN_TRANSIT").length
-    const received  = shipments.filter((s) => s.status === "RECEIVED").length
+    // Active = entities still progressing (not olive-tone)
+    const activeSamples  = sampleCards.filter((c) => c.tone !== "olive").length
+    const activeExports  = exportCards.filter((c) => c.tone !== "olive").length
+    const activeShipments = shipmentCards.filter((c) => c.tone !== "olive").length
+    const active = activeSamples + activeExports + activeShipments
+
+    const inTransit = shipments.filter(
+      (s) =>
+        s.status === "IN_TRANSIT" ||
+        (s.currentStage !== null &&
+          (TRANSIT_STAGES as readonly string[]).includes(s.currentStage))
+    ).length
+
+    const customs = shipments.filter(
+      (s) =>
+        s.currentStage !== null &&
+        (CUSTOMS_STAGES as readonly string[]).includes(s.currentStage)
+    ).length
+
     const attention =
       sampleLots.filter((l) => l.status === "REJECTED").length +
       shipments.filter((s) => s.status === "DISCREPANCY").length
-    return { sampleJourneys, inTransit, received, attention }
-  }, [sampleLots, shipments])
+
+    return { active, inTransit, customs, attention }
+  }, [sampleCards, exportCards, shipmentCards, shipments, sampleLots])
 
   if (loading) {
     return (
@@ -446,7 +768,10 @@ export default function LogisticsTrackingPanel({
     )
   }
 
-  const hasContent = sampleCards.length > 0 || shipmentCards.length > 0
+  const hasContent =
+    sampleCards.length > 0 ||
+    exportCards.length > 0 ||
+    shipmentCards.length > 0
 
   return (
     <div className="space-y-6">
@@ -456,10 +781,10 @@ export default function LogisticsTrackingPanel({
       {/* ============================================== */}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryTile label="Sample journeys"        value={summary.sampleJourneys} tone="amber"   />
-        <SummaryTile label="Shipments in transit"   value={summary.inTransit}      tone="amber"   />
-        <SummaryTile label="Shipments received"     value={summary.received}       tone="olive"   />
-        <SummaryTile label="Attention items"        value={summary.attention}      tone={summary.attention > 0 ? "red" : "neutral"} />
+        <SummaryTile label="Active journeys"      value={summary.active}    tone="amber" />
+        <SummaryTile label="Shipments in transit" value={summary.inTransit} tone="amber" />
+        <SummaryTile label="Awaiting customs"     value={summary.customs}   tone={summary.customs > 0 ? "bronze" : "neutral"} />
+        <SummaryTile label="Attention items"      value={summary.attention} tone={summary.attention > 0 ? "red" : "neutral"} />
       </div>
 
       {/* ============================================== */}
@@ -489,12 +814,31 @@ export default function LogisticsTrackingPanel({
       )}
 
       {/* ============================================== */}
-      {/* INTERNATIONAL SHIPMENT                         */}
+      {/* EXPORT READINESS                               */}
+      {/* ============================================== */}
+
+      {exportCards.length > 0 && (
+        <div className="space-y-3">
+          <SubsectionTitle icon="🌿" label="Export readiness" count={exportCards.length} />
+          <div className="grid gap-4">
+            {exportCards.map((card) => (
+              <TimelineCard key={card.id} card={card} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================== */}
+      {/* INTERNATIONAL + DESTINATION SHIPMENT           */}
       {/* ============================================== */}
 
       {shipmentCards.length > 0 && (
         <div className="space-y-3">
-          <SubsectionTitle icon="🚢" label="International shipments" count={shipmentCards.length} />
+          <SubsectionTitle
+            icon="🚢"
+            label="International + destination shipment"
+            count={shipmentCards.length}
+          />
           <div className="grid gap-4">
             {shipmentCards.map((card) => (
               <TimelineCard key={card.id} card={card} />
@@ -534,16 +878,18 @@ function SummaryTile({
   tone: TrackingTone
 }) {
   const cls =
-    tone === "olive" ? "bg-[#f4f8f2] border-[#d3e0cc]" :
-    tone === "red"   ? "bg-[#fbf0eb] border-[#e8cdc1]" :
-    tone === "amber" ? "bg-[#fbf7f0] border-[#e6d4a8]" :
-                       "bg-[#f7f3ed] border-[#d8cebb]"
+    tone === "olive"  ? "bg-[#f4f8f2] border-[#d3e0cc]" :
+    tone === "red"    ? "bg-[#fbf0eb] border-[#e8cdc1]" :
+    tone === "amber"  ? "bg-[#fbf7f0] border-[#e6d4a8]" :
+    tone === "bronze" ? "bg-[#f7efdf] border-[#cfb48a]" :
+                        "bg-[#f7f3ed] border-[#d8cebb]"
 
   const valueColor =
-    tone === "olive" ? "text-[#3a6b35]" :
-    tone === "red"   ? "text-[#8a3a25]" :
-    tone === "amber" ? "text-[#7a5230]" :
-                       "text-[#2f2418]"
+    tone === "olive"  ? "text-[#3a6b35]" :
+    tone === "red"    ? "text-[#8a3a25]" :
+    tone === "amber"  ? "text-[#7a5230]" :
+    tone === "bronze" ? "text-[#5f472f]" :
+                        "text-[#2f2418]"
 
   return (
     <div className={`rounded-xl border-2 px-4 py-3 ${cls}`}>
@@ -589,11 +935,21 @@ function TimelineCard({ card }: { card: TrackingCard }) {
           </h4>
           <p className="mt-0.5 text-[12px] text-[#6b5a45]">{card.subtitle}</p>
         </div>
-        <StatusBadge tone={card.statusTone} label={card.currentStage} />
+        <StatusBadge tone={card.tone} label={card.currentStage} />
       </div>
 
       {/* Timeline */}
       <Timeline stages={card.stages} />
+
+      {/* Next step */}
+      {card.nextStep && card.nextStep !== "—" && (
+        <div className="mt-3 text-[11px] text-[#7a5c2e]">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-[#9a8b73] mr-2">
+            Next
+          </span>
+          {card.nextStep}
+        </div>
+      )}
 
       {/* Metadata */}
       {card.metadata.length > 0 && (
@@ -619,16 +975,18 @@ function TimelineCard({ card }: { card: TrackingCard }) {
 
 function StatusBadge({ tone, label }: { tone: TrackingTone; label: string }) {
   const cls =
-    tone === "olive" ? "bg-[#e8f0e6] text-[#3a6b35] border-[#b7cbb0]" :
-    tone === "amber" ? "bg-[#f3e9d7] text-[#7a5230] border-[#c4b28e]" :
-    tone === "red"   ? "bg-[#fbe2da] text-[#8a3a25] border-[#d8a89a]" :
-                       "bg-[#ede4d4] text-[#7a5c2e] border-[#c9b89a]"
+    tone === "olive"  ? "bg-[#e8f0e6] text-[#3a6b35] border-[#b7cbb0]" :
+    tone === "amber"  ? "bg-[#f3e9d7] text-[#7a5230] border-[#c4b28e]" :
+    tone === "red"    ? "bg-[#fbe2da] text-[#8a3a25] border-[#d8a89a]" :
+    tone === "bronze" ? "bg-[#f7efdf] text-[#5f472f] border-[#cfb48a]" :
+                        "bg-[#ede4d4] text-[#7a5c2e] border-[#c9b89a]"
 
   const dotCls =
-    tone === "olive" ? "bg-[#3a6b35]" :
-    tone === "amber" ? "bg-[#c07840]" :
-    tone === "red"   ? "bg-[#8a3a25]" :
-                       "bg-[#7a5c2e]"
+    tone === "olive"  ? "bg-[#3a6b35]" :
+    tone === "amber"  ? "bg-[#c07840]" :
+    tone === "red"    ? "bg-[#8a3a25]" :
+    tone === "bronze" ? "bg-[#7a5230]" :
+                        "bg-[#7a5c2e]"
 
   return (
     <span
@@ -645,7 +1003,7 @@ function Timeline({ stages }: { stages: TrackingStage[] }) {
     <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
       {stages.map((stage, idx) => (
         <li key={stage.id} className="flex items-center gap-1.5">
-          <StageChip state={stage.state} label={stage.label} />
+          <StageChip state={stage.state} label={stage.label} detail={stage.detail} />
           {idx < stages.length - 1 && (
             <span
               className={`h-px w-3 ${
@@ -662,9 +1020,11 @@ function Timeline({ stages }: { stages: TrackingStage[] }) {
 function StageChip({
   state,
   label,
+  detail,
 }: {
   state: TrackingStageState
   label: string
+  detail?: string
 }) {
   const cls =
     state === "completed" ? "bg-[#e8f0e6] text-[#3a6b35] border-[#b7cbb0]" :
@@ -683,9 +1043,15 @@ function StageChip({
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${cls}`}
+      title={detail}
     >
       <span className="font-mono">{icon}</span>
       {label}
+      {detail && (
+        <span className="text-[9.5px] text-[#9a8b73] ml-0.5 tabular-nums">
+          {detail}
+        </span>
+      )}
     </span>
   )
 }
