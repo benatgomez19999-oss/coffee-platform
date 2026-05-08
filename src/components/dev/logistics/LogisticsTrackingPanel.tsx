@@ -1,34 +1,32 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   DESTINATION_STAGE_LABELS,
   type DestinationStage,
 } from "@/src/lib/logistics/destinationTracking"
 
 // ======================================================
-// LOGISTICS TRACKING PANEL (LOG-3 / LOG-3B)
+// LOGISTICS TRACKING PANEL (LOG-3 / LOG-3B / LOG-3C)
 //
-// Read-only visualization of the operational journey:
+// Read-only operational journey visualization:
+//   Sample logistics → Export readiness →
+//   International + destination shipment → Future ops
 //
-//   Sample logistics
-//     → Export readiness  (verified GreenLots)
-//     → International + Destination shipment
-//     → Future destination operations (placeholder)
+// LOG-3C polish:
+//   - manual Refresh + opt-in Auto-refresh (15s)
+//   - filters: hide completed / attention only / shipments only
+//   - compact mode for long shipment timelines
+//   - shipment timeline grouped into 4 phases:
+//     Shipment / Rotterdam / Co-roaster / Client
+//   - improved empty states + "Showing X of Y"
 //
-// LOG-3B extends LOG-3 with:
-//   - separate "Export Readiness" card group
-//   - full LOG-3A destination stage flow on Shipment
-//     cards, with conditional customs steps
-//   - "Awaiting customs" summary metric
-//
-// No writes. Pure presentation. Builders are pure
+// Pure presentation. No writes. Builders are pure
 // functions feeding the render.
 // ======================================================
 
 // ------------------------------------------------------
 // EXPORTED PROP TYPES
-// (page.tsx uses these to type the fetch response)
 // ------------------------------------------------------
 
 export type SampleLotStatus =
@@ -107,7 +105,6 @@ export type TrackingShipment = {
   receivedAt: string | null
   createdAt: string
   greenLots: TrackingShipmentLot[]
-  // LOG-3A — destination tracking
   currentStage: DestinationStage | null
   destinationCountry: string | null
   requiresDestinationCustoms: boolean
@@ -117,10 +114,12 @@ export type LogisticsTrackingPanelProps = {
   sampleLots: TrackingSampleLot[]
   shipments: TrackingShipment[]
   loading?: boolean
+  onRefresh?: () => void | Promise<void>
+  lastRefreshedAt?: Date | null
 }
 
 // ------------------------------------------------------
-// INTERNAL VIEW MODEL
+// VIEW MODEL TYPES
 // ------------------------------------------------------
 
 type TrackingStageState =
@@ -141,6 +140,20 @@ type TrackingTone = "neutral" | "amber" | "olive" | "red" | "bronze"
 
 type TrackingCardKind = "sample" | "partner_review" | "shipment" | "future"
 
+type ShipmentPhaseId = "shipment" | "rotterdam" | "co-roaster" | "client"
+
+// Phases never use "blocked" — that state belongs to flat
+// future-operations stages. Keep this strict so the
+// PhaseStateBadge can pattern-match exhaustively.
+type PhaseState = "completed" | "current" | "pending" | "attention"
+
+type TrackingPhase = {
+  id: ShipmentPhaseId
+  label: string
+  stages: TrackingStage[]
+  state: PhaseState
+}
+
 type TrackingCard = {
   id: string
   kind: TrackingCardKind
@@ -150,11 +163,30 @@ type TrackingCard = {
   tone: TrackingTone
   metadata: { label: string; value: string }[]
   stages: TrackingStage[]
+  phases?: TrackingPhase[]
   nextStep: string
+  isComplete: boolean
+  hasAttention: boolean
 }
 
+type TrackingFilterState = {
+  hideCompleted: boolean
+  attentionOnly: boolean
+  shipmentsOnly: boolean
+  compactMode: boolean
+}
+
+const DEFAULT_FILTERS: TrackingFilterState = {
+  hideCompleted: false,
+  attentionOnly: false,
+  shipmentsOnly: false,
+  compactMode: false,
+}
+
+const AUTO_REFRESH_INTERVAL_MS = 15_000
+
 // ------------------------------------------------------
-// STAGE DEFINITIONS — sample journey
+// SAMPLE STAGE DEFINITIONS
 // ------------------------------------------------------
 
 const SAMPLE_STAGE_IDS = [
@@ -179,7 +211,7 @@ const SAMPLE_STAGE_LABELS: Record<SampleStageId, string> = {
 }
 
 // ------------------------------------------------------
-// STAGE DEFINITIONS — export readiness (post-verification)
+// EXPORT STAGE DEFINITIONS
 // ------------------------------------------------------
 
 const EXPORT_STAGE_IDS = [
@@ -200,8 +232,7 @@ const EXPORT_STAGE_LABELS: Record<ExportStageId, string> = {
 }
 
 // ------------------------------------------------------
-// STAGE DEFINITIONS — shipment journey
-// (head + destination flow, customs is conditional)
+// SHIPMENT STAGE DEFINITIONS + PHASE GROUPS
 // ------------------------------------------------------
 
 type ShipmentStageId =
@@ -217,19 +248,52 @@ const SHIPMENT_HEAD_LABELS: Record<
   "in-transit-rotterdam": "In transit to Rotterdam",
 }
 
-const DESTINATION_FLOW_BASE: readonly DestinationStage[] = [
-  "ARRIVED_AT_ROTTERDAM_PORT",
-  "ROTTERDAM_CUSTOMS_CHECKING",
-  "ROTTERDAM_CUSTOMS_CLEARED",
-  "TO_PORT_WAREHOUSE",
-  "AT_PORT_WAREHOUSE",
-  "AWAITING_PORT_WAREHOUSE_PICKUP",
-  "TO_CO_ROASTER",
-  "AT_CO_ROASTER_WAREHOUSE",
-  "ROASTING_IN_PROGRESS",
-  "FINAL_PACKING_20KG",
-  "AWAITING_CO_ROASTER_PICKUP",
-  "TO_CLIENT",
+// Phase definitions are stable. Customs stages within
+// the Client phase are filtered at runtime based on
+// requiresDestinationCustoms.
+const PHASE_DEFINITIONS: ReadonlyArray<{
+  id: ShipmentPhaseId
+  label: string
+  stageIds: readonly ShipmentStageId[]
+}> = [
+  {
+    id: "shipment",
+    label: "Shipment",
+    stageIds: ["shipment-created", "in-transit-rotterdam"],
+  },
+  {
+    id: "rotterdam",
+    label: "Rotterdam / Port",
+    stageIds: [
+      "ARRIVED_AT_ROTTERDAM_PORT",
+      "ROTTERDAM_CUSTOMS_CHECKING",
+      "ROTTERDAM_CUSTOMS_CLEARED",
+      "TO_PORT_WAREHOUSE",
+      "AT_PORT_WAREHOUSE",
+      "AWAITING_PORT_WAREHOUSE_PICKUP",
+    ],
+  },
+  {
+    id: "co-roaster",
+    label: "Co-roaster",
+    stageIds: [
+      "TO_CO_ROASTER",
+      "AT_CO_ROASTER_WAREHOUSE",
+      "ROASTING_IN_PROGRESS",
+      "FINAL_PACKING_20KG",
+      "AWAITING_CO_ROASTER_PICKUP",
+    ],
+  },
+  {
+    id: "client",
+    label: "Client",
+    stageIds: [
+      "TO_CLIENT",
+      "DESTINATION_CUSTOMS_CHECKING",
+      "DESTINATION_CUSTOMS_CLEARED",
+      "RECEIVED_BY_CLIENT",
+    ],
+  },
 ]
 
 const DESTINATION_CUSTOMS_STAGES: readonly DestinationStage[] = [
@@ -240,13 +304,14 @@ const DESTINATION_CUSTOMS_STAGES: readonly DestinationStage[] = [
 function getShipmentStageIds(
   requiresDestinationCustoms: boolean
 ): ShipmentStageId[] {
-  return [
-    "shipment-created",
-    "in-transit-rotterdam",
-    ...DESTINATION_FLOW_BASE,
-    ...(requiresDestinationCustoms ? DESTINATION_CUSTOMS_STAGES : []),
-    "RECEIVED_BY_CLIENT",
-  ]
+  return PHASE_DEFINITIONS.flatMap((phase) => {
+    if (phase.id !== "client") return phase.stageIds.slice()
+    if (requiresDestinationCustoms) return phase.stageIds.slice()
+    // Client phase without customs — drop the customs stages
+    return phase.stageIds.filter(
+      (id) => !(DESTINATION_CUSTOMS_STAGES as readonly string[]).includes(id)
+    )
+  })
 }
 
 function getShipmentStageLabel(id: ShipmentStageId): string {
@@ -295,7 +360,6 @@ function buildSampleNextStep(lot: TrackingSampleLot): string {
   if (lot.status === "VERIFIED")        return "Verified — see export readiness card"
   if (lot.status === "IN_REVIEW")       return "Verify lot"
   if (lot.status === "PENDING")         return "Send sample to lab"
-  // SAMPLE_REQUESTED variants
   switch (lot.sampleShippingStatus) {
     case "PICKUP_REQUESTED": return "Schedule pickup"
     case "PICKUP_SCHEDULED": return "Sample in transit"
@@ -326,8 +390,7 @@ function buildSampleMetadata(lot: TrackingSampleLot): { label: string; value: st
 }
 
 function buildSampleCards(lots: TrackingSampleLot[]): TrackingCard[] {
-  // LOG-3B: Verified lots move to the Export Readiness group.
-  // They no longer clutter the Sample Logistics group.
+  // Verified lots move to Export Readiness group
   const samplePhase = lots.filter((l) => l.status !== "VERIFIED")
 
   return samplePhase.map((lot) => {
@@ -354,13 +417,16 @@ function buildSampleCards(lots: TrackingSampleLot[]): TrackingCard[] {
       metadata: buildSampleMetadata(lot),
       stages,
       nextStep: buildSampleNextStep(lot),
+      // REJECTED is terminal but counts as attention, so do not
+      // mark it complete (so "Hide completed" doesn't hide it).
+      isComplete: false,
+      hasAttention: isAttention,
     }
   })
 }
 
 // ------------------------------------------------------
-// EXPORT READINESS CARDS  (LOG-3B)
-// Built from VERIFIED sample lots that have a GreenLot.
+// EXPORT READINESS CARDS
 // ------------------------------------------------------
 
 function computeExportCurrentStage(
@@ -430,7 +496,6 @@ function buildExportReadinessCards(lots: TrackingSampleLot[]): TrackingCard[] {
   )
 
   return verified.map((lot) => {
-    // greenLot is non-null by filter; assert for TS happiness via local narrow
     const gl = lot.greenLot
     if (!gl) return null as never
 
@@ -456,26 +521,20 @@ function buildExportReadinessCards(lots: TrackingSampleLot[]): TrackingCard[] {
       metadata: buildExportMetadata(lot),
       stages,
       nextStep: buildExportNextStep(gl.status),
+      isComplete: gl.status === "SOLD",
+      hasAttention: false,
     }
   })
 }
 
 // ------------------------------------------------------
-// SHIPMENT CARDS  (LOG-3B — full destination flow)
+// SHIPMENT CARDS
 // ------------------------------------------------------
-
-function isDestinationStageId(
-  id: ShipmentStageId
-): id is DestinationStage {
-  return id !== "shipment-created" && id !== "in-transit-rotterdam"
-}
 
 function computeShipmentCurrentStageIndex(
   s: TrackingShipment,
   stageIds: ShipmentStageId[]
 ): number {
-  // Discrepancy: paint the in-transit-rotterdam slot as the locus
-  // of attention (or current stage if known)
   if (s.status === "DISCREPANCY") {
     if (s.currentStage) {
       const idx = stageIds.indexOf(s.currentStage)
@@ -484,13 +543,11 @@ function computeShipmentCurrentStageIndex(
     return stageIds.indexOf("in-transit-rotterdam")
   }
 
-  // currentStage drives the timeline once destination tracking starts
   if (s.currentStage) {
     const idx = stageIds.indexOf(s.currentStage)
     if (idx >= 0) return idx
   }
 
-  // No currentStage yet — derive from macro status
   if (s.status === "IN_TRANSIT")  return stageIds.indexOf("in-transit-rotterdam")
   if (s.status === "ARRIVED")     return stageIds.indexOf("ARRIVED_AT_ROTTERDAM_PORT")
   if (s.status === "RECEIVED")    return stageIds.indexOf("RECEIVED_BY_CLIENT")
@@ -530,6 +587,52 @@ function buildShipmentStages(s: TrackingShipment): TrackingStage[] {
   })
 }
 
+//////////////////////////////////////////////////////
+// 🚢 TRACKING PHASES
+//////////////////////////////////////////////////////
+
+function groupStagesIntoPhases(
+  stages: TrackingStage[],
+  requiresDestinationCustoms: boolean
+): TrackingPhase[] {
+  return PHASE_DEFINITIONS.map((def) => {
+    let phaseStageIds = def.stageIds as readonly string[]
+
+    // Drop customs stages from the Client phase if not required
+    if (def.id === "client" && !requiresDestinationCustoms) {
+      phaseStageIds = phaseStageIds.filter(
+        (id) => !(DESTINATION_CUSTOMS_STAGES as readonly string[]).includes(id)
+      )
+    }
+
+    const phaseStages = stages.filter((s) =>
+      phaseStageIds.includes(s.id)
+    )
+
+    if (phaseStages.length === 0) {
+      // Defensive — should never happen for the 4 fixed phases
+      return null as never
+    }
+
+    const allCompleted = phaseStages.every((s) => s.state === "completed")
+    const hasCurrent = phaseStages.some((s) => s.state === "current")
+    const hasAttention = phaseStages.some((s) => s.state === "attention")
+
+    let state: PhaseState
+    if (hasAttention)      state = "attention"
+    else if (hasCurrent)   state = "current"
+    else if (allCompleted) state = "completed"
+    else                   state = "pending"
+
+    return {
+      id: def.id,
+      label: def.label,
+      stages: phaseStages,
+      state,
+    }
+  }).filter((p): p is TrackingPhase => p !== null)
+}
+
 function buildShipmentCurrentLabel(s: TrackingShipment): string {
   if (s.status === "DISCREPANCY") return "Discrepancy"
 
@@ -549,7 +652,6 @@ function buildShipmentNextStep(s: TrackingShipment): string {
     return "Resolve discrepancy before receiving"
   }
 
-  // Use current stage to propose the next operational step
   if (s.currentStage) {
     if (s.currentStage === "RECEIVED_BY_CLIENT") return "Cycle complete"
     if (s.currentStage === "TO_CLIENT") {
@@ -621,6 +723,7 @@ function buildShipmentMetadata(s: TrackingShipment): { label: string; value: str
 function buildShipmentTrackingCards(shipments: TrackingShipment[]): TrackingCard[] {
   return shipments.map((s) => {
     const stages = buildShipmentStages(s)
+    const phases = groupStagesIntoPhases(stages, s.requiresDestinationCustoms)
     const isDiscrepancy = s.status === "DISCREPANCY"
     const isComplete =
       s.status === "RECEIVED" || s.currentStage === "RECEIVED_BY_CLIENT"
@@ -639,7 +742,10 @@ function buildShipmentTrackingCards(shipments: TrackingShipment[]): TrackingCard
       tone,
       metadata: buildShipmentMetadata(s),
       stages,
+      phases,
       nextStep: buildShipmentNextStep(s),
+      isComplete,
+      hasAttention: isDiscrepancy,
     }
   })
 }
@@ -672,8 +778,24 @@ function buildFutureCards(): TrackingCard[] {
       ],
       stages,
       nextStep: "—",
+      isComplete: false,
+      hasAttention: false,
     },
   ]
+}
+
+// ------------------------------------------------------
+// FILTERS
+// ------------------------------------------------------
+
+function passesFilters(
+  card: TrackingCard,
+  filters: TrackingFilterState
+): boolean {
+  if (filters.attentionOnly && !card.hasAttention) return false
+  if (filters.shipmentsOnly && card.kind !== "shipment") return false
+  if (filters.hideCompleted && card.isComplete && !card.hasAttention) return false
+  return true
 }
 
 // ------------------------------------------------------
@@ -688,6 +810,14 @@ function formatDate(iso: string | null): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+  })
+}
+
+function formatTime(d: Date): string {
+  return d.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   })
 }
 
@@ -710,7 +840,32 @@ export default function LogisticsTrackingPanel({
   sampleLots,
   shipments,
   loading,
+  onRefresh,
+  lastRefreshedAt,
 }: LogisticsTrackingPanelProps) {
+
+  //////////////////////////////////////////////////////
+  // 🧠 STATE
+  //////////////////////////////////////////////////////
+
+  const [filters, setFilters] = useState<TrackingFilterState>(DEFAULT_FILTERS)
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(false)
+
+  //////////////////////////////////////////////////////
+  // 🔁 REFRESH (auto)
+  //////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (!autoRefresh || !onRefresh) return
+    const id = setInterval(() => {
+      void onRefresh()
+    }, AUTO_REFRESH_INTERVAL_MS)
+    return () => clearInterval(id)
+  }, [autoRefresh, onRefresh])
+
+  //////////////////////////////////////////////////////
+  // CARDS — built from props (memoized)
+  //////////////////////////////////////////////////////
 
   const sampleCards = useMemo(
     () => buildSampleCards(sampleLots),
@@ -729,14 +884,34 @@ export default function LogisticsTrackingPanel({
 
   const futureCards = useMemo(() => buildFutureCards(), [])
 
-  // ----------------------------------------------------
-  // Summary metrics
-  // ----------------------------------------------------
+  //////////////////////////////////////////////////////
+  // 🎚️ FILTERS — applied at render time
+  //////////////////////////////////////////////////////
+
+  const filteredSampleCards = useMemo(
+    () => sampleCards.filter((c) => passesFilters(c, filters)),
+    [sampleCards, filters]
+  )
+  const filteredExportCards = useMemo(
+    () => exportCards.filter((c) => passesFilters(c, filters)),
+    [exportCards, filters]
+  )
+  const filteredShipmentCards = useMemo(
+    () => shipmentCards.filter((c) => passesFilters(c, filters)),
+    [shipmentCards, filters]
+  )
+  const filteredFutureCards = useMemo(
+    () => futureCards.filter((c) => passesFilters(c, filters)),
+    [futureCards, filters]
+  )
+
+  //////////////////////////////////////////////////////
+  // SUMMARY (always reflects all cards, ignoring filters)
+  //////////////////////////////////////////////////////
 
   const summary = useMemo(() => {
-    // Active = entities still progressing (not olive-tone)
-    const activeSamples  = sampleCards.filter((c) => c.tone !== "olive").length
-    const activeExports  = exportCards.filter((c) => c.tone !== "olive").length
+    const activeSamples   = sampleCards.filter((c) => c.tone !== "olive").length
+    const activeExports   = exportCards.filter((c) => c.tone !== "olive").length
     const activeShipments = shipmentCards.filter((c) => c.tone !== "olive").length
     const active = activeSamples + activeExports + activeShipments
 
@@ -760,6 +935,32 @@ export default function LogisticsTrackingPanel({
     return { active, inTransit, customs, attention }
   }, [sampleCards, exportCards, shipmentCards, shipments, sampleLots])
 
+  //////////////////////////////////////////////////////
+  // COUNTS — for "Showing X of Y" + empty-state logic
+  //////////////////////////////////////////////////////
+
+  const totalRealCards =
+    sampleCards.length + exportCards.length + shipmentCards.length
+  const totalAllCards =
+    totalRealCards + futureCards.length
+
+  const visibleAllCards =
+    filteredSampleCards.length +
+    filteredExportCards.length +
+    filteredShipmentCards.length +
+    filteredFutureCards.length
+
+  const hasAnyRealData = totalRealCards > 0
+  const filteredHasAnyRealVisible =
+    filteredSampleCards.length +
+      filteredExportCards.length +
+      filteredShipmentCards.length >
+    0
+
+  //////////////////////////////////////////////////////
+  // RENDER
+  //////////////////////////////////////////////////////
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-8 text-sm text-[#7b6851]">
@@ -768,13 +969,81 @@ export default function LogisticsTrackingPanel({
     )
   }
 
-  const hasContent =
-    sampleCards.length > 0 ||
-    exportCards.length > 0 ||
-    shipmentCards.length > 0
-
   return (
     <div className="space-y-6">
+
+      {/* ============================================== */}
+      {/* CONTROLS ROW (refresh + filters)               */}
+      {/* ============================================== */}
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#d8c5a8] bg-[#fbf7f0] p-4">
+
+        {/* Refresh row */}
+        {onRefresh && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => { void onRefresh() }}
+              className="rounded-full border border-[#cfb48a] bg-white px-4 py-1.5 text-sm font-medium text-[#5f472f] transition hover:bg-[#f7f2ea]"
+            >
+              🔁 Refresh all
+            </button>
+
+            <label className="inline-flex items-center gap-2 text-[12px] text-[#5f472f] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                className="accent-[#7a5230]"
+              />
+              <span>Auto-refresh (15s)</span>
+            </label>
+
+            <span className="text-[11px] text-[#9a8b73]">
+              {lastRefreshedAt
+                ? `Last refreshed: ${formatTime(lastRefreshedAt)}`
+                : "Not refreshed yet"}
+            </span>
+          </div>
+        )}
+
+        {/* Filters row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterPill
+            label="Hide completed"
+            active={filters.hideCompleted}
+            onClick={() =>
+              setFilters((f) => ({ ...f, hideCompleted: !f.hideCompleted }))
+            }
+          />
+          <FilterPill
+            label="Attention only"
+            active={filters.attentionOnly}
+            tone="red"
+            onClick={() =>
+              setFilters((f) => ({ ...f, attentionOnly: !f.attentionOnly }))
+            }
+          />
+          <FilterPill
+            label="Shipments only"
+            active={filters.shipmentsOnly}
+            onClick={() =>
+              setFilters((f) => ({ ...f, shipmentsOnly: !f.shipmentsOnly }))
+            }
+          />
+          <FilterPill
+            label="Compact mode"
+            active={filters.compactMode}
+            onClick={() =>
+              setFilters((f) => ({ ...f, compactMode: !f.compactMode }))
+            }
+          />
+
+          <span className="ml-auto text-[11px] text-[#9a8b73] tabular-nums">
+            Showing {visibleAllCards} of {totalAllCards} tracking cards
+          </span>
+        </div>
+      </div>
 
       {/* ============================================== */}
       {/* SUMMARY ROW                                    */}
@@ -783,31 +1052,56 @@ export default function LogisticsTrackingPanel({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryTile label="Active journeys"      value={summary.active}    tone="amber" />
         <SummaryTile label="Shipments in transit" value={summary.inTransit} tone="amber" />
-        <SummaryTile label="Awaiting customs"     value={summary.customs}   tone={summary.customs > 0 ? "bronze" : "neutral"} />
-        <SummaryTile label="Attention items"      value={summary.attention} tone={summary.attention > 0 ? "red" : "neutral"} />
+        <SummaryTile
+          label="Awaiting customs"
+          value={summary.customs}
+          tone={summary.customs > 0 ? "bronze" : "neutral"}
+        />
+        <SummaryTile
+          label="Attention items"
+          value={summary.attention}
+          tone={summary.attention > 0 ? "red" : "neutral"}
+        />
       </div>
 
       {/* ============================================== */}
-      {/* EMPTY STATE                                    */}
+      {/* EMPTY STATES                                   */}
       {/* ============================================== */}
 
-      {!hasContent && (
-        <div className="rounded-2xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-8 text-sm text-[#7b6851]">
-          No logistics entities yet. Create a producer lot, send it to lab,
-          publish a GreenLot, then seed a shipment.
-        </div>
+      {!hasAnyRealData && (
+        <EmptyState
+          message="No logistics entities yet. Create a producer lot, send it to lab, publish a GreenLot, then seed a shipment."
+        />
       )}
+
+      {hasAnyRealData &&
+        filters.shipmentsOnly &&
+        shipmentCards.length === 0 && (
+          <EmptyState
+            message="No shipments yet. Use SECTION 4 to seed a test shipment once a GreenLot is published."
+          />
+        )}
+
+      {hasAnyRealData &&
+        !filters.shipmentsOnly &&
+        !filteredHasAnyRealVisible && (
+          <EmptyState message="No tracking cards match the current filters." />
+        )}
 
       {/* ============================================== */}
       {/* SAMPLE LOGISTICS                               */}
       {/* ============================================== */}
 
-      {sampleCards.length > 0 && (
+      {filteredSampleCards.length > 0 && (
         <div className="space-y-3">
-          <SubsectionTitle icon="📋" label="Sample logistics" count={sampleCards.length} />
+          <SubsectionTitle
+            icon="📋"
+            label="Sample logistics"
+            count={filteredSampleCards.length}
+          />
           <div className="grid gap-4">
-            {sampleCards.map((card) => (
-              <TimelineCard key={card.id} card={card} />
+            {filteredSampleCards.map((card) => (
+              <TimelineCard key={card.id} card={card} compact={false} />
             ))}
           </div>
         </div>
@@ -817,12 +1111,16 @@ export default function LogisticsTrackingPanel({
       {/* EXPORT READINESS                               */}
       {/* ============================================== */}
 
-      {exportCards.length > 0 && (
+      {filteredExportCards.length > 0 && (
         <div className="space-y-3">
-          <SubsectionTitle icon="🌿" label="Export readiness" count={exportCards.length} />
+          <SubsectionTitle
+            icon="🌿"
+            label="Export readiness"
+            count={filteredExportCards.length}
+          />
           <div className="grid gap-4">
-            {exportCards.map((card) => (
-              <TimelineCard key={card.id} card={card} />
+            {filteredExportCards.map((card) => (
+              <TimelineCard key={card.id} card={card} compact={false} />
             ))}
           </div>
         </div>
@@ -832,16 +1130,20 @@ export default function LogisticsTrackingPanel({
       {/* INTERNATIONAL + DESTINATION SHIPMENT           */}
       {/* ============================================== */}
 
-      {shipmentCards.length > 0 && (
+      {filteredShipmentCards.length > 0 && (
         <div className="space-y-3">
           <SubsectionTitle
             icon="🚢"
             label="International + destination shipment"
-            count={shipmentCards.length}
+            count={filteredShipmentCards.length}
           />
           <div className="grid gap-4">
-            {shipmentCards.map((card) => (
-              <TimelineCard key={card.id} card={card} />
+            {filteredShipmentCards.map((card) => (
+              <TimelineCard
+                key={card.id}
+                card={card}
+                compact={filters.compactMode}
+              />
             ))}
           </div>
         </div>
@@ -851,14 +1153,16 @@ export default function LogisticsTrackingPanel({
       {/* FUTURE DESTINATION                             */}
       {/* ============================================== */}
 
-      <div className="space-y-3">
-        <SubsectionTitle icon="🏭" label="Future destination operations" />
-        <div className="grid gap-4">
-          {futureCards.map((card) => (
-            <TimelineCard key={card.id} card={card} />
-          ))}
+      {filteredFutureCards.length > 0 && (
+        <div className="space-y-3">
+          <SubsectionTitle icon="🏭" label="Future destination operations" />
+          <div className="grid gap-4">
+            {filteredFutureCards.map((card) => (
+              <TimelineCard key={card.id} card={card} compact={false} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   )
@@ -924,7 +1228,53 @@ function SubsectionTitle({
   )
 }
 
-function TimelineCard({ card }: { card: TrackingCard }) {
+function FilterPill({
+  label,
+  active,
+  tone,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  tone?: "red"
+  onClick: () => void
+}) {
+  const activeCls =
+    tone === "red"
+      ? "bg-[#fbe2da] text-[#8a3a25] border-[#d8a89a]"
+      : "bg-[#f7efdf] text-[#5f472f] border-[#cfb48a]"
+
+  const cls = active
+    ? activeCls
+    : "bg-white text-[#9a8b73] border-[#e2d6bd] hover:text-[#5f472f]"
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${cls}`}
+    >
+      {active ? "✓ " : ""}
+      {label}
+    </button>
+  )
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-8 text-sm text-[#7b6851]">
+      {message}
+    </div>
+  )
+}
+
+function TimelineCard({
+  card,
+  compact,
+}: {
+  card: TrackingCard
+  compact: boolean
+}) {
   return (
     <div className="rounded-2xl border-2 border-[#d8c5a8] bg-[#fbf7f0] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)]">
       {/* Header */}
@@ -938,8 +1288,12 @@ function TimelineCard({ card }: { card: TrackingCard }) {
         <StatusBadge tone={card.tone} label={card.currentStage} />
       </div>
 
-      {/* Timeline */}
-      <Timeline stages={card.stages} />
+      {/* Timeline — phases for shipments, flat for everything else */}
+      {card.phases && card.phases.length > 0 ? (
+        <PhaseTimeline phases={card.phases} compact={compact} />
+      ) : (
+        <Timeline stages={card.stages} />
+      )}
 
       {/* Next step */}
       {card.nextStep && card.nextStep !== "—" && (
@@ -1014,6 +1368,126 @@ function Timeline({ stages }: { stages: TrackingStage[] }) {
         </li>
       ))}
     </ol>
+  )
+}
+
+function PhaseTimeline({
+  phases,
+  compact,
+}: {
+  phases: TrackingPhase[]
+  compact: boolean
+}) {
+  return (
+    <div className="space-y-2">
+      {phases.map((phase) => (
+        <PhaseBlock key={phase.id} phase={phase} compact={compact} />
+      ))}
+    </div>
+  )
+}
+
+function PhaseBlock({
+  phase,
+  compact,
+}: {
+  phase: TrackingPhase
+  compact: boolean
+}) {
+  const isCurrentOrAttention =
+    phase.state === "current" || phase.state === "attention"
+
+  const completedCount = phase.stages.filter((s) => s.state === "completed").length
+  const total = phase.stages.length
+
+  // In compact mode, only the current/attention phase shows full chips.
+  // Completed and pending phases collapse to a one-line summary.
+  const showFull = !compact || isCurrentOrAttention
+
+  const containerCls =
+    phase.state === "attention" ? "border-[#d8a89a] bg-[#fdf3ee]" :
+    phase.state === "current"   ? "border-[#cfb48a] bg-[#f7efdf]" :
+    phase.state === "completed" ? "border-[#d3e0cc] bg-[#f4f8f2]" :
+                                  "border-[#e2d6bd] bg-[#fbf7f0]"
+
+  return (
+    <div className={`rounded-lg border ${containerCls} p-3`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#7a5c2e] font-semibold">
+          {phase.label}
+        </span>
+        <PhaseStateBadge state={phase.state} completed={completedCount} total={total} />
+      </div>
+
+      {showFull ? (
+        <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+          {phase.stages.map((stage, idx) => (
+            <li key={stage.id} className="flex items-center gap-1.5">
+              <StageChip
+                state={stage.state}
+                label={stage.label}
+                detail={stage.detail}
+              />
+              {idx < phase.stages.length - 1 && (
+                <span
+                  className={`h-px w-3 ${
+                    stage.state === "completed"
+                      ? "bg-[#9bb377]"
+                      : "bg-[#d8c5a8]"
+                  }`}
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="text-[11px] text-[#7b6851]">
+          {phase.state === "completed"
+            ? `All ${total} stage${total === 1 ? "" : "s"} completed`
+            : `${total} stage${total === 1 ? "" : "s"} pending`}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PhaseStateBadge({
+  state,
+  completed,
+  total,
+}: {
+  state: PhaseState
+  completed: number
+  total: number
+}) {
+  if (state === "attention") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#fbe2da] text-[#8a3a25] border border-[#d8a89a] px-2 py-0.5 text-[10px] font-medium">
+        ⚠ Attention
+      </span>
+    )
+  }
+
+  if (state === "current") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-white text-[#7a5230] border border-[#cfb48a] px-2 py-0.5 text-[10px] font-medium tabular-nums">
+        ● Current · {completed}/{total}
+      </span>
+    )
+  }
+
+  if (state === "completed") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f0e6] text-[#3a6b35] border border-[#b7cbb0] px-2 py-0.5 text-[10px] font-medium">
+        ✓ Completed
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#f5f0e6] text-[#a89574] border border-[#e2d6bd] px-2 py-0.5 text-[10px] font-medium">
+      ○ Pending
+    </span>
   )
 }
 

@@ -152,6 +152,7 @@ export default function DevLogisticsPage() {
   const [trackingSampleLots, setTrackingSampleLots] = useState<TrackingSampleLot[]>([])
   const [trackingShipments, setTrackingShipments] = useState<TrackingShipment[]>([])
   const [trackingLoading, setTrackingLoading] = useState(true)
+  const [trackingLastRefreshedAt, setTrackingLastRefreshedAt] = useState<Date | null>(null)
 
   //////////////////////////////////////////////////////
   // LOAD — Shipping lots
@@ -231,6 +232,7 @@ export default function DevLogisticsPage() {
       }
       setTrackingSampleLots(Array.isArray(data.sampleLots) ? data.sampleLots : [])
       setTrackingShipments(Array.isArray(data.shipments) ? data.shipments : [])
+      setTrackingLastRefreshedAt(new Date())
     } catch (error) {
       console.error(error)
       // Calm fallback — no alert. Panel will show empty state.
@@ -917,6 +919,8 @@ export default function DevLogisticsPage() {
           sampleLots={trackingSampleLots}
           shipments={trackingShipments}
           loading={trackingLoading}
+          onRefresh={loadTracking}
+          lastRefreshedAt={trackingLastRefreshedAt}
         />
 
       </div>
