@@ -95,9 +95,16 @@ export async function POST(req: Request) {
     if (error instanceof ContractServiceError) {
       const status = error.code === "FORBIDDEN" ? 403
         : error.code === "INSUFFICIENT_SUPPLY" ? 409
+        : error.code === "PRICE_DRIFT_REQUIRES_REVIEW" ? 409
         : 400
       return NextResponse.json(
-        { error: error.message, code: error.code },
+        {
+          error: error.message,
+          code: error.code,
+          // CONTRACT-REQUEST-2 — echo drift context so the wizard
+          // can render old vs new price without a re-fetch.
+          ...(error.details ?? {}),
+        },
         { status }
       )
     }
