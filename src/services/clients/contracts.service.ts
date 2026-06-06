@@ -4,6 +4,8 @@ import { eventBus } from "@/src/events/core/eventBus"
 import { EVENTS } from "@/src/events/core/eventTypes"
 import { getContractableSupply } from "@/src/services/system/supply.service"
 import { resolveRoastYield, roastedToGreen, computeRoastedPrice } from "@/src/lib/roastYield"
+import { resolveClientB2BPriceForLot } from "@/src/services/pricing/clientB2BPrice"
+import { evaluateContractPriceDrift } from "@/src/services/contract-request/contractPriceDrift.pure"
 
 // =====================================================
 // CONTRACT SERVICE — UNIFIED BACKEND OWNER
@@ -64,10 +66,16 @@ async function fetchGreenLotWithPricing(greenLotId: string, tx: Prisma.Transacti
 
 export class ContractServiceError extends Error {
   code: string
-  constructor(message: string, code: string) {
+  // CONTRACT-REQUEST-2 — optional detail payload so the route layer
+  // can echo non-secret context (e.g. previewPricePerKg /
+  // currentPricePerKg for PRICE_DRIFT_REQUIRES_REVIEW) back to the
+  // wizard without re-reading the lot.
+  details?: Record<string, unknown>
+  constructor(message: string, code: string, details?: Record<string, unknown>) {
     super(message)
     this.name = "ContractServiceError"
     this.code = code
+    if (details) this.details = details
   }
 }
 
@@ -93,8 +101,11 @@ export async function createContractWithSupplyValidation(input: {
 
     const lot = await fetchGreenLotWithPricing(greenLotId, tx)
     const roastYield = resolveRoastYield(lot)
-    const greenPricePerKg = lot.pricingSnapshot!.clientPricePerKg
-    const lockedPricePerKg = computeRoastedPrice(greenPricePerKg, roastYield)
+    // PRICING-B2B-3 — single source of truth for the price the
+    // client signs at. Resolver prefers persisted clientB2BPricePerKg
+    // and falls back to legacy green/yield for old rows.
+    const resolvedB2B = resolveClientB2BPriceForLot(lot)
+    const lockedPricePerKg = resolvedB2B.pricePerKgRoasted
 
     // -------------------------------------------------
     // 2. CONVERT ROASTED → GREEN FOR VALIDATION
@@ -121,12 +132,24 @@ export async function createContractWithSupplyValidation(input: {
 
     // -------------------------------------------------
     // 4. CONSUME DEMAND INTENT (if provided)
+    //
+    // CONTRACT-REQUEST-2 — evaluate price drift BEFORE
+    // consuming the intent and BEFORE creating the contract.
+    // If the lot's current B2B price moved up materially
+    // since intent.previewPricePerKg, we refuse and ask the
+    // buyer to review. The intent stays OPEN so they can
+    // refresh it from the dashboard.
     // -------------------------------------------------
 
     if (input.demandIntentId) {
       const intent = await tx.demandIntent.findUnique({
         where: { id: input.demandIntentId },
-        select: { status: true, expiresAt: true }
+        select: {
+          status: true,
+          expiresAt: true,
+          previewPricePerKg: true,
+          greenLotId: true,
+        }
       })
       if (!intent) {
         throw new ContractServiceError("DemandIntent not found", "INTENT_NOT_FOUND")
@@ -143,6 +166,28 @@ export async function createContractWithSupplyValidation(input: {
           "INTENT_EXPIRED"
         )
       }
+
+      // Drift check — `lockedPricePerKg` is the freshly-resolved
+      // current B2B price for this lot. Compare against the
+      // price the buyer saw at request time.
+      const drift = evaluateContractPriceDrift({
+        intentPreviewPricePerKg: intent.previewPricePerKg,
+        currentPricePerKg: lockedPricePerKg,
+      })
+      if (drift.blocking) {
+        throw new ContractServiceError(
+          drift.message,
+          "PRICE_DRIFT_REQUIRES_REVIEW",
+          {
+            previewPricePerKg: drift.previewPricePerKg,
+            currentPricePerKg: drift.currentPricePerKg,
+            driftStatus: drift.status,
+            delta: drift.delta,
+            deltaPercent: drift.deltaPercent,
+          },
+        )
+      }
+
       await tx.demandIntent.update({
         where: { id: input.demandIntentId },
         data: { status: "CONSUMED", consumedAt: new Date() }
@@ -256,10 +301,11 @@ export async function amendContractWithSupplyValidation(input: {
 
       const lot = await fetchGreenLotWithPricing(newGreenLotId!, tx)
       const newYield = resolveRoastYield(lot)
-      const newLockedPrice = computeRoastedPrice(
-        lot.pricingSnapshot!.clientPricePerKg,
-        newYield
-      )
+      // PRICING-B2B-3 — repricing on coffee switch goes through the
+      // same resolver so a switched contract locks at the persisted
+      // B2B price (with legacy fallback for un-migrated rows).
+      const switchResolved = resolveClientB2BPriceForLot(lot)
+      const newLockedPrice = switchResolved.pricePerKgRoasted
       const newMonthlyGreenKg = roastedToGreen(monthlyVolumeKg, newYield)
 
       const supply = await getContractableSupply({

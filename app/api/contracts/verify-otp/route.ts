@@ -7,6 +7,8 @@ import {
   amendContractWithSupplyValidation,
   ContractServiceError,
 } from "@/src/services/clients/contracts.service"
+import { resolveClientB2BPriceForLot } from "@/src/services/pricing/clientB2BPrice"
+import { evaluateContractPriceDrift } from "@/src/services/contract-request/contractPriceDrift.pure"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -135,6 +137,50 @@ export async function POST(req: Request) {
         return NextResponse.json(
           { error: "DemandIntent has expired" },
           { status: 400 }
+        )
+      }
+
+      // =====================================================
+      // CONTRACT-REQUEST-2 — PRICE DRIFT GUARD (AMEND PATH)
+      //
+      // Re-resolve the lot's current B2B price right before the
+      // amend goes through, and compare to intent.previewPricePerKg.
+      // If the lot got more expensive (or we can't read either
+      // price), refuse: don't consume the intent, don't mutate
+      // the contract. The buyer can refresh from the dashboard.
+      // =====================================================
+
+      let currentPricePerKg: number | null = null
+      if (intent.greenLotId) {
+        const lot = await prisma.greenLot.findUnique({
+          where: { id: intent.greenLotId },
+          include: { pricingSnapshot: true },
+        })
+        if (lot?.pricingSnapshot) {
+          try {
+            currentPricePerKg = resolveClientB2BPriceForLot(lot).pricePerKgRoasted
+          } catch {
+            currentPricePerKg = null
+          }
+        }
+      }
+
+      const drift = evaluateContractPriceDrift({
+        intentPreviewPricePerKg: intent.previewPricePerKg,
+        currentPricePerKg,
+      })
+      if (drift.blocking) {
+        return NextResponse.json(
+          {
+            error: drift.message,
+            code: "PRICE_DRIFT_REQUIRES_REVIEW",
+            previewPricePerKg: drift.previewPricePerKg,
+            currentPricePerKg: drift.currentPricePerKg,
+            driftStatus: drift.status,
+            delta: drift.delta,
+            deltaPercent: drift.deltaPercent,
+          },
+          { status: 409 },
         )
       }
 

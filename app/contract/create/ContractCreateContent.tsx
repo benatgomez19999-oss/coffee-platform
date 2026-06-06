@@ -54,6 +54,19 @@ export default function ContractCreatePage() {
       ? Number(volumeParam)
       : 400
 
+  // CONTRACT-REQUEST-2 — duration handoff from the configure-
+  // monthly-supply modal. Allowed values mirror the modal's
+  // ALLOWED_DURATION_MONTHS set (3 / 6 / 12 / 24); anything else
+  // falls back to the legacy default.
+  const durationParam = searchParams.get("duration")
+  const ALLOWED_DURATIONS_FROM_MODAL = new Set([3, 6, 12, 24])
+  const parsedDurationParam = durationParam ? Number(durationParam) : NaN
+  const initialDuration =
+    Number.isFinite(parsedDurationParam) &&
+    ALLOWED_DURATIONS_FROM_MODAL.has(parsedDurationParam)
+      ? parsedDurationParam
+      : 9
+
   const intentId = searchParams.get("intentId")
 
   // When intentId is present, start in a loading state (step 0)
@@ -81,7 +94,7 @@ export default function ContractCreatePage() {
     supply: {
       origin: "Brazil",
       monthlyVolume: initialVolume,
-      duration: 9,
+      duration: initialDuration,
       greenLotId: null,
       lotName: null,
       farmName: null,
@@ -208,11 +221,30 @@ useEffect(() => {
         // VALID — populate draft and proceed to step 3
         // -------------------------------------------------
 
+        // CONTRACT-REQUEST-3 — duration hydration priority:
+        //   1. DemandIntent.requestedDurationMonths (persisted on the intent)
+        //   2. URL `duration` param (CONTRACT-REQUEST-2 backwards compat,
+        //      already applied as `initialDuration` → prev.supply.duration)
+        //   3. legacy wizard default (9 — picked up by `initialDuration`)
+        //
+        // We only override prev.supply.duration when the intent
+        // carries a usable value AND it's in the allow-list, so an
+        // old intent with NULL falls back to whatever step 1/2
+        // resolved.
+        const ALLOWED_INTENT_DURATIONS = new Set([3, 6, 12, 24])
+        const intentDuration =
+          typeof intent.requestedDurationMonths === "number" &&
+          Number.isFinite(intent.requestedDurationMonths) &&
+          ALLOWED_INTENT_DURATIONS.has(intent.requestedDurationMonths)
+            ? intent.requestedDurationMonths
+            : null
+
         setDraft(prev => ({
           ...prev,
           supply: {
             ...prev.supply,
             monthlyVolume: intent.requestedKg,
+            duration: intentDuration ?? prev.supply.duration,
             greenLotId: intent.greenLotId,
             lotName: intent.greenLot?.name ?? intent.greenLot?.variety ?? null,
             farmName: intent.greenLot?.farm?.name ?? null,
