@@ -1,0 +1,4 @@
+# Runtime uploads — do not commit user files.
+*
+!.gitignore
+!.gitkeep

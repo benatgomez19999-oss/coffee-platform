@@ -14,7 +14,8 @@
     "allowImportingTsExtensions": true,
     "jsx": "preserve",
     "incremental": true,
-    
+    "ignoreDeprecations": "6.0",
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*", "./src/*"],
