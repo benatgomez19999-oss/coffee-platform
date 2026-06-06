@@ -1021,6 +1021,23 @@ enum LotMediaSource {
   TONAL_PLACEHOLDER
 }
 
+// LOT-MEDIA-2 — who can see this media row.
+//
+//   PUBLIC_MARKET   — surfaced on /api/marketplace/lots,
+//                     /api/contracts/catalog and the
+//                     /platform/client dashboard catalog.
+//   BUYER_PRIVATE   — only surfaced to a contracted/active
+//                     buyer (future contract detail endpoint).
+//                     Default for TRACEABILITY_BAG and most
+//                     CERTIFICATE rows.
+//   INTERNAL_ONLY   — partner / operations only. Never
+//                     surfaced outside an internal ops UI.
+enum LotMediaVisibility {
+  PUBLIC_MARKET
+  BUYER_PRIVATE
+  INTERNAL_ONLY
+}
+
 model GreenLotMedia {
   id          String             @id @default(uuid())
 
@@ -1030,6 +1047,13 @@ model GreenLotMedia {
   url         String
   role        LotMediaRole
   source      LotMediaSource
+
+  // LOT-MEDIA-2 — visibility separates public listing media
+  // (FARM / PROCESS / PRODUCT_DETAIL) from buyer-only proof
+  // (TRACEABILITY_BAG / CERTIFICATE / internal documents).
+  // PUBLIC_MARKET is the default so LOT-MEDIA-1 rows keep
+  // their current behaviour after the migration.
+  visibility  LotMediaVisibility @default(PUBLIC_MARKET)
 
   position    Int                @default(0)
   isPrimary   Boolean            @default(false)
@@ -1045,6 +1069,7 @@ model GreenLotMedia {
   @@index([greenLotId])
   @@index([greenLotId, role])
   @@index([greenLotId, isPrimary])
+  @@index([greenLotId, visibility])
 }
 
 //////////////////////////////////////////////////////
@@ -1075,6 +1100,12 @@ model FarmMedia {
   role        LotMediaRole
   source      LotMediaSource
 
+  // LOT-MEDIA-2 — see GreenLotMedia.visibility. FarmMedia is
+  // typically PUBLIC_MARKET (farm landscape / process scene)
+  // but partners can mark PRODUCER / CERTIFICATE rows as
+  // INTERNAL_ONLY if they should not appear in marketplace.
+  visibility  LotMediaVisibility @default(PUBLIC_MARKET)
+
   position    Int                @default(0)
   isPrimary   Boolean            @default(false)
 
@@ -1089,6 +1120,7 @@ model FarmMedia {
   @@index([farmId])
   @@index([farmId, role])
   @@index([farmId, isPrimary])
+  @@index([farmId, visibility])
 }
 
 model Shipment {
