@@ -7,7 +7,18 @@ import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
 import { useRef } from "react"
 
-const countryOptions = [
+// Country select options.
+// PRODUCER-ONBOARDING-V2:
+//   - Buyer list = EU + US/UK (unchanged).
+//   - Producer list = the main coffee-producing origins. Producers
+//     working from a country outside the list can type a custom value
+//     in the next sprint (we don't ship free-text on a Select yet —
+//     the API accepts free text).
+//
+// `value` is the producer-facing country *name* (sent to the API
+// and persisted on Producer.country). Buyer codes (ES, US, …)
+// remain ISO-style because PhoneInput consumes them downstream.
+const buyerCountryOptions = [
   { value: "ES", label: "Spain 🇪🇸" },
   { value: "US", label: "United States 🇺🇸" },
   { value: "GB", label: "United Kingdom 🇬🇧" },
@@ -15,6 +26,51 @@ const countryOptions = [
   { value: "IT", label: "Italy 🇮🇹" },
   { value: "DE", label: "Germany 🇩🇪" }
 ]
+
+const producerCountryOptions = [
+  { value: "Colombia",     label: "Colombia 🇨🇴" },
+  { value: "Brazil",       label: "Brazil 🇧🇷" },
+  { value: "Ethiopia",     label: "Ethiopia 🇪🇹" },
+  { value: "Guatemala",    label: "Guatemala 🇬🇹" },
+  { value: "Kenya",        label: "Kenya 🇰🇪" },
+  { value: "Honduras",     label: "Honduras 🇭🇳" },
+  { value: "Costa Rica",   label: "Costa Rica 🇨🇷" },
+  { value: "Rwanda",       label: "Rwanda 🇷🇼" },
+  { value: "Burundi",      label: "Burundi 🇧🇮" },
+  { value: "Nicaragua",    label: "Nicaragua 🇳🇮" },
+  { value: "Peru",         label: "Peru 🇵🇪" },
+  { value: "Mexico",       label: "Mexico 🇲🇽" },
+  { value: "Indonesia",    label: "Indonesia 🇮🇩" },
+  { value: "Vietnam",      label: "Vietnam 🇻🇳" },
+  { value: "Panama",       label: "Panama 🇵🇦" },
+  { value: "Tanzania",     label: "Tanzania 🇹🇿" },
+  { value: "El Salvador",  label: "El Salvador 🇸🇻" }
+]
+
+// PRODUCER-ONBOARDING-V2 — producer country values are stored as
+// country *names* on Producer.country (matches existing seeds + the
+// marketplace tone table). PhoneInput consumes ISO-2 codes, so we
+// keep a small lookup to feed it the right flag for the producer
+// branch only.
+const PRODUCER_COUNTRY_ISO: Record<string, string> = {
+  "Colombia": "co",
+  "Brazil": "br",
+  "Ethiopia": "et",
+  "Guatemala": "gt",
+  "Kenya": "ke",
+  "Honduras": "hn",
+  "Costa Rica": "cr",
+  "Rwanda": "rw",
+  "Burundi": "bi",
+  "Nicaragua": "ni",
+  "Peru": "pe",
+  "Mexico": "mx",
+  "Indonesia": "id",
+  "Vietnam": "vn",
+  "Panama": "pa",
+  "Tanzania": "tz",
+  "El Salvador": "sv"
+}
 
 export default function OnboardingProfile() {
   const router = useRouter()
@@ -44,7 +100,11 @@ export default function OnboardingProfile() {
     vat: "",
     contactName: "",
     businessName: "",
-    legalCompanyName: ""
+    legalCompanyName: "",
+    // PRODUCER-ONBOARDING-V2 — real farm altitude in metres.
+    // Kept as a string so the <input type="number"> can hold an
+    // empty value without coercing to NaN.
+    altitude: ""
   })
 
   // ================= LOAD DATA =================
@@ -310,8 +370,12 @@ const handleSubmit = async () => {
 )}
 
       <Select
-        options={countryOptions}
-        value={countryOptions.find(opt => opt.value === form.country)}
+        options={role === "PRODUCER" ? producerCountryOptions : buyerCountryOptions}
+        value={
+          (role === "PRODUCER" ? producerCountryOptions : buyerCountryOptions)
+            .find(opt => opt.value === form.country)
+        }
+        placeholder={role === "PRODUCER" ? "Producing country" : "Country"}
         onChange={option => handleChange("country", option?.value || "")}
         styles={{
           control: base => ({
@@ -340,7 +404,11 @@ const handleSubmit = async () => {
       />
 
       <PhoneInput
-        country={form.country?.toLowerCase() || "es"}
+        country={
+          role === "PRODUCER"
+            ? PRODUCER_COUNTRY_ISO[form.country] ?? "co"
+            : form.country?.toLowerCase() || "es"
+        }
         value={form.phone}
         disableDropdown
         onChange={(value) => handleChange("phone", `+${value}`)}
@@ -491,17 +559,40 @@ const handleSubmit = async () => {
 
       <input
         className="input"
-        placeholder="Region"
+        placeholder={role === "PRODUCER" ? "Farm region (e.g. Huila, Antioquia)" : "Region"}
         value={form.region}
         onChange={e => handleChange("region", e.target.value)}
       />
 
-      <input
-        className="input"
-        placeholder="Postal Code"
-        value={form.postalCode}
-        onChange={e => handleChange("postalCode", e.target.value)}
-      />
+      {/* PRODUCER-ONBOARDING-V2 — real farm altitude (metres) */}
+      {role === "PRODUCER" && (
+        <>
+          <input
+            className="input"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={3500}
+            step={1}
+            placeholder="Farm altitude in metres (e.g. 1850)"
+            value={form.altitude}
+            onChange={e => handleChange("altitude", e.target.value)}
+          />
+          <p className="text-xs text-white/45 -mt-1">
+            Use the average altitude of the farm or the lot area you
+            usually submit. You can edit this later in Producer Settings.
+          </p>
+        </>
+      )}
+
+      {role !== "PRODUCER" && (
+        <input
+          className="input"
+          placeholder="Postal Code"
+          value={form.postalCode}
+          onChange={e => handleChange("postalCode", e.target.value)}
+        />
+      )}
 
       <button
         onClick={handleSubmit}
