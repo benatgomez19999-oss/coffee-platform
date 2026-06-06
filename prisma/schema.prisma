@@ -45,6 +45,17 @@ model Farm {
   //////////////////////////////////////////////////////
 
   stories    FarmStory[]
+
+  //////////////////////////////////////////////////////
+  // 🖼️ FARM-MEDIA-1 — reusable farm-level media
+  //
+  // Inherited by every lot from this farm via the
+  // buildInheritedLotMediaSequence helper. Stored
+  // separately from GreenLotMedia so an origin photo
+  // can be uploaded once and reused across many lots.
+  //////////////////////////////////////////////////////
+
+  media      FarmMedia[]
 }
 
 model ProducerLotDraft {
@@ -1034,6 +1045,50 @@ model GreenLotMedia {
   @@index([greenLotId])
   @@index([greenLotId, role])
   @@index([greenLotId, isPrimary])
+}
+
+//////////////////////////////////////////////////////
+// 🌄 FARM MEDIA (FARM-MEDIA-1)
+//
+// Reusable farm/origin media. One upload covers every
+// lot from the same farm. Reuses LotMediaRole and
+// LotMediaSource so the inherited media sequence has a
+// single role priority and trust model.
+//
+// Inheritance rule (see lot-media/lotMedia.pure.ts):
+//   - GreenLotMedia rows take precedence over FarmMedia
+//     for the same role/position.
+//   - FarmMedia satisfies recommended-role coverage
+//     (FARM / PROCESS / PRODUCER) as long as the source
+//     is verified (PARTNER_UPLOAD / PLATFORM_CURATED).
+//   - GENERATED_EDITORIAL / TONAL_PLACEHOLDER never
+//     count as verified.
+//////////////////////////////////////////////////////
+
+model FarmMedia {
+  id          String             @id @default(uuid())
+
+  farmId      String
+  farm        Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  url         String
+  role        LotMediaRole
+  source      LotMediaSource
+
+  position    Int                @default(0)
+  isPrimary   Boolean            @default(false)
+
+  altText     String?
+  caption     String?
+  credit      String?
+  metadata    Json?
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([farmId])
+  @@index([farmId, role])
+  @@index([farmId, isPrimary])
 }
 
 model Shipment {

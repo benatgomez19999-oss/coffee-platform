@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/database/prisma"
 import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
+import {
+  evaluateLotMediaReadiness,
+  normalizeLotMediaRole,
+  normalizeLotMediaSource,
+  normalizeLotMediaVisibility,
+} from "@/src/services/lot-media/lotMedia.pure"
+import type { LotMediaItem } from "@/src/services/lot-media/lotMedia.types"
 
 //////////////////////////////////////////////////////
 // POST — Publish a GreenLot (DRAFT → PUBLISHED)
@@ -9,7 +16,45 @@ import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
 //
 // The lot must already exist (created by verifyLotService)
 // and must be in DRAFT status. Only then can it go live.
+//
+// FARM-MEDIA-1: PUBLISH also requires verified FARM +
+// PROCESS media from either the lot or its farm. Editorial
+// / tonal placeholder sources never satisfy this gate.
 //////////////////////////////////////////////////////
+
+type RawMediaRow = {
+  id: string
+  url: string
+  role: string
+  source: string
+  visibility?: string | null
+  position: number
+  isPrimary: boolean
+  altText: string | null
+}
+
+function projectMediaRows(rows: ReadonlyArray<RawMediaRow>): LotMediaItem[] {
+  const out: LotMediaItem[] = []
+  for (const r of rows) {
+    if (typeof r.url !== "string" || r.url.trim() === "") continue
+    const role = normalizeLotMediaRole(r.role)
+    const source = normalizeLotMediaSource(r.source)
+    if (!role || !source) continue
+    const visibility =
+      normalizeLotMediaVisibility(r.visibility) ?? "PUBLIC_MARKET"
+    out.push({
+      id: r.id,
+      url: r.url,
+      role,
+      source,
+      visibility,
+      position: Number.isFinite(r.position) && r.position >= 0 ? r.position : 0,
+      isPrimary: r.isPrimary === true,
+      altText: r.altText ?? null,
+    })
+  }
+  return out
+}
 
 export async function POST(
   req: NextRequest,
@@ -31,12 +76,47 @@ export async function POST(
     }
 
     //////////////////////////////////////////////////////
-    // 🔍 FETCH GREEN LOT
+    // 🔍 FETCH GREEN LOT (+ media + farm media)
     //////////////////////////////////////////////////////
 
     const greenLot = await prisma.greenLot.findUnique({
       where: { id: params.id },
-      select: { id: true, status: true, name: true },
+      select: {
+        id: true,
+        status: true,
+        name: true,
+        farmId: true,
+        media: {
+          select: {
+            id: true,
+            url: true,
+            role: true,
+            source: true,
+            visibility: true,
+            position: true,
+            isPrimary: true,
+            altText: true,
+          },
+          orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        },
+        farm: {
+          select: {
+            id: true,
+            media: {
+              select: {
+                id: true,
+                url: true,
+                role: true,
+                source: true,
+                position: true,
+                isPrimary: true,
+                altText: true,
+              },
+              orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+            },
+          },
+        },
+      },
     })
 
     if (!greenLot) {
@@ -51,6 +131,27 @@ export async function POST(
       return NextResponse.json(
         {
           error: `Cannot publish lot with status ${greenLot.status}. Expected DRAFT.`,
+        },
+        { status: 400 }
+      )
+    }
+
+    //////////////////////////////////////////////////////
+    // 🖼️ FARM-MEDIA-1 — PUBLISH READINESS GUARD
+    //////////////////////////////////////////////////////
+
+    const readiness = evaluateLotMediaReadiness({
+      lotMedia: projectMediaRows(greenLot.media ?? []),
+      farmMedia: projectMediaRows(greenLot.farm?.media ?? []),
+      mode: "PUBLISH",
+    })
+
+    if (!readiness.ready) {
+      return NextResponse.json(
+        {
+          code: "LOT_MEDIA_NOT_READY",
+          error: "Lot media is not ready for publish.",
+          reasons: readiness.blockingReasons,
         },
         { status: 400 }
       )
