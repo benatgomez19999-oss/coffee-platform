@@ -13,6 +13,11 @@ export async function POST(
   try {
     const user = await requireAuth()
 
+    // CONTRACT-REQUEST-1 — only clients can act on demand intents.
+    if (user.role !== "CLIENT") {
+      return NextResponse.json({ error: "Forbidden", code: "FORBIDDEN" }, { status: 403 })
+    }
+
     if (!user.companyId) {
       return NextResponse.json({ error: "User has no company" }, { status: 403 })
     }
@@ -20,10 +25,12 @@ export async function POST(
     const { id } = await params
     const body = await req.json().catch(() => ({}))
 
+    // Default autoExecute to false so the buyer must explicitly
+    // confirm before WAITING → OPEN flips supply into commitment.
     const intent = await waitForSupply({
       intentId: id,
       companyId: user.companyId,
-      autoExecute: body.autoExecute,
+      autoExecute: body?.autoExecute === true,
     })
 
     return NextResponse.json({ intent })

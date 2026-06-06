@@ -13,6 +13,11 @@ export async function POST(
   try {
     const user = await requireAuth()
 
+    // CONTRACT-REQUEST-1 — only clients can act on demand intents.
+    if (user.role !== "CLIENT") {
+      return NextResponse.json({ error: "Forbidden", code: "FORBIDDEN" }, { status: 403 })
+    }
+
     if (!user.companyId) {
       return NextResponse.json({ error: "User has no company" }, { status: 403 })
     }
