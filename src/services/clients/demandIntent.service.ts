@@ -3,6 +3,8 @@ import { DemandIntentStatus } from "@prisma/client"
 import { evaluateSemaphore, SemaphoreResult } from "@/src/decision/semaphoreEvaluator"
 import { getContractableSupply } from "@/src/services/system/supply.service"
 import { resolveRoastYield, roastedToGreen, computeRoastedPrice } from "@/src/lib/roastYield"
+import { resolveClientB2BPriceForLot } from "@/src/services/pricing/clientB2BPrice"
+import { evaluateContractPriceDrift } from "@/src/services/contract-request/contractPriceDrift.pure"
 
 // =====================================================
 // DEMAND INTENT SERVICE
@@ -28,10 +30,19 @@ const INTENT_TTL_HOURS = 48
 
 export class IntentServiceError extends Error {
   code: string
-  constructor(message: string, code: string) {
+  // CONTRACT-REQUEST-3 — optional detail bag so the route
+  // layer can surface drift context (preview vs current
+  // price) without us tucking it onto error.message.
+  details?: Record<string, unknown>
+  constructor(
+    message: string,
+    code: string,
+    details?: Record<string, unknown>,
+  ) {
     super(message)
     this.name = "IntentServiceError"
     this.code = code
+    if (details) this.details = details
   }
 }
 
@@ -45,12 +56,55 @@ export async function createDemandIntent(input: {
   requestedKg: number       // ROASTED
   type: "CREATE" | "AMEND"
   contractId?: string
+  // CONTRACT-REQUEST-3 — persisted on the intent so the
+  // contract wizard hydrates the same values the buyer
+  // entered in the modal, regardless of when they return.
+  requestedDurationMonths?: number | null
+  requestedStartDate?: Date | null
 }) {
 
-  const { companyId, greenLotId, requestedKg, type, contractId } = input
+  const {
+    companyId,
+    greenLotId,
+    requestedKg,
+    type,
+    contractId,
+    requestedDurationMonths,
+    requestedStartDate,
+  } = input
 
   // Transactional: lot read, supply check, semaphore eval, intent create
   const result = await prisma.$transaction(async (tx) => {
+
+    // -------------------------------------------------
+    // 0. DUPLICATE GUARD (CONTRACT-REQUEST-1)
+    //
+    // A buyer should never hold more than one pending
+    // request on the same lot — that would double-reserve
+    // the same green delta and confuse the dashboard.
+    // Pending = OPEN | COUNTERED | WAITING with a TTL
+    // still in the future.
+    // -------------------------------------------------
+
+    const existing = await tx.demandIntent.findFirst({
+      where: {
+        companyId,
+        greenLotId,
+        status: { in: ["OPEN", "COUNTERED", "WAITING"] },
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true, status: true },
+    })
+
+    if (existing) {
+      const err = new IntentServiceError(
+        "You already have a pending request for this lot.",
+        "DUPLICATE_REQUEST",
+      ) as IntentServiceError & { existingIntentId?: string; existingStatus?: string }
+      err.existingIntentId = existing.id
+      err.existingStatus = existing.status
+      throw err
+    }
 
     // -------------------------------------------------
     // 1. RESOLVE LOT + YIELD + PRICING
@@ -70,8 +124,11 @@ export async function createDemandIntent(input: {
 
     const roastYield = resolveRoastYield(lot)
     const requestedGreenKg = roastedToGreen(requestedKg, roastYield)
-    const greenPricePerKg = lot.pricingSnapshot.clientPricePerKg
-    const roastedPricePerKg = computeRoastedPrice(greenPricePerKg, roastYield)
+    // PRICING-B2B-3 — preview must match the contract lock price.
+    // Resolver prefers persisted clientB2BPricePerKg and falls back
+    // to legacy green/yield for un-migrated rows.
+    const resolvedB2B = resolveClientB2BPriceForLot(lot)
+    const roastedPricePerKg = resolvedB2B.pricePerKgRoasted
 
     // -------------------------------------------------
     // 2. GET CONTRACTABLE SUPPLY (inside tx)
@@ -143,6 +200,13 @@ export async function createDemandIntent(input: {
         semaphore: semaphoreResult.status,
         riskScore: semaphoreResult.confidence,
         availableAtEval: supply.contractableKg,
+
+        // CONTRACT-REQUEST-3 — buyer's request parameters.
+        // Persisted alongside the price so the contract
+        // wizard hydrates identically whether the buyer
+        // continues immediately or returns days later.
+        requestedDurationMonths: requestedDurationMonths ?? null,
+        requestedStartDate: requestedStartDate ?? null,
 
         status,
         expiresAt,
@@ -319,11 +383,62 @@ export async function confirmWaiting(input: {
       )
     }
 
+    // CONTRACT-REQUEST-3 — price drift guard.
+    //
+    // The buyer placed this request at intent.previewPricePerKg.
+    // Before we flip WAITING → OPEN (which is what makes the
+    // request "active" again from a UX point of view), check
+    // that the lot's current B2B price hasn't drifted UP. If
+    // it has, surface a 409 PRICE_DRIFT_REQUIRES_REVIEW and
+    // leave the intent in WAITING. The buyer can then create
+    // a new request at the new price, knowingly.
+    //
+    // Lower / matching prices are allowed — the eventual
+    // contract creation re-runs the same drift evaluator and
+    // locks the lower number (CONTRACT-REQUEST-2). We never
+    // mutate intent.previewPricePerKg here.
+    let currentPricePerKg: number | null = null
+    if (intent.greenLotId) {
+      const lot = await tx.greenLot.findUnique({
+        where: { id: intent.greenLotId },
+        include: { pricingSnapshot: true },
+      })
+      if (lot) {
+        const resolved = resolveClientB2BPriceForLot(lot)
+        if (Number.isFinite(resolved.pricePerKgRoasted)) {
+          currentPricePerKg = resolved.pricePerKgRoasted
+        }
+      }
+    }
+
+    const drift = evaluateContractPriceDrift({
+      intentPreviewPricePerKg: intent.previewPricePerKg,
+      currentPricePerKg,
+    })
+
+    if (drift.blocking) {
+      throw new IntentServiceError(
+        drift.message,
+        "PRICE_DRIFT_REQUIRES_REVIEW",
+        {
+          previewPricePerKg: drift.previewPricePerKg,
+          currentPricePerKg: drift.currentPricePerKg,
+          driftStatus: drift.status,
+          delta: drift.delta,
+          deltaPercent: drift.deltaPercent,
+        },
+      )
+    }
+
     return tx.demandIntent.update({
       where: { id: intentId },
       data: {
         status: "OPEN",
         deltaKg: requestedGreenKg,
+        // Note: we deliberately do NOT touch previewPricePerKg.
+        // It remains the buyer's remembered price. Contract
+        // creation re-runs the drift check and signs at the
+        // lower of preview vs current.
       }
     })
   })

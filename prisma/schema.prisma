@@ -497,6 +497,14 @@ model DemandIntent {
   autoExecute     Boolean             @default(false)
   notifiedAt      DateTime?
 
+  // CONTRACT-REQUEST-3 — buyer's original request parameters.
+  // Persisted so the contract wizard can hydrate identically
+  // whether the buyer continues immediately or comes back later.
+  // Both nullable for backwards compatibility with intents
+  // created before CONTRACT-REQUEST-3.
+  requestedDurationMonths Int?
+  requestedStartDate      DateTime?
+
   status          DemandIntentStatus  @default(OPEN)
   expiresAt       DateTime
   consumedAt      DateTime?
