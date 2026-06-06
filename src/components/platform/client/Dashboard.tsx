@@ -1,122 +1,124 @@
-"use client";
+"use client"
 
-import React, { useEffect, useRef, useState } from "react";
-import ClientTradingPanel from "@/src/components/platform/client/ClientTradingPanel"
-import ClientContractsPanel from "@/src/components/platform/client/ClientContractsPanel"
-import ClientOverviewPanel from "@/src/components/platform/client/ClientOverviewPanel"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
+
 import PlatformHeader from "@/src/components/shared/general/PlatformHeader"
 import CoffeeLoader from "@/src/components/shared/general/CoffeeLoader"
 import { hideNavOverlay } from "@/src/lib/navigationOverlay"
-import { useSearchParams } from "next/navigation"
-import { initWebsocketClient }
-from "@/src/websocket/websocketClient"
-import { useRouter } from "next/navigation"
+import { initWebsocketClient } from "@/src/websocket/websocketClient"
 
+import ClientDashboardHero from "@/src/components/platform/client/ClientDashboardHero"
+import SupplyDeskPanel from "@/src/components/platform/client/SupplyDeskPanel"
+import ContractPortfolioPanel from "@/src/components/platform/client/ContractPortfolioPanel"
+import ContractCatalogStrip, {
+  type ContractCatalogStripLot,
+} from "@/src/components/platform/client/ClientContractCatalogPanel"
+import SupplyContractsPanel from "@/src/components/platform/client/SupplyContractsPanel"
+import ConfigureMonthlySupplyModal, {
+  type ContractRequestLot,
+} from "@/src/components/platform/client/ConfigureMonthlySupplyModal"
+import { hasPendingRequestForLot } from "@/src/services/contract-request/contractRequest.pure"
 
-// ======================================================
-// PALETTE — page-level tokens (kept inline; no theme file)
-// ======================================================
+import { COLORS, RADII, SPACING } from "@/src/components/platform/client/dashboardTokens"
+import { computePortfolioMetrics } from "@/src/services/client-dashboard/contractPortfolioMetrics"
+import {
+  pickRecommendedContractLots,
+  type RecommendedContractLot,
+} from "@/src/services/client-dashboard/recommendedContractLots"
+import { hasClientActivity } from "@/src/services/dev/scenarios/devContractScenario.pure"
+import type { ContractCatalogLotDto } from "@/src/services/allocation/contracts/contractCatalog.mapper"
 
-const COLORS = {
-  bg:         "#08100d",
-  bgDeep:     "#070b09",
-  textPrimary:"#f4efe3",
-  textMuted:  "rgba(244,239,227,0.62)",
-  textFaint:  "rgba(244,239,227,0.38)",
-  gold:       "#d6b04f",
-  goldSoft:   "rgba(214,176,79,0.22)",
-  goldFaint:  "rgba(214,176,79,0.08)",
-  cardBg:     "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)",
-  cardBorder: "1px solid rgba(214,176,79,0.18)",
-  divider:    "1px solid rgba(255,255,255,0.06)",
+//////////////////////////////////////////////////////
+// 🪟 CLIENT DASHBOARD
+//
+// Editorial dark UI built on the existing data feeds:
+//   /api/contracts            — owned contracts list
+//   /api/demand-intent        — pending intents
+//   /api/market               — market totals (roasted available, lot count)
+//   /api/contracts/catalog    — allocation-driven monthly catalog
+//
+// Layout:
+//   - PlatformHeader
+//   - ClientDashboardHero (KPI strip)
+//   - 2-col: SupplyDeskPanel | ContractPortfolioPanel
+//   - ContractCatalogStrip
+//   - 3-col: SourcingRelationship · SupplyContracts · NeedHelp
+//////////////////////////////////////////////////////
+
+type CatalogResponse = {
+  generatedAt: string
+  policyVersion: string
+  count: number
+  lots: ContractCatalogLotDto[]
+  metrics: {
+    totalLots: number
+    totalAssignableGreenKg: number
+    totalAssignableRoastedKg: number
+    avgScaScore: number | null
+    origins: Array<{ country: string; roastedKg: number; percentage: number }>
+    topProfiles: Array<{ profileId: string; lots: number }>
+  }
 }
-
 
 export default function Dashboard({ user }: { user: any }) {
 
-const router = useRouter()
-const [contracts, setContracts] = useState<any[]>([])
-const [marketData, setMarketData] = useState<any>(null)
-const [intents, setIntents] = useState<any[]>([])
+  // ─── DATA ─────────────────────────────────────────
+  const [contracts, setContracts] = useState<any[]>([])
+  const [marketData, setMarketData] = useState<any>(null)
+  const [intents, setIntents] = useState<any[]>([])
+  const [catalog, setCatalog] = useState<CatalogResponse | null>(null)
+  const [catalogLoading, setCatalogLoading] = useState<boolean>(true)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
 
-// ======================================================
-// SUCCESSFUL CONTRACT
-// ======================================================
+  const searchParams = useSearchParams()!
+  const contractSuccess = searchParams.get("contract") === "success"
+  const [showMessage, setShowMessage] = useState(contractSuccess)
 
-const searchParams = useSearchParams()!
+  // ─── EFFECTS ─────────────────────────────────────
 
-const contractSuccess =
-  searchParams.get("contract") === "success"
+  useEffect(() => {
+    if (!contractSuccess) return
+    const t = setTimeout(() => setShowMessage(false), 4000)
+    return () => clearTimeout(t)
+  }, [contractSuccess])
 
-const [showMessage, setShowMessage] = useState(contractSuccess)
-
-useEffect(() => {
-
-  if (contractSuccess) {
-
-    const timer = setTimeout(() => {
-      setShowMessage(false)
-    }, 4000)
-
-    return () => clearTimeout(timer)
-
-  }
-
-}, [contractSuccess])
-
-// ======================================================
-// LOAD CONTRACTS
-// ======================================================
-
-useEffect(() => {
-
-  const loadContracts = async () => {
-    try {
-      const res = await fetch("/api/contracts", {
-        credentials: "include"
-      })
-
-      if (!res.ok) return
-
-      const data = await res.json()
-      setContracts(data)
-
-    } catch (err) {
-      console.error("Error loading contracts", err)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch("/api/contracts", { credentials: "include" })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setContracts(data)
+      } catch (err) {
+        console.error("Error loading contracts", err)
+      }
     }
-  }
+    load()
+    return () => { cancelled = true }
+  }, [contractSuccess])
 
-  loadContracts()
-
-}, [])
-
-// ======================================================
-// LOAD MARKET DATA
-// ======================================================
-
-useEffect(() => {
-  const loadMarket = async () => {
-    try {
-      const res = await fetch("/api/market")
-      if (!res.ok) return
-      const data = await res.json()
-      setMarketData(data)
-    } catch (err) {
-      console.error("Error loading market", err)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch("/api/market")
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setMarketData(data)
+      } catch (err) {
+        console.error("Error loading market", err)
+      }
     }
-  }
-  loadMarket()
-}, [])
+    load()
+    return () => { cancelled = true }
+  }, [])
 
-// ======================================================
-// LOAD DEMAND INTENTS
-// (Lifted from ClientOverviewPanel so the hero counter
-// and the panel share a single read. Same endpoint, same
-// status filter — no DemandIntent logic change.)
-// ======================================================
-
-useEffect(() => {
-  const loadIntents = async () => {
+  // Lifted out of useEffect so the modal can trigger a refresh
+  // after a request is created. State setters are stable across
+  // renders, so the function reference stays useful.
+  const refreshIntents = React.useCallback(async () => {
     try {
       const res = await fetch("/api/demand-intent")
       if (!res.ok) return
@@ -125,662 +127,482 @@ useEffect(() => {
     } catch (err) {
       console.error("Error loading intents", err)
     }
-  }
-  loadIntents()
-}, [])
+  }, [])
 
-// ======================================================
-// RELOAD CONTRACTS ON SUCCESS
-// ======================================================
+  useEffect(() => {
+    refreshIntents()
+  }, [refreshIntents])
 
-useEffect(() => {
-
-  if (contractSuccess) {
-
-    const loadContracts = async () => {
-      const res = await fetch("/api/contracts", {
-        credentials: "include"
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        setContracts(data)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch("/api/contracts/catalog", {
+          credentials: "include",
+          cache: "no-store",
+        })
+        if (!res.ok) {
+          throw new Error(`Catalog load failed (${res.status})`)
+        }
+        const data = (await res.json()) as CatalogResponse
+        if (!cancelled) setCatalog(data)
+      } catch (err) {
+        console.error("Error loading catalog", err)
+        if (!cancelled) {
+          setCatalogError(err instanceof Error ? err.message : "Catalog load failed")
+        }
+      } finally {
+        if (!cancelled) setCatalogLoading(false)
       }
     }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
-    loadContracts()
+  useEffect(() => { initWebsocketClient() }, [])
+  useEffect(() => { hideNavOverlay() }, [])
 
+  // ─── LOADER ANIMATION ────────────────────────────
+
+  const hasEnteredRef = useRef(false)
+  const [entered, setEntered] = useState(false)
+  const handleFinish = () => {
+    if (hasEnteredRef.current) return
+    hasEnteredRef.current = true
+    setEntered(true)
   }
 
-}, [contractSuccess])
+  // ─── DERIVED ─────────────────────────────────────
 
-// ======================================================
-// WEBSOCKET — REALTIME CONTRACT UPDATES
-// ======================================================
+  const metrics = useMemo(
+    () =>
+      computePortfolioMetrics({
+        contracts,
+        intents,
+        market: marketData,
+        catalog: catalog?.metrics ?? null,
+      }),
+    [contracts, intents, marketData, catalog]
+  )
 
-useEffect(() => {
-  initWebsocketClient()
-}, [])
+  // DEV-CONTRACTS-1 / CLIENT-DASHBOARD-DATA-1: pivot dashboard
+  // layout into catalog-first mode when the user has no active
+  // or pending contracts / requests.
+  const hasActivity = hasClientActivity(metrics)
 
-// ======================================================
-// 🧹 NAV OVERLAY CLEANUP
-// La landing inyecta un overlay con la cherry en
-// #nav-overlay-root antes de hacer router.push("/platform").
-// El destino debe limpiarlo al montar — mismo patrón que
-// usa ProducerView. Sin esto, la cherry se queda visible
-// encima del dashboard cuando se entra desde la landing.
-// ======================================================
+  const recommendedLots: RecommendedContractLot[] = useMemo(
+    () => pickRecommendedContractLots(catalog?.lots ?? [], 3),
+    [catalog]
+  )
 
-useEffect(() => {
-  hideNavOverlay()
-}, [])
+  const catalogStripLots = useMemo(() => {
+    if (!catalog) return []
+    return catalog.lots.slice(0, 8).map((dto) => ({
+      id: dto.id,
+      lotNumber: dto.lotNumber,
+      name: dto.name,
+      producerName: dto.producerName,
+      farmName: dto.farmName,
+      region: dto.region,
+      country: dto.country,
+      process: dto.process,
+      variety: dto.variety,
+      scaScore: dto.scaScore,
+      altitude: dto.altitude,
+      contractAssignableRoastedKg: dto.contractAssignableRoastedKg,
+      pricePerKgRoasted: dto.pricePerKgRoasted,
+      currency: dto.currency,
+      recommendedSurface: dto.recommendedSurface,
+      badges: dto.badges,
+      // DASHBOARD-IMAGES-1 — pass-through public media. DTO mapper
+      // already filters PUBLIC_MARKET; the strip never re-filters.
+      media: dto.media,
+      primaryMedia: dto.primaryMedia,
+      mediaSummary: dto.mediaSummary,
+    }))
+  }, [catalog])
 
-// ======================================================
-// 🎬 LOADER ANIMATION
-// Mismo patrón que ProducerView: CoffeeLoader corre la
-// secuencia completa (cherry → green → roasted → fade)
-// y al terminar hace fade-in del dashboard. Funciona
-// igual desde landing, login y F5.
-// ======================================================
+  const catalogRef = useRef<HTMLDivElement | null>(null)
+  const scrollToCatalog = () => {
+    catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
-const hasEnteredRef = useRef(false)
-const [entered, setEntered] = useState(false)
+  // ─── CONTRACT-REQUEST-1 — modal state ─────────────
+  //
+  // pendingRequestLotIds is rebuilt on every intents update so
+  // CTAs grey out the moment a pending request appears.
+  const pendingRequestLotIds = useMemo(() => {
+    const set = new Set<string>()
+    for (const i of intents ?? []) {
+      if (i?.greenLotId && hasPendingRequestForLot([i], i.greenLotId)) {
+        set.add(i.greenLotId)
+      }
+    }
+    return set
+  }, [intents])
 
-const handleFinish = () => {
-  if (hasEnteredRef.current) return
-  hasEnteredRef.current = true
-  setEntered(true)
-}
+  const [requestLot, setRequestLot] = useState<ContractRequestLot | null>(null)
+  const openConfigureModal = (lot: ContractRequestLot) => setRequestLot(lot)
+  const closeConfigureModal = () => setRequestLot(null)
 
-// ======================================================
-// HERO METRICS — REAL DATA ONLY
-// ======================================================
+  const recommendedToRequestLot = (lot: RecommendedContractLot): ContractRequestLot => ({
+    id: lot.id,
+    name: lot.name,
+    producerName: null,
+    region: lot.origin || null,
+    country: null,
+    variety: lot.variety,
+    process: lot.process,
+    scaScore: lot.scaScore,
+    altitude: lot.altitude,
+    pricePerKgRoasted: lot.pricePerKgRoasted,
+    contractAssignableRoastedKg: lot.assignableRoastedKg,
+    currency: lot.currency,
+    media: lot.media,
+    primaryMedia: lot.primaryMedia,
+    mediaSummary: lot.mediaSummary,
+  })
 
-const roastedAvailableKg = marketData?.totals?.roastedAvailableKg ?? 0
-const activeContractsCount = contracts.filter(
-  (c: any) => c?.status === "ACTIVE"
-).length
-const pendingIntentsCount = intents.filter(
-  (i: any) =>
-    i?.status === "OPEN" ||
-    i?.status === "COUNTERED" ||
-    i?.status === "WAITING"
-).length
+  const catalogStripToRequestLot = (lot: ContractCatalogStripLot): ContractRequestLot => ({
+    id: lot.id,
+    name: lot.name,
+    producerName: lot.producerName ?? null,
+    region: lot.region ?? null,
+    country: lot.country ?? null,
+    variety: lot.variety,
+    process: lot.process,
+    scaScore: lot.scaScore,
+    altitude: lot.altitude,
+    pricePerKgRoasted: lot.pricePerKgRoasted,
+    contractAssignableRoastedKg: lot.contractAssignableRoastedKg,
+    currency: lot.currency,
+    media: lot.media,
+    primaryMedia: lot.primaryMedia ?? null,
+    mediaSummary: lot.mediaSummary,
+  })
 
-
-return (
-  <>
-
-{/* ====================================================== */}
-{/* ☕ COFFEE LOADER (cherry → green → roasted → fade) */}
-{/* ====================================================== */}
-{!entered && <CoffeeLoader onFinish={handleFinish} />}
-
-{/* ====================================================== */}
-{/* 🎬 DASHBOARD (fade-in al terminar el loader) */}
-{/* ====================================================== */}
-<div
-  className={`transition-opacity duration-700 ease-out ${entered ? "opacity-100" : "opacity-0"}`}
->
-
-{/* ====================================================== */}
-{/* SHARED PLATFORM HEADER (role-aware — themes from user.role) */}
-{/* ====================================================== */}
-<PlatformHeader user={user} />
-
-{/* ====================================================== */}
-{/* MAIN DASHBOARD                                         */}
-{/* ====================================================== */}
-<div
-  style={{
-    minHeight: "100vh",
-    background: `radial-gradient(ellipse at 0% 0%, rgba(214,176,79,0.04), transparent 55%), ${COLORS.bg}`,
-    color: COLORS.textPrimary,
-    paddingTop: "100px"
-  }}
->
-
-  {/* =================================================== */}
-  {/* HERO                                                 */}
-  {/* =================================================== */}
-  <section
-    style={{
-      position: "relative",
-      maxWidth: 1440,
-      margin: "0 auto",
-      padding: "0 80px",
-    }}
-  >
-    <div
-      style={{
-        position: "relative",
-        borderRadius: 24,
-        overflow: "hidden",
-        minHeight: 360,
-        border: COLORS.cardBorder,
-        background: `
-          radial-gradient(ellipse at 80% 0%, rgba(214,176,79,0.06), transparent 50%),
-          linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005))
-        `,
-      }}
-    >
-
-      {/* RIGHT — IMAGE + LAYERED BLEND
-          The image container overlaps deep into the text area
-          (70% wide) so there is no visible vertical seam. The
-          two overlay layers do all the masking:
-            1. Smooth horizontal multi-stop gradient — fades the
-               left edge of the image into the dark card.
-            2. Soft radial vignette — dims top/bottom/right
-               corners so the cup sits inside the card frame
-               instead of looking like a pasted photo. */}
-      <div
-        style={{
-          position: "absolute",
-          right: 0, top: 0, bottom: 0,
-          width: "70%",
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        <img
-          src="/images/client_taza.png"
-          alt=""
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-          onError={(e) => {
-            // Fall back to atmospheric gradient if asset is missing
-            ;(e.currentTarget as HTMLImageElement).style.display = "none"
-          }}
-        />
-
-        {/* Layer 1 — smooth horizontal fade into card background */}
-        <div
-          style={{
-            position: "absolute", inset: 0,
-            background:
-              "linear-gradient(90deg, " +
-              COLORS.bg + " 0%, " +
-              COLORS.bg + " 14%, " +
-              "rgba(8,16,13,0.96) 30%, " +
-              "rgba(8,16,13,0.82) 44%, " +
-              "rgba(8,16,13,0.55) 58%, " +
-              "rgba(8,16,13,0.28) 72%, " +
-              "rgba(8,16,13,0.1) 86%, " +
-              "rgba(8,16,13,0) 100%)",
-          }}
-        />
-
-        {/* Layer 2 — radial vignette: focuses the cup, dims edges */}
-        <div
-          style={{
-            position: "absolute", inset: 0,
-            background:
-              "radial-gradient(ellipse 75% 90% at 72% 52%, " +
-              "transparent 0%, " +
-              "transparent 38%, " +
-              "rgba(8,16,13,0.35) 72%, " +
-              "rgba(8,16,13,0.7) 100%)",
-          }}
-        />
-      </div>
-
-      {/* LEFT — CONTENT */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 620,
-          padding: "56px 56px 40px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: COLORS.gold,
-            opacity: 0.85,
-            marginBottom: 22,
-          }}
-        >
-          Private Coffee Supply Desk
-        </div>
-
-        <h1
-          style={{
-            fontSize: "clamp(2.4rem, 3.8vw, 3.4rem)",
-            fontWeight: 400,
-            letterSpacing: "-0.02em",
-            color: COLORS.textPrimary,
-            margin: 0,
-            lineHeight: 1.05,
-          }}
-        >
-          Your Coffee<br />Supply Desk
-        </h1>
-
-        <p
-          style={{
-            marginTop: 18,
-            maxWidth: 520,
-            fontSize: "0.98rem",
-            lineHeight: 1.7,
-            color: COLORS.textMuted,
-            fontWeight: 300,
-          }}
-        >
-          Direct, verified roasted coffee supply — coordinated end-to-end with
-          your sourcing partners. Track availability, manage commitments, and
-          request volume against published lots.
-        </p>
-
-        {/* THIN GOLD RULE */}
-        <div
-          style={{
-            marginTop: 30,
-            width: "100%",
-            height: 1,
-            background:
-              "linear-gradient(90deg, rgba(214,176,79,0.45) 0%, rgba(214,176,79,0.05) 100%)",
-          }}
-        />
-
-        {/* HERO METRIC STRIP — REAL DATA
-            Three metrics with thin vertical dividers in between.
-            Explicit 1px divider columns keep spacing predictable
-            across viewports. */}
-        <div
-          style={{
-            marginTop: 26,
-            display: "grid",
-            gridTemplateColumns: "1fr 1px 1fr 1px 1fr",
-            columnGap: 24,
-            rowGap: 18,
-          }}
-        >
-          <HeroMetric
-            icon={<LeafIcon />}
-            label="Roasted Supply"
-            value={`${formatKg(roastedAvailableKg)} kg`}
-            sub="Across all regions"
-          />
-          <div
-            style={{
-              alignSelf: "stretch",
-              width: 1,
-              background: "rgba(255,255,255,0.07)",
-            }}
-          />
-          <HeroMetric
-            icon={<DocIcon />}
-            label="Active Contracts"
-            value={String(activeContractsCount)}
-            sub="Current agreements"
-          />
-          <div
-            style={{
-              alignSelf: "stretch",
-              width: 1,
-              background: "rgba(255,255,255,0.07)",
-            }}
-          />
-          <HeroMetric
-            icon={<ClockIcon />}
-            label="Pending Requests"
-            value={String(pendingIntentsCount)}
-            sub="Open, countered or waiting"
-          />
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  {/* =================================================== */}
-  {/* SUCCESS BANNER                                       */}
-  {/* =================================================== */}
-  {showMessage && (
-    <div
-      style={{
-        maxWidth: 1440,
-        margin: "20px auto 0",
-        padding: "0 80px",
-      }}
-    >
-      <div
-        style={{
-          padding: "14px 22px",
-          borderRadius: 12,
-          background: "rgba(74,222,128,0.07)",
-          border: "1px solid rgba(74,222,128,0.25)",
-          color: "#9be8b3",
-          fontSize: 13,
-          letterSpacing: "0.02em",
-        }}
-      >
-        Contract activated successfully.
-      </div>
-    </div>
-  )}
-
-  {/* =================================================== */}
-  {/* MAIN GRID                                            */}
-  {/* =================================================== */}
-  <div
-    style={{
-      maxWidth: 1440,
-      margin: "0 auto",
-      padding: "32px 80px 80px",
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 0.95fr)",
-      gap: 28,
-    }}
-  >
-
-    {/* ========== LEFT COLUMN ========== */}
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 28,
-      }}
-    >
-      {/* SUPPLY DESK (anchored for CTA scrolling) */}
-      <ClientTradingPanel
-        key={searchParams?.toString?.() || "default"}
-        marketData={marketData}
-      />
-
-      {/* SOURCING RELATIONSHIP (static trust card — no fake activity) */}
-      <SourcingRelationshipCard />
-    </div>
-
-    {/* ========== RIGHT COLUMN ========== */}
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 28,
-      }}
-    >
-      <ClientOverviewPanel
-        marketData={marketData}
-        contracts={contracts}
-        intents={intents}
-      />
-      <ClientContractsPanel
-        contracts={contracts}
-        hasLots={(marketData?.totals?.lotCount ?? 0) > 0}
-      />
-      <NeedHelpCard />
-    </div>
-
-  </div>
-
-</div>
-
-</div>
-
-</>
-)
-}
-
-
-// ======================================================
-// HERO METRIC — icon circle + label/value/sub
-// ======================================================
-
-function HeroMetric({
-  icon,
-  label,
-  value,
-  sub,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  sub: string
-}) {
   return (
-    <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 999,
-          background: COLORS.goldFaint,
-          border: `1px solid ${COLORS.goldSoft}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: COLORS.gold,
-          flexShrink: 0,
-        }}
-      >
-        {icon}
+    <>
+      {!entered && <CoffeeLoader onFinish={handleFinish} />}
+
+      <div className={`transition-opacity duration-700 ease-out ${entered ? "opacity-100" : "opacity-0"}`}>
+
+        <PlatformHeader user={user} />
+
+        <div
+          style={{
+            minHeight: "100vh",
+            background: `radial-gradient(ellipse at 0% 0%, rgba(214,176,79,0.04), transparent 55%), ${COLORS.bg}`,
+            color: COLORS.textPrimary,
+            paddingTop: "100px",
+          }}
+        >
+          {/* HERO */}
+          <section
+            style={{
+              maxWidth: SPACING.pageMaxWidth,
+              margin: "0 auto",
+              padding: `0 ${SPACING.pagePaddingX}px`,
+            }}
+          >
+            <ClientDashboardHero
+              userName={user?.name ?? null}
+              kpis={{
+                activeContracts: metrics.activeContracts,
+                uniqueOrigins: metrics.uniqueOrigins,
+                monthlyGreenKg: metrics.monthlyGreenKg,
+                pendingRequests: metrics.pendingRequests,
+                nextShipmentIso: metrics.nextShipment.dateIso,
+                nextShipmentCountry: metrics.nextShipment.country,
+                catalogLotsAvailable: metrics.contractCatalogLots,
+              }}
+            />
+          </section>
+
+          {/* SUCCESS BANNER */}
+          {showMessage && (
+            <div
+              style={{
+                maxWidth: SPACING.pageMaxWidth,
+                margin: "20px auto 0",
+                padding: `0 ${SPACING.pagePaddingX}px`,
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 22px",
+                  borderRadius: 12,
+                  background: COLORS.emeraldBg,
+                  border: `1px solid ${COLORS.emeraldLine}`,
+                  color: "#9be8b3",
+                  fontSize: 13,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Contract activated successfully.
+              </div>
+            </div>
+          )}
+
+          {/* RECOMMENDED FOR MONTHLY SUPPLY — full-width 3-card row */}
+          <div
+            style={{
+              maxWidth: SPACING.pageMaxWidth,
+              margin: "0 auto",
+              padding: `28px ${SPACING.pagePaddingX}px 0`,
+            }}
+          >
+            <SupplyDeskPanel
+              lots={recommendedLots}
+              loading={catalogLoading}
+              errorMsg={catalogError}
+              onScrollToCatalog={scrollToCatalog}
+              onConfigureMonthlySupply={(lot) =>
+                openConfigureModal(recommendedToRequestLot(lot))
+              }
+              pendingRequestLotIds={pendingRequestLotIds}
+            />
+          </div>
+
+          {/* CATALOG (2/3) + PORTFOLIO SIDEBAR (1/3) — catalog-first hierarchy.
+              When the client has no activity yet, the portfolio still renders
+              with zeros and an empty-recent-contracts placeholder so the column
+              isn't blank. */}
+          <div
+            style={{
+              maxWidth: SPACING.pageMaxWidth,
+              margin: "24px auto 0",
+              padding: `0 ${SPACING.pagePaddingX}px`,
+              display: "grid",
+              gridTemplateColumns: hasActivity
+                ? "minmax(0, 1.9fr) minmax(0, 1fr)"
+                : "minmax(0, 2.3fr) minmax(0, 1fr)",
+              gap: 24,
+              alignItems: "stretch",
+            }}
+          >
+            <ContractCatalogStrip
+              ref={catalogRef}
+              lots={catalogStripLots}
+              loading={catalogLoading}
+              errorMsg={catalogError}
+              onConfigureMonthlySupply={(lot) =>
+                openConfigureModal(catalogStripToRequestLot(lot))
+              }
+              pendingRequestLotIds={pendingRequestLotIds}
+            />
+            <ContractPortfolioPanel
+              metrics={metrics}
+              contracts={contracts}
+              loading={catalogLoading}
+            />
+          </div>
+
+          {/* BOTTOM ROW */}
+          <div
+            style={{
+              maxWidth: SPACING.pageMaxWidth,
+              margin: "0 auto",
+              padding: `24px ${SPACING.pagePaddingX}px 80px`,
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr)",
+              gap: 24,
+            }}
+          >
+            <SourcingRelationshipCard />
+            <SupplyContractsPanel contracts={contracts as any} />
+            <NeedHelpCard />
+          </div>
+        </div>
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: COLORS.textFaint,
-            marginBottom: 4,
-          }}
-        >
-          {label}
-        </div>
-        <div
-          style={{
-            fontSize: 26,
-            fontWeight: 400,
-            color: COLORS.gold,
-            letterSpacing: "-0.01em",
-            lineHeight: 1.1,
-          }}
-        >
-          {value}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: COLORS.textMuted,
-            marginTop: 4,
-          }}
-        >
-          {sub}
-        </div>
-      </div>
-    </div>
+
+      {/* CONTRACT-REQUEST-1 — configure monthly supply modal */}
+      <ConfigureMonthlySupplyModal
+        open={requestLot != null}
+        lot={requestLot}
+        onClose={closeConfigureModal}
+        onRequestCreated={refreshIntents}
+      />
+    </>
   )
 }
 
-
-// ======================================================
-// SOURCING RELATIONSHIP — static trust card
-// (No fake activity rows. Static copy only.)
-// ======================================================
+// ------------------------------------------------------
+// SOURCING RELATIONSHIP — improved trust card
+// ------------------------------------------------------
 
 function SourcingRelationshipCard() {
   return (
     <div
       style={{
-        padding: 30,
-        borderRadius: 22,
-        background: COLORS.cardBg,
-        border: COLORS.cardBorder,
+        padding: 24,
+        borderRadius: RADII.card,
+        background: COLORS.panelBg,
+        border: COLORS.borderSoft,
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
       }}
     >
-      <div
-        style={{
-          fontSize: 11,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
-          color: COLORS.gold,
-          opacity: 0.85,
-          marginBottom: 8,
-        }}
-      >
-        Sourcing Relationship
-      </div>
-      <div
-        style={{
-          fontSize: 18,
-          color: COLORS.textPrimary,
-          fontWeight: 400,
-          letterSpacing: "-0.005em",
-          marginBottom: 14,
-        }}
-      >
-        Direct relationships. Verified quality.
+      <div>
+        <div
+          style={{
+            fontSize: 11,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: COLORS.gold,
+            opacity: 0.85,
+            marginBottom: 6,
+          }}
+        >
+          Sourcing Relationship
+        </div>
+        <div
+          style={{
+            fontSize: 17,
+            color: COLORS.textPrimary,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+            fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+          }}
+        >
+          Direct relationships. Verified quality.
+        </div>
       </div>
       <p
         style={{
           margin: 0,
-          fontSize: 14,
-          lineHeight: 1.75,
+          fontSize: 12.5,
+          lineHeight: 1.7,
           color: COLORS.textMuted,
           fontWeight: 300,
-          maxWidth: 540,
         }}
       >
-        We work exclusively with trusted origin partners to bring consistent,
-        traceable, premium Colombian coffee — coordinated through long-term
-        sourcing agreements rather than open-market speculation.
+        We partner directly with producers across premier origins to deliver
+        exceptional coffees with full transparency — every lot is verified,
+        every relationship is long-term.
       </p>
+      <a
+        href="/platform/marketplace"
+        style={{
+          alignSelf: "flex-start",
+          padding: "9px 14px",
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: "0.04em",
+          borderRadius: 10,
+          color: COLORS.gold,
+          textDecoration: "none",
+          background: COLORS.goldFaint,
+          border: `1px solid ${COLORS.goldSoft}`,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        Learn more about our approach <ArrowRight />
+      </a>
     </div>
   )
 }
 
-
-// ======================================================
-// NEED HELP — informational card
-// (Static copy. No invented routing.)
-// ======================================================
+// ------------------------------------------------------
+// NEED HELP
+// ------------------------------------------------------
 
 function NeedHelpCard() {
-
   function handleSupportClick() {
-    // No automated support flow exists yet. Surface honestly
-    // rather than route to a fake destination.
     alert("Please reach out to your account manager directly.")
   }
-
   return (
     <div
       style={{
-        padding: 26,
-        borderRadius: 22,
-        background: COLORS.cardBg,
-        border: COLORS.cardBorder,
+        padding: 24,
+        borderRadius: RADII.card,
+        background: COLORS.panelBg,
+        border: COLORS.borderSoft,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
+        flexDirection: "column",
+        gap: 14,
       }}
     >
-      <div style={{ minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
         <div
           style={{
-            fontSize: 16,
-            color: COLORS.textPrimary,
-            fontWeight: 400,
-            letterSpacing: "-0.005em",
-            marginBottom: 6,
+            width: 44,
+            height: 44,
+            borderRadius: RADII.pill,
+            background: COLORS.goldFaint,
+            border: `1px solid ${COLORS.goldSoft}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: COLORS.gold,
+            flexShrink: 0,
           }}
         >
-          Need help?
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+            <path d="M21 19a2 2 0 0 1-2 2h-1v-7h3z" />
+            <path d="M3 19a2 2 0 0 0 2 2h1v-7H3z" />
+          </svg>
         </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: COLORS.textMuted,
-            lineHeight: 1.6,
-          }}
-        >
-          Your account manager is here to support your sourcing needs.
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: COLORS.gold,
+              opacity: 0.85,
+              marginBottom: 6,
+            }}
+          >
+            Need help?
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: COLORS.textPrimary,
+              fontWeight: 400,
+              lineHeight: 1.5,
+            }}
+          >
+            Your account manager is here to support — questions about lots,
+            contracts or logistics, we're here to help you succeed.
+          </div>
         </div>
       </div>
-
       <button
         type="button"
         onClick={handleSupportClick}
         style={{
-          flexShrink: 0,
-          padding: "10px 18px",
-          borderRadius: 999,
-          border: `1px solid ${COLORS.goldSoft}`,
-          background: "transparent",
-          color: COLORS.gold,
-          fontSize: 13,
+          alignSelf: "flex-start",
+          padding: "9px 14px",
+          fontSize: 12,
+          fontWeight: 500,
           letterSpacing: "0.04em",
+          borderRadius: 10,
+          color: COLORS.gold,
+          background: COLORS.goldFaint,
+          border: `1px solid ${COLORS.goldSoft}`,
           cursor: "pointer",
-          transition: "background 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = COLORS.goldFaint
-        }}
-        onMouseLeave={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = "transparent"
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        Contact Support
+        Contact support <ArrowRight />
       </button>
     </div>
   )
 }
 
-
-// ======================================================
-// ICONS — inline SVG line icons (no external deps)
-// ======================================================
-
-function LeafIcon() {
+function ArrowRight() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
-      stroke="currentColor" strokeWidth="1.4"
-      strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 17C3 9 9 3 17 3C17 11 11 17 3 17Z" />
-      <path d="M3 17C6 14 10 11 14 9" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12,5 19,12 12,19" />
     </svg>
   )
-}
-
-function DocIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
-      stroke="currentColor" strokeWidth="1.4"
-      strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 2.5H12L17 7.5V17.5H5V2.5Z" />
-      <path d="M12 2.5V7.5H17" />
-      <path d="M7.5 11H14.5" />
-      <path d="M7.5 14H12.5" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
-      stroke="currentColor" strokeWidth="1.4"
-      strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="10" cy="10" r="7.25" />
-      <path d="M10 6V10L13 12" />
-    </svg>
-  )
-}
-
-
-// ======================================================
-// HELPERS
-// ======================================================
-
-function formatKg(v: number): string {
-  return Math.round(v).toLocaleString("en-US")
 }
