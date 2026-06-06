@@ -174,13 +174,21 @@ export async function POST(req: NextRequest) {
 
     if (err instanceof ShipmentServiceError) {
       const status =
-        err.code === "DUPLICATE_REFERENCE" ? 409 :
-        err.code === "LOT_ALREADY_SHIPPED" ? 409 :
-        err.code === "LOT_NOT_FOUND"       ? 404 :
+        err.code === "DUPLICATE_REFERENCE"        ? 409 :
+        err.code === "LOT_ALREADY_SHIPPED"        ? 409 :
+        err.code === "LOT_NOT_FOUND"              ? 404 :
+        err.code === "LOT_BUYER_PROOF_NOT_READY"  ? 409 :
         400
 
       return NextResponse.json(
-        { error: err.message, code: err.code },
+        {
+          error: err.message,
+          code: err.code,
+          // BUYER-PROOF-2B — surface `failingLots` (and any future
+          // detail payload) so the partner UI can render per-lot
+          // remediation without parsing the message string.
+          ...(err.details ?? {}),
+        },
         { status }
       )
     }

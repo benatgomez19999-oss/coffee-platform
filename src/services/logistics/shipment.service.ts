@@ -1,5 +1,12 @@
 import { prisma } from "@/src/database/prisma"
 import type { DestinationStage } from "@/src/lib/logistics/destinationTracking"
+import {
+  evaluateBuyerProofMediaReadiness,
+  normalizeLotMediaRole,
+  normalizeLotMediaSource,
+  normalizeLotMediaVisibility,
+} from "@/src/services/lot-media/lotMedia.pure"
+import type { LotMediaItem } from "@/src/services/lot-media/lotMedia.types"
 
 // =====================================================
 // SHIPMENT SERVICE — LOG-1 (Origin → EU bridge)
@@ -29,10 +36,16 @@ import type { DestinationStage } from "@/src/lib/logistics/destinationTracking"
 
 export class ShipmentServiceError extends Error {
   code: string
-  constructor(message: string, code: string) {
+  details?: Record<string, unknown>
+  constructor(
+    message: string,
+    code: string,
+    details?: Record<string, unknown>,
+  ) {
     super(message)
     this.name = "ShipmentServiceError"
     this.code = code
+    if (details) this.details = details
   }
 }
 
@@ -163,6 +176,97 @@ export async function createShipment(input: CreateShipmentInput) {
           .map((l) => l.lotNumber)
           .join(", ")}`,
         "LOT_ALREADY_SHIPPED"
+      )
+    }
+
+    //////////////////////////////////////////////////////
+    // 🔐 BUYER-PROOF-2B — TRACEABILITY PROOF GUARD
+    //
+    // Each lot must carry a verified BUYER_PRIVATE
+    // TRACEABILITY_BAG row before it can leave origin.
+    //
+    // Policy choice (documented in BUYER-PROOF-2B.md):
+    //   - only lot-level GreenLotMedia counts for the
+    //     traceability requirement (we pass farmMedia: []
+    //     to the pure helper). Farm-level rows are
+    //     "marketing" by nature; the bag photo describes
+    //     this specific shipment.
+    //   - certificate stays warning-only (does not block).
+    //   - PUBLIC_MARKET / INTERNAL_ONLY / editorial /
+    //     placeholder rows are rejected by the helper.
+    //
+    // We run this BEFORE creating the Shipment row and
+    // BEFORE reserving any lot, so a failure leaves the
+    // DB untouched (transaction rolls back automatically).
+    //////////////////////////////////////////////////////
+
+    const mediaRows = await tx.greenLotMedia.findMany({
+      where: { greenLotId: { in: uniqueIds } },
+      select: {
+        id: true,
+        url: true,
+        role: true,
+        source: true,
+        visibility: true,
+        position: true,
+        isPrimary: true,
+        altText: true,
+        greenLotId: true,
+      },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+    })
+
+    const mediaByLot = new Map<string, LotMediaItem[]>()
+    for (const id of uniqueIds) mediaByLot.set(id, [])
+    for (const r of mediaRows) {
+      if (typeof r.url !== "string" || r.url.trim() === "") continue
+      const role = normalizeLotMediaRole(r.role)
+      const source = normalizeLotMediaSource(r.source)
+      if (!role || !source) continue
+      const visibility =
+        normalizeLotMediaVisibility(r.visibility) ?? "PUBLIC_MARKET"
+      const list = mediaByLot.get(r.greenLotId)
+      if (!list) continue
+      list.push({
+        id: r.id,
+        url: r.url,
+        role,
+        source,
+        visibility,
+        position:
+          Number.isFinite(r.position) && r.position >= 0 ? r.position : 0,
+        isPrimary: r.isPrimary === true,
+        altText: r.altText ?? null,
+        owner: "LOT",
+        ownerId: r.greenLotId,
+      })
+    }
+
+    const failingLots: Array<{
+      greenLotId: string
+      lotNumber: string
+      missing: Array<"TRACEABILITY_PROOF">
+    }> = []
+    for (const lot of lots) {
+      const readiness = evaluateBuyerProofMediaReadiness({
+        lotMedia: mediaByLot.get(lot.id) ?? [],
+        farmMedia: [],
+        mode: "SHIPMENT_READY",
+      })
+      if (!readiness.ready) {
+        failingLots.push({
+          greenLotId: lot.id,
+          lotNumber: lot.lotNumber,
+          missing: ["TRACEABILITY_PROOF"],
+        })
+      }
+    }
+
+    if (failingLots.length > 0) {
+      throw new ShipmentServiceError(
+        "Private traceability proof is required before shipment.",
+        "LOT_BUYER_PROOF_NOT_READY",
+        { failingLots },
       )
     }
 
