@@ -199,6 +199,10 @@ model GreenLot {
   // 🧠 DEMAND INTENTS (reverse relation)
   demandIntents DemandIntent[]
 
+  // 🖼️ LOT-MEDIA-1 — semantic ordered media (farm/process/producer/etc).
+  // Empty array allowed; UI falls back to deterministic tonal placeholder.
+  media         GreenLotMedia[]
+
   @@index([shipmentId])
 }
 
@@ -969,6 +973,67 @@ enum DestinationTrackingStage {
   DESTINATION_CUSTOMS_CHECKING
   DESTINATION_CUSTOMS_CLEARED
   RECEIVED_BY_CLIENT
+}
+
+//////////////////////////////////////////////////////
+// 🖼️ LOT MEDIA (LOT-MEDIA-1)
+//
+// Semantic media model for green lots. Each row carries
+// a role (FARM / PROCESS / PRODUCER / …) so the ordered
+// sequence forms a documentary narrative rather than an
+// opaque images: string[] array.
+//
+// Trust rule: only PARTNER_UPLOAD and PLATFORM_CURATED
+// count as verified documentary evidence. GENERATED_EDITORIAL
+// and TONAL_PLACEHOLDER are fallback/illustrative — UI may
+// render them but MUST NOT label them as partner-verified.
+//
+// Existing lots have no rows in this table; the marketplace
+// + dashboard UI continues to fall back to the deterministic
+// tonal placeholder when media.length === 0.
+//////////////////////////////////////////////////////
+
+enum LotMediaRole {
+  FARM
+  PROCESS
+  PRODUCER
+  TRACEABILITY_BAG
+  PRODUCT_DETAIL
+  CERTIFICATE
+  EDITORIAL_FALLBACK
+}
+
+enum LotMediaSource {
+  PARTNER_UPLOAD
+  PLATFORM_CURATED
+  GENERATED_EDITORIAL
+  TONAL_PLACEHOLDER
+}
+
+model GreenLotMedia {
+  id          String             @id @default(uuid())
+
+  greenLotId  String
+  greenLot    GreenLot           @relation(fields: [greenLotId], references: [id], onDelete: Cascade)
+
+  url         String
+  role        LotMediaRole
+  source      LotMediaSource
+
+  position    Int                @default(0)
+  isPrimary   Boolean            @default(false)
+
+  altText     String?
+  caption     String?
+  credit      String?
+  metadata    Json?
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([greenLotId])
+  @@index([greenLotId, role])
+  @@index([greenLotId, isPrimary])
 }
 
 model Shipment {
