@@ -268,10 +268,13 @@ model PricingSnapshot {
   lotId     String   @unique
   lot       GreenLot @relation(fields: [lotId], references: [id])
 
-  // 💸 precio pagado al productor
+  // 💸 precio pagado al productor (€/kg GREEN)
   producerPricePerKg Float
 
-  // 💰 precio venta cliente
+  // ⚠️ LEGACY GREEN PRICE — despite the name, this field stores
+  // €/kg GREEN, not roasted. Kept for backwards compatibility.
+  // The roasted B2B price now lives in clientB2BPricePerKg
+  // (see PRICING-B2B-3). Renaming is deferred to a future sprint.
   clientPricePerKg   Float
 
   // 📊 margen (opcional pero útil)
@@ -279,6 +282,25 @@ model PricingSnapshot {
 
   // 🧠 versionado del algoritmo
   pricingVersion     String
+
+  //////////////////////////////////////////////////////
+  // 💰 CLIENT B2B ROASTED PRICE (PRICING-B2B-3)
+  //
+  // Authoritative ROASTED €/kg the client signs at —
+  // produced by calculateMarketplaceB2BPricing at lot
+  // verification (production) and seed time (dev factory).
+  //
+  // Nullable for backwards compatibility: rows pre-dating
+  // PRICING-B2B-3 fall back to
+  //   computeRoastedPrice(clientPricePerKg, roastYield)
+  // via resolveClientB2BPriceForLot.
+  //////////////////////////////////////////////////////
+
+  clientB2BPricePerKg       Float?
+  clientB2BPricingVersion   String?
+  clientB2BPricingMode      String?
+  clientB2BPricingBreakdown Json?
+  clientB2BPriceComputedAt  DateTime?
 
   //////////////////////////////////////////////////////
   // 🧠 PRICING BREAKDOWN (CRÍTICO)
