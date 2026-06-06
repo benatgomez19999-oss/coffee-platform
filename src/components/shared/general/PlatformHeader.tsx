@@ -9,9 +9,14 @@ import CoffeeAssistant from "@/src/components/shared/assistant/CoffeeAssistant"
 export default function PlatformHeader({
   user,
   assistantContext,
+  onSettingsClick,
 }: {
   user: any
   assistantContext?: "lot-wizard" | "dashboard" | "partner-dashboard"
+  // PRODUCER-SETTINGS-1 — optional click handler for the settings
+  // icon. Producer dashboard wires this to open the settings drawer.
+  // When omitted, the icon stays decorative (no-op cursor).
+  onSettingsClick?: () => void
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -221,10 +226,10 @@ onMouseLeave={(e) => {
 
           {/* MARKETPLACE */}
           <span
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/platform/marketplace")}
             style={{
               ...navItemStyle,
-              color: pathname === "/"
+              color: pathname === "/platform/marketplace"
                  ? theme.accentStrong
                  : theme.accent
             }}
@@ -323,7 +328,20 @@ onMouseLeave={(e) => {
 
     {/* SETTINGS ICON — premium interaction */}
 <div
-  title="Settings"
+  title={onSettingsClick ? "Open settings" : "Settings"}
+  role={onSettingsClick ? "button" : undefined}
+  tabIndex={onSettingsClick ? 0 : undefined}
+  aria-label={onSettingsClick ? "Open settings" : undefined}
+  onClick={onSettingsClick}
+  onKeyDown={onSettingsClick
+    ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onSettingsClick()
+        }
+      }
+    : undefined
+  }
   style={{
     width: 33,
     height: 33,
@@ -331,7 +349,7 @@ onMouseLeave={(e) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    cursor: "pointer",
+    cursor: onSettingsClick ? "pointer" : "default",
 
     // 🎨 base más limpia
     background: "rgba(255,255,255,0.02)",

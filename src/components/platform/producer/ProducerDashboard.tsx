@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import "@/styles/themes/producer.css"
 import React from "react"
+import FarmMediaUploadCard from "@/src/components/platform/producer/FarmMediaUploadCard"
 
 type ColumnVariant = "preparing" | "lab" | "ready" | "sold" | "default"
 
@@ -541,25 +542,10 @@ return (
 )}
 
     {/* ////////////////////////////////////////////////////// */}
-    {/* // 🖼 RIGHT: VISUAL */}
+    {/* // 🖼 RIGHT: FARM PHOTOS (FARM-MEDIA mini upload)        */}
     {/* ////////////////////////////////////////////////////// */}
 
-    <div className="hidden md:block w-[260px] h-[120px] relative">
-
-  {/* BASE */}
-  <div className="
-    absolute inset-0 rounded-xl
-    bg-gradient-to-br from-[#e8dfd1] to-[#d6c7b2]
-    opacity-60
-  " />
-
-  {/* PLACEHOLDER SIEMPRE */}
-  <>
-    <div className="absolute top-3 left-3 w-20 h-14 bg-white/40 rounded-md" />
-    <div className="absolute bottom-3 right-4 w-24 h-16 bg-white/30 rounded-md" />
-  </>
-
-</div>
+    <FarmMediaUploadCard />
 
   </div>
 </div>

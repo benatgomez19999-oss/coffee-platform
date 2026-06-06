@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import CoffeeLoader from "@/src/components/shared/general/CoffeeLoader";
 import PlatformHeader from "@/src/components/shared/general/PlatformHeader";
 import ProducerDashboard from "@/src/components/platform/producer/ProducerDashboard";
+import ProducerSettingsDrawer from "@/src/components/platform/producer/ProducerSettingsDrawer";
 
 export default function ProducerView({ user }: { user: any }) {
 
@@ -24,6 +25,7 @@ export default function ProducerView({ user }: { user: any }) {
 
   const hasEnteredRef = useRef(false);
   const [entered, setEntered] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   //////////////////////////////////////////////////////
   // 🎬 FINISH (SAFE)
@@ -52,11 +54,19 @@ export default function ProducerView({ user }: { user: any }) {
           ${entered ? "opacity-100" : "opacity-0"}
         `}
       >
-        <PlatformHeader user={user} />
+        <PlatformHeader
+          user={user}
+          onSettingsClick={() => setSettingsOpen(true)}
+        />
 
         <div className="pt-[90px] px-6">
           <ProducerDashboard user={user} />
         </div>
+
+        <ProducerSettingsDrawer
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
       </div>
     </>
   );
