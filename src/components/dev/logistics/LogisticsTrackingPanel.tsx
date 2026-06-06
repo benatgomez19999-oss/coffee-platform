@@ -792,6 +792,12 @@ function passesFilters(
   card: TrackingCard,
   filters: TrackingFilterState
 ): boolean {
+  // Future operations is roadmap, not operational tracking.
+  // Filters apply to operational cards only — Future stays
+  // visible regardless. The render path may still compact it
+  // when there are no operational cards.
+  if (card.kind === "future") return true
+
   if (filters.attentionOnly && !card.hasAttention) return false
   if (filters.shipmentsOnly && card.kind !== "shipment") return false
   if (filters.hideCompleted && card.isComplete && !card.hasAttention) return false
@@ -936,26 +942,24 @@ export default function LogisticsTrackingPanel({
   }, [sampleCards, exportCards, shipmentCards, shipments, sampleLots])
 
   //////////////////////////////////////////////////////
-  // COUNTS — for "Showing X of Y" + empty-state logic
+  // 🧮 COUNTS — operational vs roadmap
+  //
+  // Future operations is a roadmap placeholder, not an
+  // operational tracking entity. It must NOT inflate the
+  // "Showing X of Y" indicator.
   //////////////////////////////////////////////////////
 
-  const totalRealCards =
+  const totalOperational =
     sampleCards.length + exportCards.length + shipmentCards.length
-  const totalAllCards =
-    totalRealCards + futureCards.length
-
-  const visibleAllCards =
+  const visibleOperational =
     filteredSampleCards.length +
     filteredExportCards.length +
-    filteredShipmentCards.length +
-    filteredFutureCards.length
+    filteredShipmentCards.length
+  const roadmapCount = futureCards.length
 
-  const hasAnyRealData = totalRealCards > 0
-  const filteredHasAnyRealVisible =
-    filteredSampleCards.length +
-      filteredExportCards.length +
-      filteredShipmentCards.length >
-    0
+  const hasAnyOperational = totalOperational > 0
+  const filtersHideAllOperational =
+    hasAnyOperational && visibleOperational === 0
 
   //////////////////////////////////////////////////////
   // RENDER
@@ -986,7 +990,7 @@ export default function LogisticsTrackingPanel({
               onClick={() => { void onRefresh() }}
               className="rounded-full border border-[#cfb48a] bg-white px-4 py-1.5 text-sm font-medium text-[#5f472f] transition hover:bg-[#f7f2ea]"
             >
-              🔁 Refresh all
+              🔁 Refresh tracking
             </button>
 
             <label className="inline-flex items-center gap-2 text-[12px] text-[#5f472f] cursor-pointer">
@@ -1040,7 +1044,9 @@ export default function LogisticsTrackingPanel({
           />
 
           <span className="ml-auto text-[11px] text-[#9a8b73] tabular-nums">
-            Showing {visibleAllCards} of {totalAllCards} tracking cards
+            {hasAnyOperational
+              ? `Showing ${visibleOperational} of ${totalOperational} operational cards`
+              : `No operational tracking cards yet · ${roadmapCount} roadmap card${roadmapCount === 1 ? "" : "s"}`}
           </span>
         </div>
       </div>
@@ -1065,16 +1071,12 @@ export default function LogisticsTrackingPanel({
       </div>
 
       {/* ============================================== */}
-      {/* EMPTY STATES                                   */}
+      {/* 🧭 EMPTY STATE                                 */}
       {/* ============================================== */}
 
-      {!hasAnyRealData && (
-        <EmptyState
-          message="No logistics entities yet. Create a producer lot, send it to lab, publish a GreenLot, then seed a shipment."
-        />
-      )}
+      {!hasAnyOperational && <BootstrapChecklist />}
 
-      {hasAnyRealData &&
+      {hasAnyOperational &&
         filters.shipmentsOnly &&
         shipmentCards.length === 0 && (
           <EmptyState
@@ -1082,11 +1084,9 @@ export default function LogisticsTrackingPanel({
           />
         )}
 
-      {hasAnyRealData &&
-        !filters.shipmentsOnly &&
-        !filteredHasAnyRealVisible && (
-          <EmptyState message="No tracking cards match the current filters." />
-        )}
+      {hasAnyOperational && filtersHideAllOperational && (
+        <EmptyState message="No operational tracking cards match the current filters." />
+      )}
 
       {/* ============================================== */}
       {/* SAMPLE LOGISTICS                               */}
@@ -1156,11 +1156,15 @@ export default function LogisticsTrackingPanel({
       {filteredFutureCards.length > 0 && (
         <div className="space-y-3">
           <SubsectionTitle icon="🏭" label="Future destination operations" />
-          <div className="grid gap-4">
-            {filteredFutureCards.map((card) => (
-              <TimelineCard key={card.id} card={card} compact={false} />
-            ))}
-          </div>
+          {hasAnyOperational ? (
+            <div className="grid gap-4">
+              {filteredFutureCards.map((card) => (
+                <TimelineCard key={card.id} card={card} compact={false} />
+              ))}
+            </div>
+          ) : (
+            <RoadmapStrip />
+          )}
         </div>
       )}
 
@@ -1264,6 +1268,62 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-8 text-sm text-[#7b6851]">
       {message}
+    </div>
+  )
+}
+
+const BOOTSTRAP_STEPS: readonly string[] = [
+  "Create producer lot",
+  "Send to lab",
+  "Advance sample to DELIVERED",
+  "Quick verify",
+  "Publish GreenLot",
+  "Seed shipment",
+  "Advance destination stage",
+]
+
+function BootstrapChecklist() {
+  return (
+    <div className="rounded-2xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-6">
+      <div className="text-[10.5px] uppercase tracking-[0.18em] text-[#9a8b73] font-semibold">
+        Bootstrap checklist
+      </div>
+      <p className="mt-1 text-[12.5px] text-[#7b6851]">
+        No operational tracking cards yet. To populate the panel, follow these
+        steps using SECTIONS 1–4 above:
+      </p>
+      <ol className="mt-3 grid gap-1.5">
+        {BOOTSTRAP_STEPS.map((step, i) => (
+          <li
+            key={step}
+            className="flex items-center gap-2 text-[12px] text-[#5f472f]"
+          >
+            <span className="inline-flex w-5 h-5 shrink-0 items-center justify-center rounded-full border border-[#cfb48a] bg-white text-[10px] font-mono text-[#7a5230] tabular-nums">
+              {i + 1}
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function RoadmapStrip() {
+  return (
+    <div className="rounded-xl border border-dashed border-[#cdb89a] bg-[#fcfaf6] p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[10.5px] uppercase tracking-[0.18em] text-[#9a8b73] font-semibold">
+          Roadmap placeholder
+        </span>
+        <span className="text-[10px] text-[#a89574]">
+          Shown for orientation
+        </span>
+      </div>
+      <p className="mt-1.5 text-[12px] text-[#7b6851] leading-relaxed">
+        Future operations: warehouse intake → roast batch → roasted inventory
+        → client dispatch → delivery audit. Not implemented yet.
+      </p>
     </div>
   )
 }

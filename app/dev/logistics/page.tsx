@@ -694,8 +694,8 @@ export default function DevLogisticsPage() {
           <span className="rounded-full border border-[#c9b89a] bg-[#f3e9d7] px-2.5 py-1 font-medium text-[#9a6030]">
             ⚠️ Dev bridge — Publish Green Lot (sin ruta real todavía)
           </span>
-          <span className="rounded-full border border-[#c9b89a] bg-[#f0ecdf] px-2.5 py-1 font-medium text-[#9a6030]">
-            ⛔ No implementado — Order prepare / ready (rutas no existen aún)
+          <span className="rounded-full border border-[#c9b89a] bg-[#f3e9d7] px-2.5 py-1 font-medium text-[#9a6030]">
+            🟡 Partial — Order prepare / ready exist; Order creation is still dev-only
           </span>
         </div>
 
