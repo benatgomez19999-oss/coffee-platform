@@ -80,6 +80,37 @@ export async function POST(req: Request) {
     }
 
     //////////////////////////////////////////////////////
+    // 🌱 ENSURE PRODUCER PROFILE (DEV ONLY)
+    //
+    // Real users go through /api/onboarding/producer which
+    // creates Producer + Farm and flips onboardingCompleted.
+    // Dev users skip onboarding (login-as drops the cookie
+    // directly), which would leave the wizard at
+    // /platform/producer/lots/new with no farms in the
+    // assistant context.
+    //
+    // This block mirrors the onboarding side-effects with
+    // sensible defaults, only when entering as "producer"
+    // and only if the User row actually has role=PRODUCER.
+    // Idempotent: re-running is a no-op once provisioned.
+    //
+    // Wrapped in try/catch so a seed failure doesn't block
+    // the dev login itself — the user can still fix via
+    // Prisma Studio.
+    //////////////////////////////////////////////////////
+
+    if (role === "producer" && user.role === "PRODUCER") {
+      try {
+        await ensureDevProducerProfile(user.id, user.name, user.onboardingCompleted)
+      } catch (seedErr) {
+        console.warn(
+          "[DEV_LOGIN_AS] producer profile seed failed (continuing with login):",
+          seedErr
+        )
+      }
+    }
+
+    //////////////////////////////////////////////////////
     // 🍪 REAL SESSION COOKIE
     //////////////////////////////////////////////////////
 
@@ -108,4 +139,53 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
+}
+
+//////////////////////////////////////////////////////
+// HELPER — Ensure dev producer has Producer + Farm
+//////////////////////////////////////////////////////
+
+async function ensureDevProducerProfile(
+  userId: string,
+  userName: string | null,
+  onboardingCompleted: boolean
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    // Producer
+    let producer = await tx.producer.findUnique({
+      where: { userId },
+      include: { farms: { select: { id: true }, take: 1 } },
+    })
+
+    if (!producer) {
+      producer = await tx.producer.create({
+        data: {
+          userId,
+          name: userName || "Dev Producer",
+          country: "COLOMBIA",
+        },
+        include: { farms: { select: { id: true }, take: 1 } },
+      })
+    }
+
+    // Farm — at least one
+    if (producer.farms.length === 0) {
+      await tx.farm.create({
+        data: {
+          name: "El Paraíso (Dev Farm)",
+          altitude: 1700,
+          region: "Huila",
+          producerId: producer.id,
+        },
+      })
+    }
+
+    // Onboarding flag — so /platform/producer doesn't bounce to /onboarding/role
+    if (!onboardingCompleted) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { onboardingCompleted: true },
+      })
+    }
+  })
 }
