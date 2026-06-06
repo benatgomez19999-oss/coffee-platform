@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:allocation": "node --experimental-strip-types --test src/services/allocation/__tests__/*.test.ts src/services/allocation/contracts/__tests__/*.test.ts src/services/client-dashboard/__tests__/*.test.ts src/services/dev/scenarios/__tests__/*.test.ts src/services/pricing/__tests__/*.test.ts src/engine/pricing/client/__tests__/*.test.ts src/services/lot-media/__tests__/*.test.ts src/components/platform/media/__tests__/*.test.ts src/services/producer-settings/__tests__/*.test.ts src/services/producer-onboarding/__tests__/*.test.ts src/services/contract-request/__tests__/*.test.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
