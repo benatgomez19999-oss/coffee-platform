@@ -762,6 +762,52 @@ model MarketSignalSnapshot {
   createdAt   DateTime          @default(now())
 }
 
+//////////////////////////////////////////////////////
+// 📈 MARKET SIGNAL TICK — append-only history
+//
+// Audit row for provider preview observations. Recording
+// a tick NEVER changes the active MarketSignalSnapshot,
+// NEVER refreshes PricingSnapshot.clientB2BPricePerKg,
+// NEVER mutates contracts or demand intents.
+//
+// providerId and providerKind are plain strings (not enums)
+// so adding a new provider doesn't require a migration.
+//////////////////////////////////////////////////////
+
+model MarketSignalTick {
+  id             String             @id @default(uuid())
+
+  providerId     String
+  providerKind   String
+  source         MarketSignalSource
+
+  cPrice         Float
+  demandIndex    Float?
+  confidence     String?
+  rawUnit        String?
+  rawValue       Float?
+
+  symbol         String?
+  contractMonth  String?
+
+  capturedAt     DateTime           @default(now())
+  validFrom      DateTime?
+  expiresAt      DateTime?
+
+  sourceName     String?
+  sourceUrl      String?
+  note           String?
+
+  diagnostics    Json?
+  rawPayload     Json?
+
+  createdAt      DateTime           @default(now())
+
+  @@index([capturedAt])
+  @@index([providerId, capturedAt])
+  @@index([source, capturedAt])
+}
+
 enum StoryStatus {
   DRAFT
   ACTIVE
