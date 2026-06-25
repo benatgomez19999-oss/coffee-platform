@@ -24,9 +24,9 @@ import { getUserFromRequest } from "@/src/lib/getUserFromRequest"
 //
 // Auth rule:
 //   By default the guard also requires an authenticated user.
-//   /api/dev/login-as is the only route that opts out via
-//   { requireUser: false } because it IS the route that
-//   establishes the session.
+//   /api/dev/test-setup/login-as and /api/dev/test-setup/status
+//   opt out via { requireUser: false } because they are the
+//   routes that establish (or report) the session.
 // =====================================================
 
 type GuardUser = NonNullable<Awaited<ReturnType<typeof getUserFromRequest>>>

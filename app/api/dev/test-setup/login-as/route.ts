@@ -11,14 +11,14 @@ import { requireDevRoute } from "@/src/lib/dev/requireDevRoute"
 // 🔐 POST /api/dev/test-setup/login-as
 // DEV-TEST-SETUP-1
 //
-// Server-side wrapper around the existing dev login-as
-// flow. The KEY difference vs /api/dev/login-as is that
-// THIS route reads DEV_AUTH_BYPASS_SECRET from the
-// server environment instead of accepting it from the
-// caller — so the secret never enters the browser
-// bundle or page JSON payload.
+// Sole dev login route. Authorisation is entirely server-
+// side: requireDevRoute() + DEV_AUTH_BYPASS_ENABLED.
+// The caller does NOT send (and the server does NOT
+// read) a shared secret — eliminating the bundle-leak
+// vector that the removed /api/dev/login-as route had
+// via NEXT_PUBLIC_DEV_AUTH_BYPASS_SECRET.
 //
-// Gating identical to /api/dev/login-as:
+// Gating:
 //   - requireDevRoute() (VERCEL_ENV != production +
 //     INTERNAL_DEV_TOOLS_ENABLED)
 //   - DEV_AUTH_BYPASS_ENABLED must equal "true"
@@ -84,9 +84,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Sign session token + set HttpOnly cookie. Identical
-  // semantics to /api/dev/login-as so any UI that already
-  // accepts that cookie keeps working.
+  // Sign session token + set HttpOnly cookie — same JWT +
+  // cookie shape the platform reads everywhere
+  // (verifyToken / getUserFromRequest).
   const token = signToken({ userId: user.id })
 
   const res = NextResponse.json({
