@@ -343,19 +343,19 @@ useEffect(() => {
         </h1>
 
         {step === 0 && !intentError && (
-          <div style={{ textAlign: "center", padding: 40, opacity: 0.6 }}>
+          <div data-testid="contract-request-loading" style={{ textAlign: "center", padding: 40, opacity: 0.6 }}>
             Loading contract request...
           </div>
         )}
 
         {intentError && (
-          <div style={{
+          <div data-testid="contract-request-error" data-status="ERROR" style={{
             padding: 24,
             borderRadius: 12,
             border: "1px solid #e0e0e0",
             background: "#fafafa",
           }}>
-            <div style={{ fontSize: 15, marginBottom: 12 }}>
+            <div data-testid="contract-request-error-text" style={{ fontSize: 15, marginBottom: 12 }}>
               {intentError}
             </div>
             <a
@@ -392,6 +392,7 @@ useEffect(() => {
         {step === 3 && !intentError && (
           <Step3Preview
             draft={draft}
+            mode={mode}
           />
         )}
 

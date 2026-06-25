@@ -276,6 +276,7 @@ export default function ClientOverviewPanel({
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {pendingSignature > 0 && pendingSignatureContract && (
               <button
+                data-testid="contract-sign-open"
                 onClick={() => {
                   window.location.href = `/contract/verify-otp?contractId=${pendingSignatureContract.id}`
                 }}
@@ -287,6 +288,7 @@ export default function ClientOverviewPanel({
 
             {pendingPayment > 0 && pendingPaymentContract && (
               <button
+                data-testid="client-overview-pay"
                 onClick={() => {
                   window.location.href = `/contract/payment?contractId=${pendingPaymentContract.id}`
                 }}
@@ -305,6 +307,7 @@ export default function ClientOverviewPanel({
 
       {pendingIntents.length > 0 && (
         <div
+          data-testid="client-intent-list"
           style={{
             marginTop: 24,
             paddingTop: 22,
@@ -326,6 +329,8 @@ export default function ClientOverviewPanel({
           {pendingIntents.map((intent: any) => (
             <div
               key={intent.id}
+              data-testid="client-intent-row"
+              data-id={intent.id}
               style={{
                 padding: "12px 16px",
                 marginBottom: 8,
@@ -349,6 +354,8 @@ export default function ClientOverviewPanel({
               >
                 <span>{intent.requestedKg} kg/mo</span>
                 <span
+                  data-testid="client-intent-status"
+                  data-status={intent.status}
                   style={{
                     color:
                       intent.status === "OPEN"

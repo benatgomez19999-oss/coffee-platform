@@ -41,6 +41,7 @@ type Draft = {
 
 type Props = {
   draft: Draft
+  mode?: string | null
 }
 
 
@@ -62,7 +63,7 @@ function formatEurPerKg(value: number | null | undefined): string {
 // COMPONENT
 // =====================================================
 
-export default function Step3Preview({ draft }: Props) {
+export default function Step3Preview({ draft, mode }: Props) {
 
   const router = useRouter()
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
@@ -267,7 +268,7 @@ export default function Step3Preview({ draft }: Props) {
       {/* INTENT SUMMARY */}
 
       {draft.supply.greenLotId && (
-        <div style={{
+        <div data-testid="contract-request-summary" style={{
           padding: 16,
           borderRadius: 10,
           border: "1px solid #e0e0e0",
@@ -291,6 +292,7 @@ export default function Step3Preview({ draft }: Props) {
 
       {pdfUrl && (
         <iframe
+          data-testid="contract-request-pdf"
           src={pdfUrl}
           style={{
             width: "100%",
@@ -304,6 +306,7 @@ export default function Step3Preview({ draft }: Props) {
       {/* CONTRACT-REQUEST-2 — PRICE DRIFT BLOCKING PANEL */}
       {priceDrift && (
         <div
+          data-testid="contract-request-price-drift"
           style={{
             padding: 18,
             borderRadius: 12,
@@ -349,6 +352,7 @@ export default function Step3Preview({ draft }: Props) {
           <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
             <button
               type="button"
+              data-testid="contract-request-pricedrift-return"
               onClick={() => router.push("/platform/client")}
               style={{
                 padding: "10px 16px",
@@ -364,6 +368,7 @@ export default function Step3Preview({ draft }: Props) {
             </button>
             <button
               type="button"
+              data-testid="contract-request-pricedrift-dismiss"
               onClick={() => setPriceDrift(null)}
               style={{
                 padding: "10px 16px",
@@ -382,6 +387,7 @@ export default function Step3Preview({ draft }: Props) {
       )}
 
       <button
+        data-testid={mode === "amend" ? "contract-amend-submit" : "contract-request-submit"}
         onClick={signContract}
         disabled={loading || priceDrift != null}
         style={{

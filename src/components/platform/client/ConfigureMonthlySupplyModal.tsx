@@ -291,6 +291,7 @@ export default function ConfigureMonthlySupplyModal({
 
       {/* Modal */}
       <div
+        data-testid="intent-create-modal"
         className="
           relative w-full md:max-w-[640px]
           rounded-t-3xl md:rounded-3xl
@@ -328,6 +329,7 @@ export default function ConfigureMonthlySupplyModal({
           />
           <button
             type="button"
+            data-testid="intent-create-close-x"
             onClick={onClose}
             aria-label="Close"
             className="absolute top-3 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-black/55 text-white/95 hover:bg-black/75"
@@ -376,6 +378,7 @@ export default function ConfigureMonthlySupplyModal({
             <>
               <Field label="Monthly volume (kg roasted)">
                 <input
+                  data-testid="intent-create-volume-input"
                   type="number"
                   inputMode="numeric"
                   min={1}
@@ -399,6 +402,7 @@ export default function ConfigureMonthlySupplyModal({
                   {ALLOWED_DURATION_MONTHS.map((d) => (
                     <button
                       key={d}
+                      data-testid={`intent-create-duration-${d}`}
                       type="button"
                       onClick={() => setDuration(d)}
                       disabled={phase.kind === "submitting"}
@@ -441,13 +445,13 @@ export default function ConfigureMonthlySupplyModal({
               )}
 
               {inputValidationMessage && volumeInput.trim() !== "" && (
-                <div className="rounded-md border border-[#e2b65c]/40 bg-[#e2b65c]/[0.08] px-3 py-2 text-[11.5px] text-[#e6c97a]">
+                <div data-testid="intent-create-validation" className="rounded-md border border-[#e2b65c]/40 bg-[#e2b65c]/[0.08] px-3 py-2 text-[11.5px] text-[#e6c97a]">
                   {inputValidationMessage}
                 </div>
               )}
 
               {phase.kind === "error" && (
-                <div className="rounded-md border border-red-400/40 bg-red-500/10 px-3 py-2 text-[12px] text-red-200">
+                <div data-testid="intent-create-error" className="rounded-md border border-red-400/40 bg-red-500/10 px-3 py-2 text-[12px] text-red-200">
                   {phase.message}
                 </div>
               )}
@@ -480,7 +484,7 @@ export default function ConfigureMonthlySupplyModal({
           )}
 
           {phase.kind === "follow-up-done" && (
-            <div className="rounded-md border border-[#86c69b]/35 bg-[#86c69b]/[0.08] px-3 py-3 text-[12px] text-[#a4dbb4]">
+            <div data-testid="intent-create-followup-done" className="rounded-md border border-[#86c69b]/35 bg-[#86c69b]/[0.08] px-3 py-3 text-[12px] text-[#a4dbb4]">
               {phase.message}
             </div>
           )}
@@ -500,6 +504,7 @@ export default function ConfigureMonthlySupplyModal({
               </span>
               <button
                 type="button"
+                data-testid="intent-create-outcome-close"
                 onClick={onClose}
                 className="rounded-md border border-white/15 px-3 py-2 text-[12px] text-[#dcc9a4] hover:bg-white/5"
               >
@@ -510,6 +515,7 @@ export default function ConfigureMonthlySupplyModal({
             <>
               <button
                 type="button"
+                data-testid="intent-create-cancel"
                 onClick={onClose}
                 className="rounded-md border border-white/15 px-3 py-2 text-[12px] text-[#dcc9a4] hover:bg-white/5"
               >
@@ -517,6 +523,7 @@ export default function ConfigureMonthlySupplyModal({
               </button>
               <button
                 type="button"
+                data-testid="intent-create-submit"
                 onClick={submit}
                 disabled={!canSubmit || isSubmitting}
                 className="
@@ -562,14 +569,15 @@ function OutcomeView({
         : "border-red-400/40 bg-red-500/[0.08] text-red-200"
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className={"rounded-xl border px-4 py-3 text-[13px] " + toneClass}>
+    <div className="flex flex-col gap-3" data-testid="intent-create-status" data-status={outcome.kind}>
+      <div data-testid="intent-create-status-text" className={"rounded-xl border px-4 py-3 text-[13px] " + toneClass}>
         {outcome.headline}
       </div>
 
       {outcome.kind === "approved" && (
         <button
           type="button"
+          data-testid="contract-request-continue"
           onClick={onContinue}
           disabled={busy}
           className="
@@ -587,6 +595,7 @@ function OutcomeView({
         <div className="flex gap-2 flex-wrap">
           <button
             type="button"
+            data-testid="contract-request-accept-counter"
             onClick={onAccept}
             disabled={busy}
             className="
@@ -599,6 +608,7 @@ function OutcomeView({
           </button>
           <button
             type="button"
+            data-testid="intent-create-counter-cancel"
             onClick={onCancel}
             disabled={busy}
             className="rounded-md border border-white/15 px-3 py-2 text-[12px] text-[#dcc9a4] hover:bg-white/5"
@@ -611,6 +621,7 @@ function OutcomeView({
       {outcome.kind === "rejected" && (
         <button
           type="button"
+          data-testid="intent-create-waitlist"
           onClick={onWait}
           disabled={busy}
           className="

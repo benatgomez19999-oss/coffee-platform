@@ -95,6 +95,7 @@ export default function SupplyContractsPanel({
       {isEmpty ? (
         <>
           <p
+            data-testid="client-active-contract-empty"
             style={{
               margin: 0,
               fontSize: 12.5,
@@ -108,6 +109,7 @@ export default function SupplyContractsPanel({
             roasting.
           </p>
           <a
+            data-testid="client-active-contract-create"
             href={pilotHref}
             style={{
               alignSelf: "flex-start",
@@ -129,7 +131,7 @@ export default function SupplyContractsPanel({
           </a>
         </>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div data-testid="client-active-contract-list" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {active.slice(0, 3).map((c) => (
             <ContractRow key={c.id} contract={c} />
           ))}
@@ -179,6 +181,8 @@ function ContractRow({ contract }: { contract: SupplyContract }) {
 
   return (
     <div
+      data-testid="client-active-contract-row"
+      data-id={contract.id}
       style={{
         padding: 12,
         borderRadius: 12,
@@ -219,6 +223,8 @@ function ContractRow({ contract }: { contract: SupplyContract }) {
           )}
         </div>
         <span
+          data-testid="client-active-contract-status"
+          data-status={contract.status}
           style={{
             fontSize: 9.5,
             letterSpacing: "0.06em",

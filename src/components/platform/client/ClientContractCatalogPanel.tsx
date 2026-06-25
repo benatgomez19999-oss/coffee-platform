@@ -451,6 +451,8 @@ function CatalogCard({
           </span>
           {pending ? (
             <span
+              data-testid="intent-create-pending"
+              data-status="PENDING"
               style={{
                 fontSize: 9.5,
                 fontWeight: 600,
@@ -470,6 +472,7 @@ function CatalogCard({
           ) : (
             <button
               type="button"
+              data-testid="intent-create-open"
               onClick={() => onConfigureMonthlySupply?.(lot)}
               disabled={
                 !onConfigureMonthlySupply ||

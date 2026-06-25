@@ -145,7 +145,7 @@ export default function ContractPortfolioPanel({
         ) : recent.length === 0 ? (
           <EmptyRow />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div data-testid="client-portfolio-list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {recent.map((r) => (
               <RecentRow key={r.id} row={r} />
             ))}
@@ -274,6 +274,8 @@ function RecentRow({
 
   return (
     <div
+      data-testid="client-portfolio-row"
+      data-id={row.id}
       style={{
         padding: 12,
         borderRadius: 12,
@@ -361,6 +363,8 @@ function StatusBadge({ status }: { status: string }) {
     titleCase(status)
   return (
     <span
+      data-testid="client-portfolio-status"
+      data-status={status}
       style={{
         fontSize: 9,
         letterSpacing: "0.06em",
@@ -389,6 +393,7 @@ function titleCase(value: string): string {
 function EmptyRow() {
   return (
     <div
+      data-testid="client-portfolio-empty"
       style={{
         padding: "14px 12px",
         borderRadius: 12,

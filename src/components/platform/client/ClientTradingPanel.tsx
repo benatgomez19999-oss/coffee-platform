@@ -87,6 +87,7 @@ export default function LeftPanel({ marketData }: Props) {
   return (
     <div
       id="supply-desk"
+      data-testid="contract-amend-panel"
       style={{
         scrollMarginTop: 110,
         padding: 36,
@@ -132,6 +133,7 @@ export default function LeftPanel({ marketData }: Props) {
       {/* ============================================== */}
       {allLots.length === 0 && (
         <div
+          data-testid="contract-amend-empty"
           style={{
             padding: "60px 32px",
             borderRadius: 18,
@@ -191,6 +193,7 @@ export default function LeftPanel({ marketData }: Props) {
 
           <button
             type="button"
+            data-testid="contract-amend-refresh"
             onClick={() => window.location.reload()}
             style={{
               marginTop: 24,
@@ -387,6 +390,7 @@ export default function LeftPanel({ marketData }: Props) {
               }}
             >
               <div
+                data-testid="contract-amend-amount-value"
                 style={{
                   fontSize: 22,
                   fontWeight: 400,
@@ -476,6 +480,7 @@ export default function LeftPanel({ marketData }: Props) {
               {/* SLIDER */}
               <input
                 type="range"
+                data-testid="contract-amend-amount-input"
                 min={0}
                 max={scaleMax}
                 value={volume}
@@ -494,6 +499,7 @@ export default function LeftPanel({ marketData }: Props) {
           {/* CONTRACT INTELLIGENCE */}
           {suggestion && (
             <div
+              data-testid="contract-amend-suggestion"
               style={{
                 marginTop: 20,
                 padding: 18,
@@ -555,6 +561,7 @@ export default function LeftPanel({ marketData }: Props) {
 
                 }}
                 disabled={intentLoading}
+                data-testid="contract-amend-submit"
                 style={{
                   marginTop: 12,
                   padding: "8px 18px",
@@ -574,6 +581,8 @@ export default function LeftPanel({ marketData }: Props) {
           {intentResult?.semaphore?.status === "yellow" &&
             intentResult.intent && (
               <div
+                data-testid="contract-amend-counter"
+                data-status="COUNTER"
                 style={{
                   marginTop: 20,
                   padding: 18,
@@ -603,6 +612,7 @@ export default function LeftPanel({ marketData }: Props) {
                         console.error("Accept failed:", err)
                       }
                     }}
+                    data-testid="contract-amend-accept"
                     style={{
                       padding: "8px 18px",
                       borderRadius: 999,
@@ -626,6 +636,7 @@ export default function LeftPanel({ marketData }: Props) {
                         console.error("Cancel failed:", err)
                       }
                     }}
+                    data-testid="contract-amend-decline"
                     style={{
                       padding: "8px 18px",
                       borderRadius: 999,
@@ -645,6 +656,8 @@ export default function LeftPanel({ marketData }: Props) {
           {intentResult?.semaphore?.status === "red" &&
             intentResult.intent && (
               <div
+                data-testid="contract-amend-insufficient"
+                data-status="INSUFFICIENT"
                 style={{
                   marginTop: 20,
                   padding: 18,
@@ -679,6 +692,7 @@ export default function LeftPanel({ marketData }: Props) {
                         console.error("Wait failed:", err)
                       }
                     }}
+                    data-testid="contract-amend-wait"
                     style={{
                       padding: "8px 18px",
                       borderRadius: 999,
@@ -702,6 +716,7 @@ export default function LeftPanel({ marketData }: Props) {
                         console.error("Cancel failed:", err)
                       }
                     }}
+                    data-testid="contract-amend-cancel"
                     style={{
                       padding: "8px 18px",
                       borderRadius: 999,
@@ -720,6 +735,8 @@ export default function LeftPanel({ marketData }: Props) {
           {/* WAITING */}
           {intentResult?.intent?.status === "WAITING" && (
             <div
+              data-testid="contract-amend-waiting"
+              data-status="WAITING"
               style={{
                 marginTop: 20,
                 padding: 18,
@@ -740,6 +757,8 @@ export default function LeftPanel({ marketData }: Props) {
           {/* ERROR */}
           {intentResult?.error && (
             <div
+              data-testid="contract-amend-error"
+              data-status="ERROR"
               style={{
                 marginTop: 20,
                 padding: 14,
@@ -760,6 +779,7 @@ export default function LeftPanel({ marketData }: Props) {
               Select Coffee Lot
             </div>
             <select
+              data-testid="contract-amend-lot-select"
               value={selectedLotId ?? ""}
               onChange={(e) => setSelectedLotId(e.target.value)}
               style={{

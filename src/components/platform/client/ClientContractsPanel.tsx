@@ -91,6 +91,7 @@ export default function ClientContractsPanel({
 
   return (
     <div
+      data-testid="client-contract-list"
       style={{
         padding: 30,
         borderRadius: 22,
@@ -122,6 +123,7 @@ export default function ClientContractsPanel({
 
       {safeContracts.length === 0 && (
         <div
+          data-testid="client-contract-empty"
           style={{
             padding: 22,
             borderRadius: 16,
@@ -193,6 +195,7 @@ export default function ClientContractsPanel({
 
           {hasLots && (
             <button
+              data-testid="client-contract-start"
               onClick={goToSupplyDesk}
               style={primaryGoldPill}
             >
@@ -213,6 +216,8 @@ export default function ClientContractsPanel({
         return (
           <div
             key={contract.id}
+            data-testid="client-contract-row"
+            data-id={contract.id}
             onClick={() => {
               selectContract(contract.id)
               setSelectedContractId(contract.id)
@@ -248,6 +253,8 @@ export default function ClientContractsPanel({
               {/* LEFT SIDE */}
               <div style={{ minWidth: 0 }}>
                 <div
+                  data-testid="client-contract-status"
+                  data-status={contract.status}
                   style={{
                     fontSize: 11,
                     letterSpacing: "0.08em",
@@ -274,6 +281,7 @@ export default function ClientContractsPanel({
 
                 {status === "AWAITING_SIGNATURE" && (
                   <button
+                    data-testid="contract-sign-open"
                     onClick={(e) => {
                       e.stopPropagation()
                       router.push(`/contract/verify-otp?contractId=${contract.id}`)
@@ -286,6 +294,7 @@ export default function ClientContractsPanel({
 
                 {(status === "SIGNED" || status === "PAYMENT_PENDING") && (
                   <button
+                    data-testid="client-contract-pay"
                     onClick={(e) => {
                       e.stopPropagation()
                       router.push(`/contract/payment?contractId=${contract.id}`)
@@ -321,6 +330,7 @@ export default function ClientContractsPanel({
 
       {safeContracts.length > 0 && hasLots && (
         <button
+          data-testid="client-contract-new"
           onClick={goToSupplyDesk}
           style={{
             ...primaryGoldPill,

@@ -110,7 +110,7 @@ export default function SignPage() {
       background: "#f7f7f7"
     }}>
 
-      <div style={{
+      <div data-testid="contract-sign-token-page" style={{
         background: "#fff",
         padding: 32,
         borderRadius: 16,
@@ -146,6 +146,7 @@ export default function SignPage() {
         />
 
         <button
+          data-testid="contract-sign-token-confirm"
           onClick={handleVerify}
           disabled={loading}
           style={{
@@ -161,13 +162,13 @@ export default function SignPage() {
         </button>
 
         {error && (
-          <p style={{ color: "red", marginTop: 10 }}>
+          <p data-testid="contract-sign-token-status" data-status="ERROR" style={{ color: "red", marginTop: 10 }}>
             {error}
           </p>
         )}
 
         {success && (
-          <p style={{ color: "green", marginTop: 10 }}>
+          <p data-testid="contract-sign-token-status" data-status="SUCCESS" style={{ color: "green", marginTop: 10 }}>
             ✅ Código verificado
           </p>
         )}

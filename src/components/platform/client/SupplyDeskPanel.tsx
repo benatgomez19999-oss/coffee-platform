@@ -279,6 +279,8 @@ function RecommendedCard({
           {pending ? (
             <button
               type="button"
+              data-testid="intent-create-pending"
+              data-status="PENDING"
               disabled
               title="You already have a request open for this lot."
               style={{
@@ -298,6 +300,7 @@ function RecommendedCard({
           ) : (
             <button
               type="button"
+              data-testid="intent-create-open"
               onClick={() => onConfigureMonthlySupply?.(lot)}
               disabled={!onConfigureMonthlySupply || lot.pricePerKgRoasted == null}
               title={
